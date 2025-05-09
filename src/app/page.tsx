@@ -3,6 +3,7 @@ import styles from '../styles/Home.module.css';
 import Sidebar from '../components/Sidebar';
 import GameCard from '../components/GameCard';
 import PlatformImage from '../components/PlatformImage';
+import AuthButtons from '../components/AuthButtons';
 
 // React Icons
 import { FiSearch, FiHome, FiTrendingUp, FiPackage } from 'react-icons/fi';
@@ -125,10 +126,7 @@ export default async function Home() {
           </button>
         </div>
         
-        <div className={styles.userMenu}>
-          <button className={styles.loginBtn}>Se connecter</button>
-          <button className={styles.registerBtn}>S'inscrire</button>
-        </div>
+        <AuthButtons />
       </header>
 
       <div className={styles.mainLayout}>
