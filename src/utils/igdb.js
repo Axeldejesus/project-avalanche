@@ -1,9 +1,6 @@
-// Utility functions for IGDB API requests
-
 import getAuth from './auth';
 
-const CLIENT_ID = 'imw0sicx44ju01i0gbaq0l1rnnx48u';
-const CLIENT_SECRET = '4rtz3lcsibgwomvm4dqv38qmru1fl4';
+const CLIENT_ID = process.env.IGDB_CLIENT_ID;
 
 let cachedToken = null;
 let tokenExpiry = null;
@@ -14,18 +11,9 @@ async function getAccessToken() {
     return cachedToken;
   }
   
-  // Otherwise get a new token
+  // Otherwise get a new token using getAuth from auth.js
   try {
-    // Get token directly from Twitch API instead of our internal API route
-    const response = await fetch(`https://id.twitch.tv/oauth2/token?client_id=${CLIENT_ID}&client_secret=${CLIENT_SECRET}&grant_type=client_credentials`, {
-      method: 'POST',
-    });
-    
-    if (!response.ok) {
-      throw new Error(`Authentication failed: ${response.status}`);
-    }
-    
-    const data = await response.json();
+    const data = await getAuth();
     
     cachedToken = data.access_token;
     // Set expiry time (subtract 5 minutes for safety)
@@ -41,6 +29,10 @@ async function getAccessToken() {
 export async function igdbRequest(endpoint, query) {
   try {
     const accessToken = await getAccessToken();
+    
+    if (!CLIENT_ID) {
+      throw new Error('IGDB client ID is not properly configured in environment variables');
+    }
     
     const response = await fetch(`https://api.igdb.com/v4/${endpoint}`, {
       method: 'POST',
