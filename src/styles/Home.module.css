@@ -62,6 +62,16 @@
   border-radius: 3px;
 }
 
+.navItem {
+  display: flex;
+  align-items: center;
+  flex-direction: row;
+}
+
+.navIcon {
+  margin-right: 8px;
+}
+
 .search {
   display: flex;
   align-items: center;

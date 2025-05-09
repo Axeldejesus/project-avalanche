@@ -4,6 +4,12 @@ import Sidebar from '../components/Sidebar';
 import GameCard from '../components/GameCard';
 import PlatformImage from '../components/PlatformImage';
 
+// React Icons
+import { FiSearch, FiHome, FiTrendingUp, FiPackage } from 'react-icons/fi';
+import { RiTrophyLine, RiCalendarEventLine, RiGamepadFill } from 'react-icons/ri';
+import { BiCategoryAlt } from 'react-icons/bi';
+import { BsCollectionPlay } from 'react-icons/bs';
+
 // Types
 interface Game {
   id: number;
@@ -106,19 +112,16 @@ export default async function Home() {
         </div>
         
         <nav className={styles.nav}>
-          <a className={styles.active}>Home</a>
-          <a>Trending</a>
-          <a>New Releases</a>
-          <a>Collections</a>
+          <a className={styles.active}><span className={styles.navItem}><FiHome className={styles.navIcon} /> <span>Home</span></span></a>
+          <a><span className={styles.navItem}><FiTrendingUp className={styles.navIcon} /> <span>Trending</span></span></a>
+          <a><span className={styles.navItem}><FiPackage className={styles.navIcon} /> <span>New Releases</span></span></a>
+          <a><span className={styles.navItem}><BsCollectionPlay className={styles.navIcon} /> <span>Collections</span></span></a>
         </nav>
         
         <div className={styles.search}>
           <input type="text" placeholder="Search games..." />
           <button>
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="11" cy="11" r="8"></circle>
-              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-            </svg>
+            <FiSearch />
           </button>
         </div>
         
@@ -164,7 +167,7 @@ export default async function Home() {
 
             <section className={styles.gameSection}>
               <div className={styles.sectionHeader}>
-                <h2>Recommended For You</h2>
+                <h2>{styles.sectionHeaderIcon} Recommended For You</h2>
                 <a href="#" className={styles.viewAll}>View All <span>→</span></a>
               </div>
               {recommendedGames.length > 0 ? (
@@ -182,7 +185,7 @@ export default async function Home() {
               {/* New Releases */}
               <div className={styles.discoverSection}>
                 <div className={styles.sectionTitle}>
-                  <div className={styles.sectionIcon}>🆕</div>
+                  <div className={styles.sectionIcon}><FiPackage /></div>
                   New Releases
                 </div>
                 
@@ -216,7 +219,7 @@ export default async function Home() {
               {/* Top Rated */}
               <div className={styles.discoverSection}>
                 <div className={styles.sectionTitle}>
-                  <div className={styles.sectionIcon}>🏆</div>
+                  <div className={styles.sectionIcon}><RiTrophyLine /></div>
                   Top Rated
                 </div>
                 
@@ -253,7 +256,7 @@ export default async function Home() {
               {/* Popular Categories */}
               <div className={styles.discoverSection}>
                 <div className={styles.sectionTitle}>
-                  <div className={styles.sectionIcon}>📊</div>
+                  <div className={styles.sectionIcon}><BiCategoryAlt /></div>
                   Popular Categories
                 </div>
                 
@@ -275,7 +278,7 @@ export default async function Home() {
               {/* Upcoming Releases */}
               <div className={styles.discoverSection}>
                 <div className={styles.sectionTitle}>
-                  <div className={styles.sectionIcon}>📅</div>
+                  <div className={styles.sectionIcon}><RiCalendarEventLine /></div>
                   Upcoming Releases
                 </div>
                 
@@ -317,7 +320,7 @@ export default async function Home() {
             {/* Explore by Platform */}
             <div className={styles.platformsSection}>
               <div className={styles.platformsHeader}>
-                <div className={styles.platformsIcon}>🎮</div>
+                <div className={styles.platformsIcon}><RiGamepadFill /></div>
                 <div className={styles.platformsTitle}>Explore by Platform</div>
               </div>
               
@@ -326,9 +329,12 @@ export default async function Home() {
                   {platforms.map((platform: Platform) => (
                     <div key={platform.id} className={styles.platformCard}>
                       <PlatformImage
+                        platformId={platform.id}
+                        platformName={platform.name}
                         src={platform.icon}
                         alt={platform.name}
                         className={styles.platformIcon}
+                        size={32}
                       />
                       <div className={styles.platformName}>{platform.name}</div>
                     </div>

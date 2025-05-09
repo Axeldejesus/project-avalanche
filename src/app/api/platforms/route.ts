@@ -18,7 +18,7 @@ export async function GET(): Promise<NextResponse<Platform[]>> {
     // Ciblons spécifiquement les plateformes les plus populaires par ID
     const platforms = await igdbRequest<IPlatform>('platforms', `
       fields name;
-      where id = (167, 169, 6, 130);
+      where id = (167, 169, 6, 130, 48, 49, 14, 3, 34, 39);
     `);
     
     if (platforms && platforms.length > 0) {

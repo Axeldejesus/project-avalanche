@@ -1,62 +1,59 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
+import Image from 'next/image';
+import { IconType } from 'react-icons';
+import { getPlatformReactIcon } from '../utils/platform-helpers';
 
 interface PlatformImageProps {
-  src: string;
+  src?: string;
+  icon?: IconType;
+  platformId?: number;
+  platformName?: string;
   alt: string;
   className?: string;
+  size?: number;
 }
 
-const PlatformImage: React.FC<PlatformImageProps> = ({ src, alt, className }) => {
-  const [imgError, setImgError] = useState(false);
+const PlatformImage: React.FC<PlatformImageProps> = ({
+  src,
+  icon,
+  platformId,
+  platformName,
+  alt,
+  className,
+  size = 24
+}) => {
+  // If icon component is directly provided, render it
+  if (icon) {
+    const IconComponent = icon;
+    return <IconComponent size={size} className={className} title={alt} />;
+  }
   
-  // Générer des couleurs basées sur le nom de la plateforme
-  const getPlatformColor = (name: string): string => {
-    const normalized = name.toLowerCase();
-    if (normalized.includes('playstation')) return '#006FCD';
-    if (normalized.includes('xbox')) return '#107C10';
-    if (normalized.includes('nintendo') || normalized.includes('switch')) return '#E60012';
-    if (normalized.includes('pc')) return '#333333';
-    return '#6c5ce7';
-  };
-
-  // Générer un SVG placeholder
-  const generateSvgPlaceholder = (name: string): string => {
-    const bgColor = getPlatformColor(name);
-    const initials = name.split(' ')
-      .map(word => word.charAt(0))
-      .join('')
-      .slice(0, 2)
-      .toUpperCase();
-    
-    const svgContent = `
-      <svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" viewBox="0 0 60 60">
-        <rect width="60" height="60" fill="${bgColor}" rx="8" ry="8"/>
-        <text x="30" y="36" font-family="Arial, sans-serif" font-size="24" fill="white" text-anchor="middle">${initials}</text>
-      </svg>
-    `;
-    
-    return `data:image/svg+xml;base64,${btoa(svgContent)}`;
-  };
-
-  const handleError = () => {
-    setImgError(true);
-  };
-
-  // Utiliser un SVG généré dynamiquement en cas d'erreur
-  const imageSrc = imgError ? generateSvgPlaceholder(alt) : src;
-
-  return (
-    <div className={className} style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-      <img 
-        src={imageSrc} 
-        alt={alt} 
-        onError={handleError}
-        style={{ width: '100%', height: '100%', objectFit: 'contain' }}
-      />
-    </div>
-  );
+  // If platformId or platformName is provided, get the appropriate icon
+  if (platformId || platformName) {
+    const IconComponent = getPlatformReactIcon(platformId, platformName);
+    return <IconComponent size={size} className={className} title={alt} />;
+  }
+  
+  // Fallback to traditional image if src is provided
+  if (src) {
+    return (
+      <div className={className} style={{ width: size, height: size }}>
+        <Image 
+          src={src} 
+          alt={alt} 
+          width={size} 
+          height={size} 
+          style={{ objectFit: 'contain' }}
+        />
+      </div>
+    );
+  }
+  
+  // Ultimate fallback - question mark icon
+  const { BsQuestionCircle } = require('react-icons/bs');
+  return <BsQuestionCircle size={size} className={className} title={alt} />;
 };
 
 export default PlatformImage;
