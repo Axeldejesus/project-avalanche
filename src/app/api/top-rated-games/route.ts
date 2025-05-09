@@ -7,6 +7,7 @@ interface IGame {
   name: string;
   cover?: { image_id: string };
   total_rating?: number;
+  genres?: Array<{ name: string }>;
 }
 
 interface TopRatedGame {
@@ -14,12 +15,13 @@ interface TopRatedGame {
   name: string;
   cover: string;
   rating: number;
+  genres?: string;
 }
 
 export async function GET(): Promise<NextResponse<TopRatedGame[]>> {
   try {
     const games = await igdbRequest<IGame>('games', `
-      fields name, cover.image_id, total_rating;
+      fields name, cover.image_id, total_rating, genres.name;
       where total_rating > 85;
       sort total_rating desc;
       limit 5;
@@ -30,7 +32,8 @@ export async function GET(): Promise<NextResponse<TopRatedGame[]>> {
         id: game.id,
         name: game.name,
         cover: getImageUrl(game.cover?.image_id),
-        rating: (game.total_rating ? game.total_rating / 20 : 4.5) // Convert to 5-star scale with fallback
+        rating: (game.total_rating ? game.total_rating / 20 : 4.5), // Convert to 5-star scale with fallback
+        genres: game.genres?.map(g => g.name).join(', ') || 'Game'
       }));
       
       return NextResponse.json(formattedGames);
@@ -40,7 +43,8 @@ export async function GET(): Promise<NextResponse<TopRatedGame[]>> {
         id: 100 + i,
         name: `Top Game ${i+1}`,
         cover: '/placeholder-cover.jpg',
-        rating: 4.5 + (Math.random() * 0.5)
+        rating: 4.5 + (Math.random() * 0.5),
+        genres: ['RPG', 'Adventure', 'Strategy', 'Shooter', 'Puzzle'][i] || 'Game'
       }));
       return NextResponse.json(fallbackGames);
     }
@@ -51,7 +55,8 @@ export async function GET(): Promise<NextResponse<TopRatedGame[]>> {
       id: 100 + i,
       name: `Top Game ${i+1}`,
       cover: '/placeholder-cover.jpg',
-      rating: 4.5 + (Math.random() * 0.5)
+      rating: 4.5 + (Math.random() * 0.5),
+      genres: ['RPG', 'Adventure', 'Strategy', 'Shooter', 'Puzzle'][i] || 'Game'
     }));
     return NextResponse.json(fallbackGames);
   }

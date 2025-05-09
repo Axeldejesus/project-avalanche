@@ -19,17 +19,7 @@ const Sidebar: React.FC = () => {
   
   return (
     <aside className={styles.sidebar}>
-      <h3>Categories</h3>
-      <div className={styles.categories}>
-        {categories.map((category) => (
-          <div key={category.name} className={styles.category}>
-            <span className={styles.categoryName}>{category.name}</span>
-            <span className={styles.categoryCount}>{category.count}</span>
-          </div>
-        ))}
-      </div>
-      <button className={styles.viewAllBtn}>All Categories</button>
-      
+  
       <div className={styles.completedBox}>
         <h3>Completed</h3>
         <p>Track your finished games</p>

@@ -1,25 +1,24 @@
 .sidebar {
-  width: 250px;
-  padding-right: 1.5rem;
+  width: 240px;
+  padding-right: 20px;
 }
 
 .sidebar h3 {
-  font-size: 1.1rem;
+  font-size: 16px;
   font-weight: 600;
-  margin-bottom: 1rem;
+  margin-bottom: 16px;
 }
 
 .categories {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  margin-bottom: 1rem;
+  margin-bottom: 16px;
 }
 
 .category {
   display: flex;
   justify-content: space-between;
-  padding: 0.75rem;
+  align-items: center;
+  padding: 8px 12px;
+  margin-bottom: 6px;
   border-radius: 8px;
   background-color: #1a1a1a;
   transition: background-color 0.2s;
@@ -27,64 +26,59 @@
 }
 
 .category:hover {
-  background-color: #2a2a2a;
+  background-color: #252525;
 }
 
 .categoryName {
-  font-weight: 500;
+  font-size: 14px;
 }
 
 .categoryCount {
+  font-size: 12px;
   color: #b3b3b3;
-  font-size: 0.9rem;
+  background-color: rgba(255, 255, 255, 0.1);
+  padding: 2px 8px;
+  border-radius: 12px;
 }
 
 .viewAllBtn {
   width: 100%;
-  padding: 0.75rem;
-  background-color: transparent;
-  border: 1px solid #2a2a2a;
-  color: #b3b3b3;
+  padding: 10px 0;
+  background-color: rgba(108, 92, 231, 0.1);
+  color: #6c5ce7;
+  border: none;
   border-radius: 8px;
-  margin-bottom: 2rem;
   cursor: pointer;
-  transition: all 0.2s;
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 24px;
 }
 
-.viewAllBtn:hover {
-  background-color: #2a2a2a;
-  color: #ffffff;
-}
-
-.completedBox, 
-.collectionBox {
+.completedBox, .collectionBox {
+  padding: 16px;
   background-color: #1a1a1a;
   border-radius: 12px;
-  padding: 1.25rem;
-  margin-bottom: 1rem;
+  margin-bottom: 16px;
 }
 
-.completedBox p,
-.collectionBox p {
-  font-size: 0.9rem;
+.completedBox h3, .collectionBox h3 {
+  margin-bottom: 8px;
+}
+
+.completedBox p, .collectionBox p {
   color: #b3b3b3;
-  margin: 0.5rem 0 1rem;
+  font-size: 13px;
+  margin-bottom: 12px;
 }
 
-.completedBox button,
-.collectionBox button {
+.completedBox button, .collectionBox button {
   width: 100%;
-  padding: 0.75rem;
-  background-color: #2a2a2a;
-  color: #ffffff;
+  padding: 8px 0;
+  background-color: rgba(108, 92, 231, 0.1);
+  color: #6c5ce7;
   border: none;
   border-radius: 6px;
-  font-weight: 500;
   cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-.completedBox button:hover,
-.collectionBox button:hover {
-  background-color: #383838;
+  font-size: 14px;
+  font-weight: 500;
 }

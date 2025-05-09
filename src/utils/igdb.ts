@@ -56,8 +56,17 @@ export async function igdbRequest<T = any>(endpoint: string, query: string): Pro
   }
 }
 
-// Helper function to process image URLs
-export function getImageUrl(imageId?: string, size: string = 'cover_big'): string {
-  if (!imageId) return '/placeholder-cover.jpg';
-  return `https://images.igdb.com/igdb/image/upload/t_${size}/${imageId}.jpg`;
+/**
+ * Obtient l'URL d'une image depuis l'API IGDB
+ * @param image_id ID de l'image
+ * @param size Taille de l'image (par défaut cover_big)
+ * @returns URL de l'image ou URL de placeholder
+ */
+export function getImageUrl(image_id?: string, size: string = 'cover_big'): string {
+  if (!image_id) {
+    return '/placeholder-cover.jpg';
+  }
+  
+  // Base URL pour les images IGDB
+  return `https://images.igdb.com/igdb/image/upload/t_${size}/${image_id}.jpg`;
 }
