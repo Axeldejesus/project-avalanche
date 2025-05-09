@@ -1,0 +1,90 @@
+.sidebar {
+  width: 250px;
+  padding-right: 1.5rem;
+}
+
+.sidebar h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+.categories {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.category {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.75rem;
+  border-radius: 8px;
+  background-color: #1a1a1a;
+  transition: background-color 0.2s;
+  cursor: pointer;
+}
+
+.category:hover {
+  background-color: #2a2a2a;
+}
+
+.categoryName {
+  font-weight: 500;
+}
+
+.categoryCount {
+  color: #b3b3b3;
+  font-size: 0.9rem;
+}
+
+.viewAllBtn {
+  width: 100%;
+  padding: 0.75rem;
+  background-color: transparent;
+  border: 1px solid #2a2a2a;
+  color: #b3b3b3;
+  border-radius: 8px;
+  margin-bottom: 2rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.viewAllBtn:hover {
+  background-color: #2a2a2a;
+  color: #ffffff;
+}
+
+.completedBox, 
+.collectionBox {
+  background-color: #1a1a1a;
+  border-radius: 12px;
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+}
+
+.completedBox p,
+.collectionBox p {
+  font-size: 0.9rem;
+  color: #b3b3b3;
+  margin: 0.5rem 0 1rem;
+}
+
+.completedBox button,
+.collectionBox button {
+  width: 100%;
+  padding: 0.75rem;
+  background-color: #2a2a2a;
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.completedBox button:hover,
+.collectionBox button:hover {
+  background-color: #383838;
+}

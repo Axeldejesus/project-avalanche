@@ -1,0 +1,98 @@
+.featured {
+  height: 500px;
+  border-radius: 16px;
+  background-size: cover;
+  background-position: center;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: flex-end;
+  margin-bottom: 2rem;
+}
+
+.featured:before {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 70%;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.9), transparent);
+}
+
+.content {
+  position: relative;
+  padding: 2rem;
+  width: 60%;
+}
+
+.rating {
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+}
+
+.stars {
+  display: flex;
+  gap: 0.2rem;
+  color: #ffd700;
+}
+
+.stars svg {
+  width: 20px;
+  height: 20px;
+}
+
+.ratingValue {
+  margin-left: 0.5rem;
+  font-size: 0.9rem;
+  color: #b3b3b3;
+}
+
+.title {
+  font-size: 3rem;
+  font-weight: 700;
+  margin: 0 0 1rem;
+}
+
+.description {
+  font-size: 1rem;
+  line-height: 1.6;
+  color: #d0d0d0;
+  margin-bottom: 1.5rem;
+}
+
+.actions {
+  display: flex;
+  gap: 1rem;
+}
+
+.primaryBtn {
+  padding: 0.75rem 1.5rem;
+  background-color: #6c5ce7;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.primaryBtn:hover {
+  background-color: #5d4cd7;
+}
+
+.secondaryBtn {
+  padding: 0.75rem 1.5rem;
+  background-color: rgba(255, 255, 255, 0.1);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.secondaryBtn:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
