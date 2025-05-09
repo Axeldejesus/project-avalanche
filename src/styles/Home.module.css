@@ -92,7 +92,38 @@
 }
 
 .userMenu {
+  display: flex;
+  gap: 10px;
   margin-left: 0.5rem;
+}
+
+.loginBtn, .registerBtn {
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+}
+
+.loginBtn {
+  background-color: transparent;
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.loginBtn:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.registerBtn {
+  background-color: #6c5ce7;
+  color: #ffffff;
+}
+
+.registerBtn:hover {
+  background-color: #5d4cd7;
 }
 
 .userButton {

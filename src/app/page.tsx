@@ -124,9 +124,8 @@ export default async function Home() {
         </div>
         
         <div className={styles.userMenu}>
-          <button className={styles.userButton}>
-            <span className={styles.userIcon}>J</span>
-          </button>
+          <button className={styles.loginBtn}>Se connecter</button>
+          <button className={styles.registerBtn}>S'inscrire</button>
         </div>
       </header>
 
