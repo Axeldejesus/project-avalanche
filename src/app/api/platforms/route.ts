@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { igdbRequest } from '../../../utils/igdb';
+import { PLATFORM_ICONS, getPlatformFallbackIcon } from '../../../utils/platform-helpers';
 
 interface IPlatform {
   id: number;
@@ -11,14 +12,6 @@ interface Platform {
   name: string;
   icon: string;
 }
-
-// Map des IDs de plateformes connues vers des icônes personnalisées
-const PLATFORM_ICONS: Record<number, string> = {
-  167: '/playstation.png', // PS5
-  169: '/xbox.png',        // Xbox Series X
-  130: '/switch.png',      // Nintendo Switch
-  6: '/pc.png',            // PC
-};
 
 export async function GET(): Promise<NextResponse<Platform[]>> {
   try {
@@ -33,33 +26,17 @@ export async function GET(): Promise<NextResponse<Platform[]>> {
         return {
           id: platform.id,
           name: platform.name,
-          icon: PLATFORM_ICONS[platform.id] || '/platform-generic.png'
+          icon: PLATFORM_ICONS[platform.id] || getPlatformFallbackIcon(platform.name)
         };
       });
       
       return NextResponse.json(formattedPlatforms);
     } else {
-      // Return fallback data
-      const fallbackPlatforms: Platform[] = [
-        { id: 167, name: "PlayStation 5", icon: "/playstation.png" },
-        { id: 169, name: "Xbox Series X", icon: "/xbox.png" },
-        { id: 6, name: "PC", icon: "/pc.png" },
-        { id: 130, name: "Nintendo Switch", icon: "/switch.png" }
-      ];
-      
-      return NextResponse.json(fallbackPlatforms);
+      console.error('No platforms data received from IGDB');
+      return NextResponse.json([]);
     }
   } catch (error) {
     console.error('Error fetching platforms:', error);
-    
-    // Fallback data on error
-    const fallbackPlatforms: Platform[] = [
-      { id: 167, name: "PlayStation 5", icon: "/playstation.png" },
-      { id: 169, name: "Xbox Series X", icon: "/xbox.png" },
-      { id: 6, name: "PC", icon: "/pc.png" },
-      { id: 130, name: "Nintendo Switch", icon: "/switch.png" }
-    ];
-    
-    return NextResponse.json(fallbackPlatforms);
+    return NextResponse.json([]);
   }
 }

@@ -2,13 +2,15 @@
  * Retourne une icône de plateforme de secours basée sur le nom
  */
 export function getPlatformFallbackIcon(platformName: string): string {
-  if (platformName.includes('PlayStation') || platformName.includes('PS5')) {
+  const normalizedName = platformName.toLowerCase();
+  
+  if (normalizedName.includes('playstation') || normalizedName.includes('ps5') || normalizedName.includes('ps4')) {
     return '/playstation.png';
-  } else if (platformName.includes('Xbox')) {
+  } else if (normalizedName.includes('xbox')) {
     return '/xbox.png';
-  } else if (platformName.includes('Nintendo') || platformName.includes('Switch')) {
+  } else if (normalizedName.includes('nintendo') || normalizedName.includes('switch')) {
     return '/switch.png';
-  } else if (platformName.includes('PC')) {
+  } else if (normalizedName.includes('pc')) {
     return '/pc.png';
   }
   return '/platform-generic.png'; // Icône générique en dernier recours

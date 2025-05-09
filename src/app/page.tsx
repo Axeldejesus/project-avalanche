@@ -40,6 +40,13 @@ interface Platform {
   icon: string;
 }
 
+// Message d'erreur simple pour les sections
+const ErrorMessage = ({ message }: { message: string }) => (
+  <div style={{ padding: '2rem', textAlign: 'center', color: '#b3b3b3' }}>
+    <p>{message}</p>
+  </div>
+);
+
 async function getData() {
   try {
     // En App Router, nous pouvons utiliser fetch directement du serveur
@@ -52,77 +59,13 @@ async function getData() {
       fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/platforms`, { next: { revalidate: 3600 } })
     ]);
 
-    // Parse responses with fallbacks for existing API routes
-    const featuredGame = featuredRes.ok ? await featuredRes.json() : {
-      id: 123,
-      name: 'Stellar Odyssey 2025',
-      cover: '/placeholder-cover.jpg',
-      background: '/placeholder-background.jpg',
-      description: 'An epic space adventure that combines the boundaries of gaming with stunning visuals and an immersive storyline.',
-      rating: 4.5,
-      reviews: 32
-    };
-    
-    // S'assurer que background est toujours défini
-    if (!featuredGame.background) {
-      featuredGame.background = '/placeholder-background.jpg';
-    }
-    
-    const recommendedGames: Game[] = recommendedRes.ok ? await recommendedRes.json() : Array(4).fill(null).map((_, i) => ({
-      id: i + 1,
-      name: ['Dragon\'s Legacy', 'Velocity Surge', 'Tactical Force', 'Chromatic Puzzle'][i],
-      cover: '/placeholder-cover.jpg',
-      rating: 4.0 + Math.random(),
-      genres: ['RPG', 'Racing', 'FPS', 'Puzzle'][i]
-    }));
-    
-    const topRatedGames: Game[] = topRatedRes.ok ? await topRatedRes.json() : Array(5).fill(null).map((_, i) => ({
-      id: 100 + i,
-      name: `Top Game ${i+1}`,
-      cover: '/placeholder-cover.jpg',
-      rating: 4.5 + (Math.random() * 0.5),
-      genres: ['RPG', 'Adventure', 'Strategy', 'Shooter', 'Puzzle'][i] || 'Game'
-    }));
-    
-    const upcomingGames: UpcomingGame[] = upcomingRes.ok ? await upcomingRes.json() : Array(5).fill(null).map((_, i) => ({
-      id: 200 + i,
-      name: `Upcoming Game ${i+1}`,
-      cover: '/placeholder-cover.jpg',
-      release_date: Math.floor(Date.now()/1000) + (i * 86400 * 30),
-      genres: ['Action RPG', 'Adventure', 'Strategy', 'Simulation', 'Racing'][i] || 'Game'
-    }));
-
-    // Parse responses for new API routes
-    const newReleaseGames: NewReleaseGame[] = newReleasesRes.ok ? await newReleasesRes.json() : [
-      {
-        id: 301,
-        name: "Nova Strike",
-        cover: "/nova-strike.jpg",
-        release_date: Math.floor(Date.now()/1000) - (7 * 86400),
-        rating: 4.2
-      },
-      {
-        id: 302,
-        name: "Dark Echoes",
-        cover: "/dark-echoes.jpg",
-        release_date: Math.floor(Date.now()/1000) - (12 * 86400),
-        rating: 4.8
-      },
-      {
-        id: 303,
-        name: "Pro Soccer 25",
-        cover: "/pro-soccer.jpg",
-        release_date: Math.floor(Date.now()/1000) - (17 * 86400),
-        rating: 3.9
-      }
-    ];
-
-    const platforms: Platform[] = platformsRes.ok ? await platformsRes.json() : [
-      { id: 1, name: "PlayStation 5", icon: "https://example.com/playstation.png" },
-      { id: 2, name: "Xbox Series X", icon: "https://example.com/xbox.png" },
-      { id: 3, name: "PC", icon: "https://example.com/pc.png" },
-      { id: 4, name: "Nintendo Switch", icon: "https://example.com/switch.png" }
-    ];
+    // Parse responses with minimal fallbacks
+    const featuredGame = featuredRes.ok ? await featuredRes.json() : null;
+    const recommendedGames = recommendedRes.ok ? await recommendedRes.json() : [];
+    const topRatedGames = topRatedRes.ok ? await topRatedRes.json() : [];
+    const upcomingGames = upcomingRes.ok ? await upcomingRes.json() : [];
+    const newReleaseGames = newReleasesRes.ok ? await newReleasesRes.json() : [];
+    const platforms = platformsRes.ok ? await platformsRes.json() : [];
 
     return {
       featuredGame,
@@ -134,67 +77,14 @@ async function getData() {
     };
   } catch (error) {
     console.error('Error fetching data:', error);
-    // Return fallback data in case of error
+    // Return empty data in case of error
     return {
-      featuredGame: {
-        id: 123,
-        name: 'Stellar Odyssey 2025',
-        cover: '/placeholder-cover.jpg',
-        background: '/placeholder-background.jpg',
-        description: 'An epic space adventure that combines the boundaries of gaming with stunning visuals and an immersive storyline.',
-        rating: 4.5,
-        reviews: 32
-      },
-      recommendedGames: Array(4).fill(null).map((_, i) => ({
-        id: i + 1,
-        name: ['Dragon\'s Legacy', 'Velocity Surge', 'Tactical Force', 'Chromatic Puzzle'][i],
-        cover: '/placeholder-cover.jpg',
-        rating: 4.0 + Math.random(),
-        genres: ['RPG', 'Racing', 'FPS', 'Puzzle'][i]
-      })),
-      topRatedGames: Array(5).fill(null).map((_, i) => ({
-        id: 100 + i,
-        name: `Top Game ${i+1}`,
-        cover: '/placeholder-cover.jpg',
-        rating: 4.5 + (Math.random() * 0.5),
-        genres: ['RPG', 'Adventure', 'Strategy', 'Shooter', 'Puzzle'][i] || 'Game'
-      })),
-      upcomingGames: Array(5).fill(null).map((_, i) => ({
-        id: 200 + i,
-        name: `Upcoming Game ${i+1}`,
-        cover: '/placeholder-cover.jpg',
-        release_date: Math.floor(Date.now()/1000) + (i * 86400 * 30),
-        genres: ['Action RPG', 'Adventure', 'Strategy', 'Simulation', 'Racing'][i] || 'Game'
-      })),
-      newReleaseGames: [
-        {
-          id: 301,
-          name: "Nova Strike",
-          cover: "/nova-strike.jpg",
-          release_date: Math.floor(Date.now()/1000) - (7 * 86400),
-          rating: 4.2
-        },
-        {
-          id: 302,
-          name: "Dark Echoes",
-          cover: "/dark-echoes.jpg",
-          release_date: Math.floor(Date.now()/1000) - (12 * 86400),
-          rating: 4.8
-        },
-        {
-          id: 303,
-          name: "Pro Soccer 25",
-          cover: "/pro-soccer.jpg",
-          release_date: Math.floor(Date.now()/1000) - (17 * 86400),
-          rating: 3.9
-        }
-      ],
-      platforms: [
-        { id: 1, name: "PlayStation 5", icon: "https://example.com/playstation.png" },
-        { id: 2, name: "Xbox Series X", icon: "https://example.com/xbox.png" },
-        { id: 3, name: "PC", icon: "https://example.com/pc.png" },
-        { id: 4, name: "Nintendo Switch", icon: "https://example.com/switch.png" }
-      ]
+      featuredGame: null,
+      recommendedGames: [],
+      topRatedGames: [],
+      upcomingGames: [],
+      newReleaseGames: [],
+      platforms: []
     };
   }
 }
@@ -204,22 +94,6 @@ function formatReleaseDate(timestamp: number): string {
   const date = new Date(timestamp * 1000);
   const options: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric', year: 'numeric' };
   return new Intl.DateTimeFormat('en-US', options).format(date);
-}
-
-// Helper to get fallback icon for platforms
-function getPlatformFallbackIcon(platformName: string): string {
-  switch (platformName) {
-    case "PlayStation 5":
-      return "/playstation-fallback.png";
-    case "Xbox Series X":
-      return "/xbox-fallback.png";
-    case "PC":
-      return "/pc-fallback.png";
-    case "Nintendo Switch":
-      return "/switch-fallback.png";
-    default:
-      return "/default-fallback.png";
-  }
 }
 
 export default async function Home() {
@@ -262,38 +136,49 @@ export default async function Home() {
         <main className={styles.main}>
           <div className={styles.discoverContainer}>
             
-            {/* Editor's Choice avec background color au lieu d'image */}
-            <div className={styles.editorChoice} style={{
-              backgroundColor: '#2a1a66', 
-              backgroundImage: 'linear-gradient(135deg, #2a1a66 0%, #6c5ce7 100%)'
-            }}>
-              <div className={styles.editorChoiceBadge}>Editor's Choice</div>
-              <div className={styles.editorChoiceContent}>
-                <h2 className={styles.editorChoiceTitle}>Ancient Chronicles</h2>
-                <p className={styles.editorChoiceDescription}>
-                  Embark on an epic journey through forgotten lands and uncover the mysteries of a lost civilization.
-                </p>
-                <div className={styles.editorChoiceRating}>
-                  <div className={styles.editorChoiceStars}>
-                    {'★'.repeat(4)}{'☆'.repeat(1)}
+            {/* Editor's Choice avec message d'erreur si besoin */}
+            {featuredGame ? (
+              <div className={styles.editorChoice} style={{
+                backgroundColor: '#2a1a66', 
+                backgroundImage: 'linear-gradient(135deg, #2a1a66 0%, #6c5ce7 100%)'
+              }}>
+                <div className={styles.editorChoiceBadge}>Editor's Choice</div>
+                <div className={styles.editorChoiceContent}>
+                  <h2 className={styles.editorChoiceTitle}>{featuredGame.name}</h2>
+                  <p className={styles.editorChoiceDescription}>
+                    {featuredGame.description || "No description available"}
+                  </p>
+                  <div className={styles.editorChoiceRating}>
+                    <div className={styles.editorChoiceStars}>
+                      {'★'.repeat(Math.floor(featuredGame.rating || 0))}{'☆'.repeat(5 - Math.floor(featuredGame.rating || 0))}
+                    </div>
+                    <span className={styles.editorChoiceReviews}>
+                      {featuredGame.rating?.toFixed(1) || "N/A"} 
+                      {featuredGame.reviews ? ` (${featuredGame.reviews} reviews)` : ""}
+                    </span>
                   </div>
-                  <span className={styles.editorChoiceReviews}>4.7 (3.1k reviews)</span>
+                  <button className={styles.viewDetailsButton}>View Details</button>
                 </div>
-                <button className={styles.viewDetailsButton}>View Details</button>
               </div>
-            </div>
+            ) : (
+              <ErrorMessage message="Aucun jeu en vedette trouvé" />
+            )}
 
-                      <section className={styles.gameSection}>
-            <div className={styles.sectionHeader}>
-              <h2>Recommended For You</h2>
-              <a href="#" className={styles.viewAll}>View All <span>→</span></a>
-            </div>
-            <div className={styles.gameGrid}>
-              {recommendedGames.map((game) => (
-                <GameCard key={game.id} game={game} />
-              ))}
-            </div>
-          </section>
+            <section className={styles.gameSection}>
+              <div className={styles.sectionHeader}>
+                <h2>Recommended For You</h2>
+                <a href="#" className={styles.viewAll}>View All <span>→</span></a>
+              </div>
+              {recommendedGames.length > 0 ? (
+                <div className={styles.gameGrid}>
+                  {recommendedGames.map((game: Game) => (
+                    <GameCard key={game.id} game={game} />
+                  ))}
+                </div>
+              ) : (
+                <ErrorMessage message="Aucune recommandation trouvée" />
+              )}
+            </section>
             
             <div className={styles.discoverSections}>
               {/* New Releases */}
@@ -303,25 +188,31 @@ export default async function Home() {
                   New Releases
                 </div>
                 
-                {newReleaseGames.map(game => (
-                  <div key={game.id} className={styles.newReleaseCard}>
-                    <img src={game.cover} alt={game.name} className={styles.newReleaseImage} />
-                    <div className={styles.newReleaseInfo}>
-                      <div className={`${styles.newReleaseName} ${styles.titleWithTooltip}`}>
-                        {game.name}
-                        <div className={styles.imageTooltip}>
-                          <img src={game.cover} alt={game.name} className={styles.tooltipImage} />
+                {newReleaseGames.length > 0 ? (
+                  newReleaseGames.map((game: NewReleaseGame) => (
+                    <div key={game.id} className={styles.newReleaseCard}>
+                      <img src={game.cover} alt={game.name} className={styles.newReleaseImage} />
+                      <div className={styles.newReleaseInfo}>
+                        <div className={`${styles.newReleaseName} ${styles.titleWithTooltip}`}>
+                          {game.name}
+                          <div className={styles.imageTooltip}>
+                            <img src={game.cover} alt={game.name} className={styles.tooltipImage} />
+                          </div>
+                        </div>
+                        <div className={styles.newReleaseRating}>
+                          <span className={styles.newReleaseStars}>★ {game.rating.toFixed(1)}</span>
+                          <span className={styles.newReleaseDate}>{formatReleaseDate(game.release_date)}</span>
                         </div>
                       </div>
-                      <div className={styles.newReleaseRating}>
-                        <span className={styles.newReleaseStars}>★ {game.rating.toFixed(1)}</span>
-                        <span className={styles.newReleaseDate}>{formatReleaseDate(game.release_date)}</span>
-                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))
+                ) : (
+                  <ErrorMessage message="Aucune nouvelle sortie trouvée" />
+                )}
                 
-                <a href="#" className={styles.viewAllLink}>View all new releases →</a>
+                {newReleaseGames.length > 0 && (
+                  <a href="#" className={styles.viewAllLink}>View all new releases →</a>
+                )}
               </div>
               
               {/* Top Rated */}
@@ -331,28 +222,34 @@ export default async function Home() {
                   Top Rated
                 </div>
                 
-                {topRatedGames.slice(0, 3).map((game, index) => (
-                  <div key={game.id} className={styles.topRatedEntry}>
-                    <div className={styles.topRatedRank}>{index + 1}</div>
-                    <div className={styles.topRatedGame}>
-                      <div>
-                        <div className={`${styles.newReleaseName} ${styles.titleWithTooltip}`}>
-                          {game.name}
-                          <div className={styles.imageTooltip}>
-                            <img src={game.cover} alt={game.name} className={styles.tooltipImage} />
+                {topRatedGames.length > 0 ? (
+                  topRatedGames.slice(0, 3).map((game: Game, index: number) => (
+                    <div key={game.id} className={styles.topRatedEntry}>
+                      <div className={styles.topRatedRank}>{index + 1}</div>
+                      <div className={styles.topRatedGame}>
+                        <div>
+                          <div className={`${styles.newReleaseName} ${styles.titleWithTooltip}`}>
+                            {game.name}
+                            <div className={styles.imageTooltip}>
+                              <img src={game.cover} alt={game.name} className={styles.tooltipImage} />
+                            </div>
+                          </div>
+                          <div className={styles.newReleaseRating}>
+                            <span className={styles.newReleaseStars}>★ {game.rating.toFixed(1)}</span>
+                            <span className={styles.genreTag}>{game.genres || 'Game'}</span>
                           </div>
                         </div>
-                        <div className={styles.newReleaseRating}>
-                          <span className={styles.newReleaseStars}>★ {game.rating.toFixed(1)}</span>
-                          <span className={styles.genreTag}>{game.genres || 'Game'}</span>
-                        </div>
                       </div>
+                      <div className={styles.percentRating}>{Math.round(game.rating * 20)}%</div>
                     </div>
-                    <div className={styles.percentRating}>{Math.round(game.rating * 20)}%</div>
-                  </div>
-                ))}
+                  ))
+                ) : (
+                  <ErrorMessage message="Aucun jeu bien noté trouvé" />
+                )}
                 
-                <a href="#" className={styles.viewAllLink}>View all top rated →</a>
+                {topRatedGames.length > 0 && (
+                  <a href="#" className={styles.viewAllLink}>View all top rated →</a>
+                )}
               </div>
               
               {/* Popular Categories */}
@@ -384,32 +281,38 @@ export default async function Home() {
                   Upcoming Releases
                 </div>
                 
-                {upcomingGames.slice(0, 3).map(game => {
-                  const releaseDate = new Date(game.release_date! * 1000);
-                  const month = releaseDate.toLocaleString('en-US', { month: 'short' }).toUpperCase();
-                  const day = releaseDate.getDate();
-                  
-                  return (
-                    <div key={game.id} className={styles.upcomingEntry}>
-                      <div className={styles.upcomingDate}>
-                        <div className={styles.upcomingMonth}>{month}</div>
-                        <div className={styles.upcomingDay}>{day}</div>
-                      </div>
-                      <div className={styles.upcomingInfo}>
-                        <div className={`${styles.upcomingName} ${styles.titleWithTooltip}`}>
-                          {game.name}
-                          <div className={styles.imageTooltip}>
-                            <img src={game.cover} alt={game.name} className={styles.tooltipImage} />
-                          </div>
+                {upcomingGames.length > 0 ? (
+                  upcomingGames.slice(0, 3).map((game: UpcomingGame) => {
+                    const releaseDate = new Date(game.release_date! * 1000);
+                    const month = releaseDate.toLocaleString('en-US', { month: 'short' }).toUpperCase();
+                    const day = releaseDate.getDate();
+                    
+                    return (
+                      <div key={game.id} className={styles.upcomingEntry}>
+                        <div className={styles.upcomingDate}>
+                          <div className={styles.upcomingMonth}>{month}</div>
+                          <div className={styles.upcomingDay}>{day}</div>
                         </div>
-                        <div className={styles.upcomingGenre}>{game.genres || 'Game'}</div>
+                        <div className={styles.upcomingInfo}>
+                          <div className={`${styles.upcomingName} ${styles.titleWithTooltip}`}>
+                            {game.name}
+                            <div className={styles.imageTooltip}>
+                              <img src={game.cover} alt={game.name} className={styles.tooltipImage} />
+                            </div>
+                          </div>
+                          <div className={styles.upcomingGenre}>{game.genres || 'Game'}</div>
+                        </div>
+                        <button className={styles.remindButton}>Remind</button>
                       </div>
-                      <button className={styles.remindButton}>Remind</button>
-                    </div>
-                  );
-                })}
+                    );
+                  })
+                ) : (
+                  <ErrorMessage message="Aucune sortie à venir trouvée" />
+                )}
                 
-                <a href="#" className={styles.viewAllLink}>View full calendar →</a>
+                {upcomingGames.length > 0 && (
+                  <a href="#" className={styles.viewAllLink}>View full calendar →</a>
+                )}
               </div>
             </div>
             
@@ -420,18 +323,22 @@ export default async function Home() {
                 <div className={styles.platformsTitle}>Explore by Platform</div>
               </div>
               
-              <div className={styles.platformsGrid}>
-                {platforms.map(platform => (
-                  <div key={platform.id} className={styles.platformCard}>
-                    <PlatformImage
-                      src={platform.icon}
-                      alt={platform.name}
-                      className={styles.platformIcon}
-                    />
-                    <div className={styles.platformName}>{platform.name}</div>
-                  </div>
-                ))}
-              </div>
+              {platforms.length > 0 ? (
+                <div className={styles.platformsGrid}>
+                  {platforms.map((platform: Platform) => (
+                    <div key={platform.id} className={styles.platformCard}>
+                      <PlatformImage
+                        src={platform.icon}
+                        alt={platform.name}
+                        className={styles.platformIcon}
+                      />
+                      <div className={styles.platformName}>{platform.name}</div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <ErrorMessage message="Aucune plateforme trouvée" />
+              )}
             </div>
           </div>
         </main>
