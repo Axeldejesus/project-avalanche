@@ -103,7 +103,7 @@ export default async function Home() {
     <div className={styles.container}>
       <header className={styles.header}>
         <div className={styles.logo}>
-          <Image src="/logo.png" alt="GameCritic" width={150} height={30} />
+          <Image src="/logo-avalanche.png" alt="Avalanche" width={100} height={30} />
         </div>
         
         <nav className={styles.nav}>

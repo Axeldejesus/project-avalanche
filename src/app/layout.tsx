@@ -1,16 +1,23 @@
-import type { Metadata } from "next";
-import "../styles/globals.css";
+import './globals.css'
+import { Inter } from 'next/font/google'
+import type { Metadata } from 'next'
+
+const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: "GameCritic - Discover Amazing Games",
-  description: "Browse and discover amazing video games",
-};
+  title: 'Avalanche',
+  description: 'Your gaming experience platform',
+    icons: {
+    icon: '/logo-avalanche.png'
+  },
+}
+
 
 export default function RootLayout({
   children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+}: {
+  children: React.ReactNode
+}) {
   return (
     <html lang="en">
       <body>
