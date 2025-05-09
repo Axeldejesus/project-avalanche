@@ -3,7 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import Modal from './Modal';
 import styles from '../../styles/Modal.module.css';
-import { FaGoogle, FaDiscord, FaTwitter, FaEye, FaEyeSlash } from 'react-icons/fa';
+import { FaGoogle, FaDiscord, FaTwitter, FaEye, FaEyeSlash, FaSpinner } from 'react-icons/fa';
+import { loginUser } from '../../services/authenticate';
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -15,7 +16,9 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSwitchToRegi
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [success, setSuccess] = useState(false);
   
   // Reset form when modal closes
   useEffect(() => {
@@ -24,26 +27,50 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSwitchToRegi
       setPassword('');
       setError('');
       setShowPassword(false);
+      setSuccess(false);
     }
   }, [isOpen]);
   
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validation basique
+    // Validation
     if (!email || !password) {
       setError('Tous les champs sont requis');
       return;
     }
     
-    // Réinitialiser l'erreur
     setError('');
+    setLoading(true);
     
-    // Simuler une connexion (à remplacer par une véritable authentification)
-    console.log('Connexion avec:', { email, password });
-    
-    // Fermer la modale après le succès (à ajuster avec la logique d'authentification réelle)
-    onClose();
+    try {
+      const result = await loginUser(email, password);
+      
+      if (result.success) {
+        console.log('Connexion réussie:', result.user);
+        setSuccess(true);
+        
+        // Fermer la modale après un court délai
+        setTimeout(() => {
+          onClose();
+          // Optionnel: redirection ou mise à jour de l'interface
+        }, 1000);
+      } else {
+        // Gérer les erreurs spécifiques
+        if (result.error === 'auth/user-not-found' || result.error === 'auth/wrong-password') {
+          setError('Email ou mot de passe incorrect.');
+        } else if (result.error === 'auth/too-many-requests') {
+          setError('Trop de tentatives de connexion. Veuillez réessayer plus tard.');
+        } else {
+          setError('Une erreur est survenue lors de la connexion. Veuillez réessayer.');
+        }
+      }
+    } catch (err) {
+      console.error('Erreur non gérée:', err);
+      setError('Une erreur inattendue s\'est produite.');
+    } finally {
+      setLoading(false);
+    }
   };
   
   const switchToRegister = () => {
@@ -62,6 +89,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSwitchToRegi
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="votreemail@exemple.com"
+            disabled={loading}
           />
         </div>
         
@@ -73,30 +101,42 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSwitchToRegi
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="••••••••"
+            disabled={loading}
           />
           <button 
             type="button" 
             className={styles.passwordToggleButton}
             onClick={() => setShowPassword(!showPassword)}
+            disabled={loading}
           >
             {showPassword ? <FaEye /> : <FaEyeSlash />} Voir le mot de passe
           </button>
         </div>
         
         {error && <div className={styles.errorMessage}>{error}</div>}
+        {success && <div className={styles.successMessage}>Connexion réussie! Redirection...</div>}
         
-        <button type="submit" className={styles.submit}>Se connecter</button>
+        <button type="submit" className={styles.submit} disabled={loading}>
+          {loading ? (
+            <>
+              <FaSpinner className={styles.spinner} /> 
+              Connexion en cours...
+            </>
+          ) : (
+            "Se connecter"
+          )}
+        </button>
         
         <div className={styles.divider}>ou</div>
         
         <div className={styles.socialLogin}>
-          <button type="button" className={styles.socialButton}>
+          <button type="button" className={styles.socialButton} disabled={loading}>
             <FaGoogle /> Continuer avec Google
           </button>
-          <button type="button" className={styles.socialButton}>
+          <button type="button" className={styles.socialButton} disabled={loading}>
             <FaDiscord /> Continuer avec Discord
           </button>
-          <button type="button" className={styles.socialButton}>
+          <button type="button" className={styles.socialButton} disabled={loading}>
             <FaTwitter /> Continuer avec Twitter
           </button>
         </div>

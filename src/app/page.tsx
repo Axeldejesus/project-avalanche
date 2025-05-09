@@ -3,7 +3,7 @@ import styles from '../styles/Home.module.css';
 import Sidebar from '../components/Sidebar';
 import GameCard from '../components/GameCard';
 import PlatformImage from '../components/PlatformImage';
-import AuthButtons from '../components/AuthButtons';
+import AuthButtonsWrapper from '../components/AuthButtonsWrapper';
 
 // React Icons
 import { FiSearch, FiHome, FiTrendingUp, FiPackage } from 'react-icons/fi';
@@ -126,7 +126,7 @@ export default async function Home() {
           </button>
         </div>
         
-        <AuthButtons />
+        <AuthButtonsWrapper />
       </header>
 
       <div className={styles.mainLayout}>

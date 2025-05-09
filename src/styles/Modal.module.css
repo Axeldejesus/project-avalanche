@@ -119,6 +119,11 @@
   background-color: #5d4cd7;
 }
 
+.submit:disabled {
+  background-color: #8e80dd;
+  cursor: not-allowed;
+}
+
 .switchText {
   text-align: center;
   margin-top: 16px;
@@ -189,6 +194,26 @@
   color: #ff5555;
   font-size: 14px;
   margin-top: 4px;
+}
+
+.successMessage {
+  color: #55cc77;
+  font-size: 14px;
+  margin-top: 4px;
+  background-color: rgba(85, 204, 119, 0.1);
+  padding: 8px 12px;
+  border-radius: 4px;
+  text-align: center;
+}
+
+.spinner {
+  animation: spin 1s linear infinite;
+  margin-right: 8px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
 .passwordInputWrapper {

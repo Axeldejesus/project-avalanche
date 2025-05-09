@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styles from '../styles/Home.module.css';
 import LoginModal from './modals/LoginModal';
 import RegisterModal from './modals/RegisterModal';
@@ -8,6 +8,12 @@ import RegisterModal from './modals/RegisterModal';
 const AuthButtons: React.FC = () => {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  
+  // Only render after component is mounted on client
+  useEffect(() => {
+    setMounted(true);
+  }, []);
   
   const openLoginModal = () => {
     setIsLoginModalOpen(true);
@@ -26,6 +32,11 @@ const AuthButtons: React.FC = () => {
   const closeRegisterModal = () => {
     setIsRegisterModalOpen(false);
   };
+  
+  // Don't render anything on the server
+  if (!mounted) {
+    return null;
+  }
   
   return (
     <>

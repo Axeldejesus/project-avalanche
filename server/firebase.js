@@ -1,13 +1,9 @@
 import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
 import { getFirestore, collection, getDocs } from "firebase/firestore";
 import dotenv from 'dotenv';
 
 // Load environment variables from .env file
 dotenv.config();
-
-// Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
 
 // Check if environment variables are loaded
 console.log("Environment variables loaded:", {
@@ -28,19 +24,14 @@ const firebaseConfig = {
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
-let analytics = null;
-try {
-  analytics = getAnalytics(app);
-} catch (error) {
-  console.error("Analytics initialization failed:", error.message);
-}
 const db = getFirestore(app);
 
 // Function to test Firebase connection
 const testConnection = async () => {
   try {
-    // Try to get a collection (replace 'test' with an actual collection in your database)
-    const querySnapshot = await getDocs(collection(db, 'test'));
+    // Try to get a collection that we know exists
+    // Using a simple metadata collection for testing connection
+    const querySnapshot = await getDocs(collection(db, 'system_info'));
     console.log('Successfully connected to Firebase! Found', querySnapshot.size, 'documents');
     return true;
   } catch (error) {
@@ -55,6 +46,7 @@ const testConnection = async () => {
       console.error('2. You have Firestore enabled in your Firebase console');
       console.error('3. You have proper security rules configured');
       console.error('4. You\'ve added your IP to any IP allowlist if applicable');
+      console.error('5. Create a "system_info" collection with public read access for connection testing');
       console.error('------------------------------------\n');
     }
     
@@ -62,16 +54,4 @@ const testConnection = async () => {
   }
 };
 
-// Comment out or remove this direct function call as we'll call it from server/index.js
-/*
-testConnection()
-  .then(connected => {
-    if (connected) {
-      console.log('Firebase connection test passed!');
-    } else {
-      console.log('Firebase connection test failed!');
-    }
-  });
-*/
-
-export { app, analytics, db, testConnection };
+export { app, db, testConnection };

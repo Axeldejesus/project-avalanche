@@ -3,7 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import Modal from './Modal';
 import styles from '../../styles/Modal.module.css';
-import { FaGoogle, FaDiscord, FaTwitter, FaEye, FaEyeSlash } from 'react-icons/fa';
+import { FaGoogle, FaDiscord, FaTwitter, FaEye, FaEyeSlash, FaSpinner } from 'react-icons/fa';
+import { registerUser } from '../../services/authenticate';
 
 interface RegisterModalProps {
   isOpen: boolean;
@@ -17,8 +18,10 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, onSwitch
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [success, setSuccess] = useState(false);
   
   // Reset form when modal closes
   useEffect(() => {
@@ -30,15 +33,26 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, onSwitch
       setError('');
       setShowPassword(false);
       setShowConfirmPassword(false);
+      setSuccess(false);
     }
   }, [isOpen]);
   
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validation basique
+    // Validation
     if (!username || !email || !password || !confirmPassword) {
       setError('Tous les champs sont requis');
+      return;
+    }
+    
+    if (username.length < 3) {
+      setError('Le nom d\'utilisateur doit contenir au moins 3 caractères');
+      return;
+    }
+    
+    if (password.length < 6) {
+      setError('Le mot de passe doit contenir au moins 6 caractères');
       return;
     }
     
@@ -49,12 +63,39 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, onSwitch
     
     // Réinitialiser l'erreur
     setError('');
+    setLoading(true);
     
-    // Simuler une inscription (à remplacer par une véritable inscription)
-    console.log('Inscription avec:', { username, email, password });
-    
-    // Fermer la modale après le succès (à ajuster avec la logique d'inscription réelle)
-    onClose();
+    try {
+      // Appel à notre service d'inscription
+      const result = await registerUser(email, password, username);
+      
+      if (result.success) {
+        console.log('Inscription réussie:', result.user);
+        setSuccess(true);
+        
+        // Fermer la modale après un court délai
+        setTimeout(() => {
+          onClose();
+          // Optionnel: redirection ou mise à jour de l'interface utilisateur
+        }, 1000);
+      } else {
+        // Gérer les erreurs spécifiques
+        if (result.error === 'auth/email-already-in-use') {
+          setError('Cet email est déjà utilisé. Essayez de vous connecter.');
+        } else if (result.error === 'auth/invalid-email') {
+          setError('Adresse email invalide.');
+        } else if (result.error === 'auth/weak-password') {
+          setError('Le mot de passe est trop faible.');
+        } else {
+          setError('Une erreur est survenue lors de l\'inscription. Veuillez réessayer.');
+        }
+      }
+    } catch (err) {
+      console.error('Erreur non gérée:', err);
+      setError('Une erreur inattendue s\'est produite.');
+    } finally {
+      setLoading(false);
+    }
   };
   
   const switchToLogin = () => {
@@ -73,6 +114,7 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, onSwitch
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             placeholder="Votre pseudo"
+            disabled={loading}
           />
         </div>
         
@@ -84,6 +126,7 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, onSwitch
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="votreemail@exemple.com"
+            disabled={loading}
           />
         </div>
         
@@ -95,11 +138,13 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, onSwitch
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="••••••••"
+            disabled={loading}
           />
           <button 
             type="button" 
             className={styles.passwordToggleButton}
             onClick={() => setShowPassword(!showPassword)}
+            disabled={loading}
           >
             {showPassword ? <FaEye /> : <FaEyeSlash />} Voir le mot de passe
           </button>
@@ -113,30 +158,42 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, onSwitch
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
             placeholder="••••••••"
+            disabled={loading}
           />
           <button 
             type="button" 
             className={styles.passwordToggleButton}
             onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+            disabled={loading}
           >
             {showConfirmPassword ? <FaEyeSlash /> : <FaEye />} voir le mot de passe
           </button>
         </div>
         
         {error && <div className={styles.errorMessage}>{error}</div>}
+        {success && <div className={styles.successMessage}>Inscription réussie! Redirection...</div>}
         
-        <button type="submit" className={styles.submit}>S'inscrire</button>
+        <button type="submit" className={styles.submit} disabled={loading}>
+          {loading ? (
+            <>
+              <FaSpinner className={styles.spinner} /> 
+              Inscription en cours...
+            </>
+          ) : (
+            "S'inscrire"
+          )}
+        </button>
         
         <div className={styles.divider}>ou</div>
         
         <div className={styles.socialLogin}>
-          <button type="button" className={styles.socialButton}>
+          <button type="button" className={styles.socialButton} disabled={loading}>
             <FaGoogle /> Continuer avec Google
           </button>
-          <button type="button" className={styles.socialButton}>
+          <button type="button" className={styles.socialButton} disabled={loading}>
             <FaDiscord /> Continuer avec Discord
           </button>
-          <button type="button" className={styles.socialButton}>
+          <button type="button" className={styles.socialButton} disabled={loading}>
             <FaTwitter /> Continuer avec Twitter
           </button>
         </div>
