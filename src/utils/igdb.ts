@@ -2,10 +2,10 @@ import getAuth from './auth';
 
 const CLIENT_ID = process.env.IGDB_CLIENT_ID;
 
-let cachedToken = null;
-let tokenExpiry = null;
+let cachedToken: string | null = null;
+let tokenExpiry: number | null = null;
 
-async function getAccessToken() {
+async function getAccessToken(): Promise<string> {
   // Check if we have a valid cached token
   if (cachedToken && tokenExpiry && Date.now() < tokenExpiry) {
     return cachedToken;
@@ -26,7 +26,7 @@ async function getAccessToken() {
   }
 }
 
-export async function igdbRequest(endpoint, query) {
+export async function igdbRequest<T = any>(endpoint: string, query: string): Promise<T[]> {
   try {
     const accessToken = await getAccessToken();
     
@@ -46,18 +46,18 @@ export async function igdbRequest(endpoint, query) {
     
     if (!response.ok) {
       console.error(`IGDB API error: ${response.status} ${response.statusText}`);
-      return []; // Return empty array instead of throwing error
+      return [] as T[]; // Return empty array instead of throwing error
     }
     
     return await response.json();
   } catch (error) {
     console.error(`IGDB request error for ${endpoint}:`, error);
-    return []; // Return empty array on error
+    return [] as T[]; // Return empty array on error
   }
 }
 
 // Helper function to process image URLs
-export function getImageUrl(imageId, size = 'cover_big') {
+export function getImageUrl(imageId?: string, size: string = 'cover_big'): string {
   if (!imageId) return '/placeholder-cover.jpg';
   return `https://images.igdb.com/igdb/image/upload/t_${size}/${imageId}.jpg`;
 }

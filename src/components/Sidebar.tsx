@@ -1,7 +1,12 @@
 import styles from '../styles/Sidebar.module.css';
 
-const Sidebar = () => {
-  const categories = [
+interface Category {
+  name: string;
+  count: number;
+}
+
+const Sidebar: React.FC = () => {
+  const categories: Category[] = [
     { name: 'Action', count: 1234 },
     { name: 'RPG', count: 856 },
     { name: 'Sports', count: 543 },

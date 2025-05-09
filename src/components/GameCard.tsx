@@ -1,6 +1,18 @@
 import styles from '../styles/GameCard.module.css';
 
-const GameCard = ({ game }) => {
+interface Game {
+  id: number;
+  name: string;
+  cover: string;
+  rating: number;
+  genres?: string;
+}
+
+interface GameCardProps {
+  game: Game;
+}
+
+const GameCard: React.FC<GameCardProps> = ({ game }) => {
   return (
     <div className={styles.card}>
       <div className={styles.imageContainer}>

@@ -1,9 +1,31 @@
-import { igdbRequest, getImageUrl } from '../../utils/igdb';
+import { NextResponse } from 'next/server';
+import { igdbRequest, getImageUrl } from '../../../utils/igdb';
 
-export default async function handler(req, res) {
+// Types
+interface IGame {
+  id: number;
+  name: string;
+  cover?: { image_id: string };
+  summary?: string;
+  total_rating?: number;
+  total_rating_count?: number;
+  screenshots?: Array<{ image_id: string }>;
+}
+
+interface FeaturedGame {
+  id: number;
+  name: string;
+  cover: string;
+  background: string;
+  description: string;
+  rating: number;
+  reviews: number;
+}
+
+export async function GET(): Promise<NextResponse<FeaturedGame>> {
   try {
     // Query a popular recent game to feature
-    const games = await igdbRequest('games', `
+    const games = await igdbRequest<IGame>('games', `
       fields name, cover.image_id, summary, total_rating, total_rating_count, screenshots.image_id;
       where total_rating > 80 & release_dates.date > 1609459200; // Games released after 2021-01-01
       sort total_rating desc;
@@ -19,21 +41,21 @@ export default async function handler(req, res) {
         backgroundImage = getImageUrl(game.screenshots[0].image_id, 'screenshot_huge');
       }
       
-      const featuredGame = {
+      const featuredGame: FeaturedGame = {
         id: game.id,
         name: game.name,
         cover: getImageUrl(game.cover?.image_id),
         background: backgroundImage,
         description: game.summary || 'No description available',
-        rating: (game.total_rating / 20) || 4.5, // Convert to 5-star scale with fallback
+        rating: (game.total_rating ? game.total_rating / 20 : 4.5), // Convert to 5-star scale with fallback
         reviews: game.total_rating_count || 0
       };
       
       console.log("Featured game from API:", featuredGame);
-      res.status(200).json(featuredGame);
+      return NextResponse.json(featuredGame);
     } else {
       // Return a fallback object only if no games are found
-      const fallbackGame = {
+      const fallbackGame: FeaturedGame = {
         id: 123,
         name: 'Stellar Odyssey 2025',
         cover: '/placeholder-cover.jpg',
@@ -43,11 +65,11 @@ export default async function handler(req, res) {
         reviews: 32
       };
       console.log("Using fallback featured game - no results from API");
-      res.status(200).json(fallbackGame);
+      return NextResponse.json(fallbackGame);
     }
   } catch (error) {
     console.error('Error fetching featured game:', error);
-    const fallbackGame = {
+    const fallbackGame: FeaturedGame = {
       id: 123,
       name: 'Stellar Odyssey 2025',
       cover: '/placeholder-cover.jpg',
@@ -56,7 +78,7 @@ export default async function handler(req, res) {
       rating: 4.5,
       reviews: 32
     };
-    console.log("Using fallback featured game due to error:", error.message);
-    res.status(200).json(fallbackGame);
+    console.log("Using fallback featured game due to error:", error instanceof Error ? error.message : error);
+    return NextResponse.json(fallbackGame);
   }
 }

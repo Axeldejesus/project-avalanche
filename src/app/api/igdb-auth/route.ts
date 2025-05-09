@@ -1,6 +1,11 @@
-// This will handle authentication with the IGDB API
+import { NextResponse } from 'next/server';
 
-export default async function handler(req, res) {
+interface AuthResponse {
+  clientId: string;
+  clientSecret: string;
+}
+
+export async function GET(): Promise<NextResponse<AuthResponse | { error: string }>> {
   try {
     const CLIENT_ID = process.env.IGDB_CLIENT_ID;
     const CLIENT_SECRET = process.env.IGDB_SECRET_KEY;
@@ -9,12 +14,12 @@ export default async function handler(req, res) {
       throw new Error('IGDB credentials are not properly configured in environment variables');
     }
     
-    res.status(200).json({
+    return NextResponse.json({
       clientId: CLIENT_ID,
       clientSecret: CLIENT_SECRET
     });
   } catch (error) {
     console.error('Authentication error:', error);
-    res.status(500).json({ error: 'Failed to provide IGDB API credentials' });
+    return NextResponse.json({ error: 'Failed to provide IGDB API credentials' }, { status: 500 });
   }
 }

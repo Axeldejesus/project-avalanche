@@ -1,6 +1,12 @@
 // Handle authentication with the IGDB API
 
-export default async function getAuth() {
+interface AuthResponse {
+  access_token: string;
+  expires_in: number;
+  token_type: string;
+}
+
+export default async function getAuth(): Promise<AuthResponse> {
   try {
     const CLIENT_ID = process.env.IGDB_CLIENT_ID;
     const CLIENT_SECRET = process.env.IGDB_SECRET_KEY;
