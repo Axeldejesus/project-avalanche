@@ -2,7 +2,6 @@ import Image from 'next/image';
 import styles from '../styles/Home.module.css';
 import Sidebar from '../components/Sidebar';
 import GameCard from '../components/GameCard';
-import FeaturedGame from '../components/FeaturedGame';
 import PlatformImage from '../components/PlatformImage';
 
 // Types

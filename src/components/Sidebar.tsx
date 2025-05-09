@@ -1,4 +1,7 @@
 import styles from '../styles/Sidebar.module.css';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Button } from '@/components/ui/button';
+import { BadgeCheck, FolderPlus, ChevronRight } from 'lucide-react';
 
 interface Category {
   name: string;
@@ -19,17 +22,23 @@ const Sidebar: React.FC = () => {
   
   return (
     <aside className={styles.sidebar}>
-  
+      
       <div className={styles.completedBox}>
         <h3>Completed</h3>
         <p>Track your finished games</p>
-        <button>View All</button>
+        <Button variant="secondary">
+          <BadgeCheck className="mr-2" size={16} />
+          View All
+        </Button>
       </div>
       
       <div className={styles.collectionBox}>
         <h3>Create Collection</h3>
         <p>Organize your game library</p>
-        <button>Create</button>
+        <Button variant="default">
+          <FolderPlus className="mr-2" size={16} />
+          Create
+        </Button>
       </div>
     </aside>
   );
