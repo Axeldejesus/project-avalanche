@@ -22,7 +22,7 @@ export async function GET(): Promise<NextResponse<Platform[]>> {
     `);
     
     if (platforms && platforms.length > 0) {
-      const formattedPlatforms: Platform[] = platforms.map(platform => {
+      const formattedPlatforms: Platform[] = platforms.map((platform: IPlatform) => {
         return {
           id: platform.id,
           name: platform.name,

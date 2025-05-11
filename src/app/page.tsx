@@ -201,65 +201,6 @@ export default async function Home() {
                 )}
               </div>
               
-              {/* Top Rated */}
-              <div className={styles.discoverSection}>
-                <div className={styles.sectionTitle}>
-                  <div className={styles.sectionIcon}><RiTrophyLine /></div>
-                  Top Rated
-                </div>
-                
-                {topRatedGames.length > 0 ? (
-                  topRatedGames.slice(0, 3).map((game: Game, index: number) => (
-                    <div key={game.id} className={styles.topRatedEntry}>
-                      <div className={styles.topRatedRank}>{index + 1}</div>
-                      <div className={styles.topRatedGame}>
-                        <div>
-                          <div className={`${styles.newReleaseName} ${styles.titleWithTooltip}`}>
-                            {game.name}
-                            <div className={styles.imageTooltip}>
-                              <img src={game.cover} alt={game.name} className={styles.tooltipImage} />
-                            </div>
-                          </div>
-                          <div className={styles.newReleaseRating}>
-                            <span className={styles.newReleaseStars}>★ {game.rating.toFixed(1)}</span>
-                            <span className={styles.genreTag}>{game.genres || 'Game'}</span>
-                          </div>
-                        </div>
-                      </div>
-                      <div className={styles.percentRating}>{Math.round(game.rating * 20)}%</div>
-                    </div>
-                  ))
-                ) : (
-                  <ErrorMessage message="Aucun jeu bien noté trouvé" />
-                )}
-                
-                {topRatedGames.length > 0 && (
-                  <a href="#" className={styles.viewAllLink}>View all top rated →</a>
-                )}
-              </div>
-              
-              {/* Popular Categories */}
-              <div className={styles.discoverSection}>
-                <div className={styles.sectionTitle}>
-                  <div className={styles.sectionIcon}><BiCategoryAlt /></div>
-                  Popular Categories
-                </div>
-                
-                <div className={styles.categoriesGrid}>
-                  <button className={styles.categoryButton}>Action</button>
-                  <button className={styles.categoryButton}>RPG</button>
-                  <button className={styles.categoryButton}>Adventure</button>
-                  <button className={styles.categoryButton}>Strategy</button>
-                  <button className={styles.categoryButton}>Simulation</button>
-                  <button className={styles.categoryButton}>Sports</button>
-                  <button className={styles.categoryButton}>Racing</button>
-                  <button className={styles.categoryButton}>Horror</button>
-                  <button className={styles.categoryButton}>Puzzle</button>
-                </div>
-                
-                <button className={styles.viewAllButton}>View All</button>
-              </div>
-              
               {/* Upcoming Releases */}
               <div className={styles.discoverSection}>
                 <div className={styles.sectionTitle}>
@@ -300,34 +241,45 @@ export default async function Home() {
                   <a href="#" className={styles.viewAllLink}>View full calendar →</a>
                 )}
               </div>
-            </div>
-            
-            {/* Explore by Platform */}
-            <div className={styles.platformsSection}>
-              <div className={styles.platformsHeader}>
-                <div className={styles.platformsIcon}><RiGamepadFill /></div>
-                <div className={styles.platformsTitle}>Explore by Platform</div>
-              </div>
               
-              {platforms.length > 0 ? (
-                <div className={styles.platformsGrid}>
-                  {platforms.map((platform: Platform) => (
-                    <div key={platform.id} className={styles.platformCard}>
-                      <PlatformImage
-                        platformId={platform.id}
-                        platformName={platform.name}
-                        src={platform.icon}
-                        alt={platform.name}
-                        className={styles.platformIcon}
-                        size={32}
-                      />
-                      <div className={styles.platformName}>{platform.name}</div>
-                    </div>
-                  ))}
+              {/* Explore by Platform - Now next to Upcoming Releases */}
+              <div className={styles.discoverSection}>
+                <div className={styles.sectionTitle}>
+                  <div className={styles.sectionIcon}><RiGamepadFill /></div>
+                  Explore by Platform
                 </div>
-              ) : (
-                <ErrorMessage message="Aucune plateforme trouvée" />
-              )}
+                
+                {platforms.length > 0 ? (
+                  <div className={styles.platformsCompactGrid}>
+                    {platforms
+                      .filter((platform: Platform) => {
+                        // Keep only PS5, Xbox, PC, and Switch
+                        const platformId = platform.id;
+                        return platformId === 167 || // PS5
+                               platformId === 169 || // Xbox Series
+                               platformId === 6 ||   // PC
+                               platformId === 130;   // Switch
+                      })
+                      .map((platform: Platform) => (
+                        <div key={platform.id} className={styles.platformCompactCard}>
+                          <PlatformImage
+                            platformId={platform.id}
+                            platformName={platform.name}
+                            src={platform.icon}
+                            alt={platform.name}
+                            className={styles.platformCompactIcon}
+                            size={24} // Smaller size
+                          />
+                          <div className={styles.platformCompactName}>{platform.name}</div>
+                        </div>
+                      ))}
+                  </div>
+                ) : (
+                  <ErrorMessage message="Aucune plateforme trouvée" />
+                )}
+                
+                <a href="#" className={styles.viewAllLink}>View full platforms →</a>
+              </div>
             </div>
           </div>
         </main>

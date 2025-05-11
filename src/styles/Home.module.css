@@ -652,6 +652,45 @@
   font-weight: 500;
 }
 
+.platformsCompactGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.platformCompactCard {
+  background-color: #1a1a1a;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  padding: 12px;
+  cursor: pointer;
+  transition: transform 0.2s, background-color 0.2s;
+}
+
+.platformCompactCard:hover {
+  transform: translateY(-2px);
+  background-color: #232323;
+}
+
+.platformCompactIcon {
+  width: 24px;
+  height: 24px;
+  margin-right: 8px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(255, 255, 255, 0.05);
+  border-radius: 6px;
+  padding: 6px;
+}
+
+.platformCompactName {
+  font-size: 12px;
+  font-weight: 500;
+}
+
 .titleWithTooltip {
   position: relative;
 }
