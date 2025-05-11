@@ -1,4 +1,5 @@
 import Image from 'next/image';
+import Link from 'next/link';
 import styles from '../styles/Home.module.css';
 import Sidebar from '../components/Sidebar';
 import GameCard from '../components/GameCard';
@@ -42,6 +43,7 @@ interface UpcomingGame {
   cover: string;
   release_date: number;
   genres?: string;
+  rating?: number; // Adding rating field for consistency
 }
 
 interface Platform {
@@ -181,21 +183,23 @@ export default async function Home() {
                 
                 {newReleaseGames.length > 0 ? (
                   newReleaseGames.map((game: NewReleaseGame) => (
-                    <div key={game.id} className={styles.newReleaseCard}>
-                      <img src={game.cover} alt={game.name} className={styles.newReleaseImage} />
-                      <div className={styles.newReleaseInfo}>
-                        <div className={`${styles.newReleaseName} ${styles.titleWithTooltip}`}>
-                          {game.name}
-                          <div className={styles.imageTooltip}>
-                            <img src={game.cover} alt={game.name} className={styles.tooltipImage} />
+                    <Link href={`/games/${game.id}`} key={game.id} className={styles.newReleaseLink}>
+                      <div className={styles.newReleaseCard}>
+                        <img src={game.cover} alt={game.name} className={styles.newReleaseImage} />
+                        <div className={styles.newReleaseInfo}>
+                          <div className={`${styles.newReleaseName} ${styles.titleWithTooltip}`}>
+                            {game.name}
+                            <div className={styles.imageTooltip}>
+                              <img src={game.cover} alt={game.name} className={styles.tooltipImage} />
+                            </div>
+                          </div>
+                          <div className={styles.newReleaseRating}>
+                            <span className={styles.newReleaseStars}>★ {game.rating.toFixed(1)}</span>
+                            <span className={styles.newReleaseDate}>{formatReleaseDate(game.release_date)}</span>
                           </div>
                         </div>
-                        <div className={styles.newReleaseRating}>
-                          <span className={styles.newReleaseStars}>★ {game.rating.toFixed(1)}</span>
-                          <span className={styles.newReleaseDate}>{formatReleaseDate(game.release_date)}</span>
-                        </div>
                       </div>
-                    </div>
+                    </Link>
                   ))
                 ) : (
                   <ErrorMessage message="Aucune nouvelle sortie trouvée" />
@@ -214,30 +218,25 @@ export default async function Home() {
                 </div>
                 
                 {upcomingGames.length > 0 ? (
-                  upcomingGames.slice(0, 3).map((game: UpcomingGame) => {
-                    const releaseDate = new Date(game.release_date! * 1000);
-                    const month = releaseDate.toLocaleString('en-US', { month: 'short' }).toUpperCase();
-                    const day = releaseDate.getDate();
-                    
-                    return (
-                      <div key={game.id} className={styles.upcomingEntry}>
-                        <div className={styles.upcomingDate}>
-                          <div className={styles.upcomingMonth}>{month}</div>
-                          <div className={styles.upcomingDay}>{day}</div>
-                        </div>
-                        <div className={styles.upcomingInfo}>
-                          <div className={`${styles.upcomingName} ${styles.titleWithTooltip}`}>
+                  upcomingGames.slice(0, 3).map((game: UpcomingGame) => (
+                    <Link href={`/games/${game.id}`} key={game.id} className={styles.newReleaseLink}>
+                      <div className={styles.newReleaseCard}>
+                        <img src={game.cover} alt={game.name} className={styles.newReleaseImage} />
+                        <div className={styles.newReleaseInfo}>
+                          <div className={`${styles.newReleaseName} ${styles.titleWithTooltip}`}>
                             {game.name}
                             <div className={styles.imageTooltip}>
                               <img src={game.cover} alt={game.name} className={styles.tooltipImage} />
                             </div>
                           </div>
-                          <div className={styles.upcomingGenre}>{game.genres || 'Game'}</div>
+                          <div className={styles.newReleaseRating}>
+                            <span className={styles.newReleaseDate}>{formatReleaseDate(game.release_date)}</span>
+                            <span className={styles.upcomingGenre}>{game.genres || 'Game'}</span>
+                          </div>
                         </div>
-                        <button className={styles.remindButton}>Remind</button>
                       </div>
-                    );
-                  })
+                    </Link>
+                  ))
                 ) : (
                   <ErrorMessage message="Aucune sortie à venir trouvée" />
                 )}

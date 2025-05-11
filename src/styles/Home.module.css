@@ -290,6 +290,18 @@
   color: #b3b3b3;
 }
 
+.newReleaseLink {
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+  display: block;
+  transition: transform 0.2s ease;
+}
+
+.newReleaseLink:hover {
+  transform: translateY(-2px);
+}
+
 .discoverContainer {
   width: 100%;
   padding: 20px 0;
