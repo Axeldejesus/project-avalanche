@@ -20,7 +20,8 @@ export async function GET(
   { params }: { params: { id: string } }
 ): Promise<NextResponse> {
   try {
-    const gameId = params.id;
+    const { id } = await params;
+    const gameId = id;
     
     if (!gameId) {
       return NextResponse.json({ error: 'Game ID is required' }, { status: 400 });

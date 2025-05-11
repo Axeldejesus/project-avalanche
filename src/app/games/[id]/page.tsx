@@ -51,9 +51,24 @@ interface GameDetail {
 
 // Helper to format date
 function formatReleaseDate(timestamp: number): string {
-  const date = new Date(timestamp * 1000);
-  const options: Intl.DateTimeFormatOptions = { month: 'long', day: 'numeric', year: 'numeric' };
-  return new Intl.DateTimeFormat('en-US', options).format(date);
+  if (!timestamp || isNaN(timestamp)) {
+    return 'Date inconnue';
+  }
+  
+  try {
+    const date = new Date(timestamp * 1000);
+    
+    // Check if date is valid
+    if (isNaN(date.getTime())) {
+      return 'Date inconnue';
+    }
+    
+    const options: Intl.DateTimeFormatOptions = { month: 'long', day: 'numeric', year: 'numeric' };
+    return new Intl.DateTimeFormat('en-US', options).format(date);
+  } catch (error) {
+    console.error('Error formatting date:', error);
+    return 'Date inconnue';
+  }
 }
 
 async function getGameDetail(id: string): Promise<GameDetail | null> {
@@ -74,7 +89,9 @@ async function getGameDetail(id: string): Promise<GameDetail | null> {
 }
 
 export default async function GameDetailPage({ params }: { params: { id: string } }) {
-  const gameDetail = await getGameDetail(params.id);
+  // Attendre que les paramètres soient disponibles
+  const { id } = await params;
+  const gameDetail = await getGameDetail(id);
   
   if (!gameDetail) {
     return (
@@ -180,7 +197,7 @@ export default async function GameDetailPage({ params }: { params: { id: string 
           </section>
           
           {/* Game Videos Section */}
-          <GameVideos gameId={parseInt(params.id)} />
+          <GameVideos gameId={parseInt(id)} />
           
           {gameDetail.screenshots.length > 0 && (
             <section className={styles.gameScreenshots}>

@@ -30,7 +30,8 @@ export async function GET(
   { params }: { params: { id: string } }
 ): Promise<NextResponse> {
   try {
-    const gameId = params.id;
+    const { id } = await params;
+    const gameId = id;
     
     if (!gameId || isNaN(Number(gameId))) {
       return NextResponse.json({ error: 'Invalid game ID' }, { status: 400 });
