@@ -12,6 +12,9 @@ import { RiTrophyLine, RiCalendarEventLine, RiGamepadFill } from 'react-icons/ri
 import { BiCategoryAlt } from 'react-icons/bi';
 import { BsCollectionPlay } from 'react-icons/bs';
 
+// Importer le préchargeur
+import { preloadPopularData } from '../utils/preloader';
+
 // Types
 interface Game {
   id: number;
@@ -73,6 +76,10 @@ async function getData() {
     const upcomingGames = upcomingRes.ok ? await upcomingRes.json() : [];
     const newReleaseGames = newReleasesRes.ok ? await newReleasesRes.json() : [];
     const platforms = platformsRes.ok ? await platformsRes.json() : [];
+
+    // Précharger d'autres données en arrière-plan, sans attendre la réponse
+    // pour ne pas ralentir le chargement initial
+    preloadPopularData().catch(console.error);
 
     return {
       featuredGame,

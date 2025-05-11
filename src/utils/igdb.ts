@@ -1,4 +1,5 @@
 import getAuth from './auth';
+import cache from './cache';
 
 const CLIENT_ID = process.env.IGDB_CLIENT_ID;
 
@@ -26,7 +27,16 @@ async function getAccessToken(): Promise<string> {
   }
 }
 
-export async function igdbRequest<T = any>(endpoint: string, query: string): Promise<T[]> {
+export async function igdbRequest<T = any>(endpoint: string, query: string, cacheTTL: number = 3600): Promise<T[]> {
+  // Générer une clé de cache unique basée sur l'endpoint et la requête
+  const cacheKey = `igdb:${endpoint}:${query.replace(/\s+/g, '')}`;
+  
+  // Vérifier si nous avons ce résultat en cache
+  const cachedResult = cache.get<T[]>(cacheKey);
+  if (cachedResult) {
+    return cachedResult;
+  }
+  
   try {
     const accessToken = await getAccessToken();
     
@@ -34,6 +44,7 @@ export async function igdbRequest<T = any>(endpoint: string, query: string): Pro
       throw new Error('IGDB client ID is not properly configured in environment variables');
     }
     
+    console.log(`🔍 Fetching IGDB data: ${endpoint}`);
     const response = await fetch(`https://api.igdb.com/v4/${endpoint}`, {
       method: 'POST',
       headers: {
@@ -49,7 +60,14 @@ export async function igdbRequest<T = any>(endpoint: string, query: string): Pro
       return [] as T[]; // Return empty array instead of throwing error
     }
     
-    return await response.json();
+    const data = await response.json();
+    
+    // Mettre en cache le résultat pour les prochaines requêtes
+    if (data && data.length > 0) {
+      cache.set(cacheKey, data, cacheTTL);
+    }
+    
+    return data;
   } catch (error) {
     console.error(`IGDB request error for ${endpoint}:`, error);
     return [] as T[]; // Return empty array on error

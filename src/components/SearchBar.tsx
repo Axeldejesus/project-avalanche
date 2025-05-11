@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { FiSearch } from 'react-icons/fi';
 import styles from '../styles/SearchBar.module.css';
@@ -18,8 +18,14 @@ export default function SearchBar() {
   const [results, setResults] = useState<SearchResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [showResults, setShowResults] = useState(false);
+  const [cachedResults, setCachedResults] = useState<Record<string, SearchResult[]>>({});
   const router = useRouter();
   const searchRef = useRef<HTMLDivElement>(null);
+  
+  // Cache client-side des résultats de recherche précédents
+  const cachedSearchResults = useMemo(() => {
+    return cachedResults[query] || null;
+  }, [query, cachedResults]);
   
   useEffect(() => {
     // Add event listener to close dropdown when clicking outside
@@ -42,12 +48,25 @@ export default function SearchBar() {
         return;
       }
       
+      // Utiliser les résultats en cache si disponibles
+      if (cachedSearchResults) {
+        setResults(cachedSearchResults);
+        setShowResults(true);
+        return;
+      }
+      
       setIsLoading(true);
       try {
         const response = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
         const data = await response.json();
         setResults(data);
         setShowResults(true);
+        
+        // Mettre en cache les résultats pour cette requête
+        setCachedResults(prev => ({
+          ...prev,
+          [query]: data
+        }));
       } catch (error) {
         console.error('Error searching games:', error);
       } finally {
@@ -60,7 +79,7 @@ export default function SearchBar() {
     }, 300);
     
     return () => clearTimeout(delayDebounce);
-  }, [query]);
+  }, [query, cachedSearchResults]);
   
   const handleResultClick = (gameId: number) => {
     router.push(`/games/${gameId}`);
