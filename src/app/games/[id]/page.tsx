@@ -135,12 +135,6 @@ export default async function GameDetailPage({ params }: { params: { id: string 
             <Button className={styles.primaryButton}>
               Add to Collection
             </Button>
-            <Button variant="outline" className={styles.secondaryButton}>
-              <BadgeCheck className={styles.actionIcon} /> Mark as Completed
-            </Button>
-            <Button variant="outline" className={styles.iconButton}>
-              <Share2 className={styles.actionIcon} />
-            </Button>
           </div>
           
           {earliestRelease && (
@@ -199,25 +193,6 @@ export default async function GameDetailPage({ params }: { params: { id: string 
             </section>
           )}
           
-          {gameDetail.similarGames.length > 0 && (
-            <section className={styles.similarGames}>
-              <h2>Similar Games</h2>
-              <div className={styles.similarGamesGrid}>
-                {gameDetail.similarGames.map(game => (
-                  <Link href={`/games/${game.id}`} key={game.id}>
-                    <div className={styles.similarGameCard}>
-                      <img 
-                        src={game.cover} 
-                        alt={game.name} 
-                        className={styles.similarGameCover} 
-                      />
-                      <div className={styles.similarGameTitle}>{game.name}</div>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            </section>
-          )}
         </div>
         
         <aside className={styles.gameSidebar}>
