@@ -689,3 +689,60 @@
 .newReleaseName:hover, .upcomingName:hover, .topRatedGame .newReleaseName:hover {
   color: #6c5ce7;
 }
+
+/* Promotional Banner */
+.promotionalBanner {
+  background-image: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.7)), url('/gaming.webp');
+  background-size: cover;
+  background-position: center;
+  border-radius: 12px;
+  padding: 5rem 2rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 2rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.bannerContent {
+  max-width: 900px;
+  text-align: center;
+  color: white;
+  z-index: 1;
+}
+
+.bannerTitle {
+  font-size: 2.8rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+  letter-spacing: -0.5px;
+  line-height: 1.2;
+}
+
+.bannerDescription {
+  font-size: 1.25rem;
+  line-height: 1.6;
+  max-width: 800px;
+  margin: 0 auto 2.5rem;
+  opacity: 0.9;
+}
+
+.viewDetailsButton {
+  padding: 0.9rem 2.5rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  background-color: #5e72e4;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 14px rgba(94, 114, 228, 0.4);
+}
+
+.viewDetailsButton:hover {
+  background-color: #4c5ec7;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(94, 114, 228, 0.6);
+}

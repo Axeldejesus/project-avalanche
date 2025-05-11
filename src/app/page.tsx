@@ -135,33 +135,21 @@ export default async function Home() {
         <main className={styles.main}>
           <div className={styles.discoverContainer}>
             
-            {/* Editor's Choice avec message d'erreur si besoin */}
-            {featuredGame ? (
-              <div className={styles.editorChoice} style={{
-                backgroundColor: '#2a1a66', 
-                backgroundImage: 'linear-gradient(135deg, #2a1a66 0%, #6c5ce7 100%)'
-              }}>
-                <div className={styles.editorChoiceBadge}>Editor's Choice</div>
-                <div className={styles.editorChoiceContent}>
-                  <h2 className={styles.editorChoiceTitle}>{featuredGame.name}</h2>
-                  <p className={styles.editorChoiceDescription}>
-                    {featuredGame.description || "No description available"}
-                  </p>
-                  <div className={styles.editorChoiceRating}>
-                    <div className={styles.editorChoiceStars}>
-                      {'★'.repeat(Math.floor(featuredGame.rating || 0))}{'☆'.repeat(5 - Math.floor(featuredGame.rating || 0))}
-                    </div>
-                    <span className={styles.editorChoiceReviews}>
-                      {featuredGame.rating?.toFixed(1) || "N/A"} 
-                      {featuredGame.reviews ? ` (${featuredGame.reviews} reviews)` : ""}
-                    </span>
-                  </div>
-                  <button className={styles.viewDetailsButton}>View Details</button>
-                </div>
+            {/* Promotional Banner */}
+            <div className={styles.promotionalBanner}>
+              <div className={styles.bannerContent}>
+                <h1 className={styles.bannerTitle}>
+                  Discover Your Next Gaming Adventure
+                </h1>
+                <p className={styles.bannerDescription}>
+                  Avalanche brings you the ultimate gaming platform with personalized recommendations, 
+                  exclusive content, and a community of passionate gamers.
+                </p>
+                <button className={styles.viewDetailsButton}>
+                  Explore Now
+                </button>
               </div>
-            ) : (
-              <ErrorMessage message="Aucun jeu en vedette trouvé" />
-            )}
+            </div>
 
             <section className={styles.gameSection}>
               <div className={styles.sectionHeader}>
