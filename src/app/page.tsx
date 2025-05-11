@@ -114,8 +114,7 @@ export default async function Home() {
         
         <nav className={styles.nav}>
           <a className={styles.active}><span className={styles.navItem}><FiHome className={styles.navIcon} /> <span>Home</span></span></a>
-          <a><span className={styles.navItem}><FiTrendingUp className={styles.navIcon} /> <span>Trending</span></span></a>
-          <a><span className={styles.navItem}><FiPackage className={styles.navIcon} /> <span>New Releases</span></span></a>
+          <a><span className={styles.navItem}><RiGamepadFill className={styles.navIcon} /> <span>Games</span></span></a>
           <a><span className={styles.navItem}><BsCollectionPlay className={styles.navIcon} /> <span>Collections</span></span></a>
         </nav>
         
