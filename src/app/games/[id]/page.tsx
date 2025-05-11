@@ -6,6 +6,7 @@ import styles from '../../../styles/GameDetail.module.css';
 import { Button } from '@/components/ui/button';
 import GameCard from '@/components/GameCard';
 import GameVideos from '@/components/GameVideos';
+import SearchBar from '@/components/SearchBar';
 
 interface Developer {
   name: string;
@@ -97,9 +98,14 @@ export default async function GameDetailPage({ params }: { params: { id: string 
   
   return (
     <div className={styles.gameDetailContainer}>
-      <Link href="/" className={styles.backButton}>
-        <FiArrowLeft /> Back to Home
-      </Link>
+      <div className={styles.topBar}>
+        <Link href="/" className={styles.backButton}>
+          <FiArrowLeft /> Back to Home
+        </Link>
+        <div className={styles.searchBarContainer}>
+          <SearchBar />
+        </div>
+      </div>
       
       <div className={styles.gameHeader}>
         <div className={styles.coverWrapper}>
