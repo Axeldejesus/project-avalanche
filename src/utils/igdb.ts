@@ -1,5 +1,4 @@
 import getAuth from './auth';
-import cache from './cache';
 
 const CLIENT_ID = process.env.IGDB_CLIENT_ID;
 
@@ -30,12 +29,7 @@ async function getAccessToken(): Promise<string> {
 export async function igdbRequest<T = any>(endpoint: string, query: string, cacheTTL: number = 3600): Promise<T[]> {
   // Générer une clé de cache unique basée sur l'endpoint et la requête
   const cacheKey = `igdb:${endpoint}:${query.replace(/\s+/g, '')}`;
-  
-  // Vérifier si nous avons ce résultat en cache
-  const cachedResult = cache.get<T[]>(cacheKey);
-  if (cachedResult) {
-    return cachedResult;
-  }
+
   
   try {
     const accessToken = await getAccessToken();
@@ -62,10 +56,6 @@ export async function igdbRequest<T = any>(endpoint: string, query: string, cach
     
     const data = await response.json();
     
-    // Mettre en cache le résultat pour les prochaines requêtes
-    if (data && data.length > 0) {
-      cache.set(cacheKey, data, cacheTTL);
-    }
     
     return data;
   } catch (error) {

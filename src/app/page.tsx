@@ -13,9 +13,6 @@ import { RiTrophyLine, RiCalendarEventLine, RiGamepadFill } from 'react-icons/ri
 import { BiCategoryAlt } from 'react-icons/bi';
 import { BsCollectionPlay } from 'react-icons/bs';
 
-// Importer le préchargeur
-import { preloadPopularData } from '../utils/preloader';
-
 // Types
 interface Game {
   id: number;
@@ -62,8 +59,7 @@ const ErrorMessage = ({ message }: { message: string }) => (
 async function getData() {
   try {
     // En App Router, nous pouvons utiliser fetch directement du serveur
-    const [featuredRes, recommendedRes, topRatedRes, upcomingRes, newReleasesRes, platformsRes] = await Promise.all([
-      fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/featured-game`, { next: { revalidate: 3600 } }),
+    const [recommendedRes, topRatedRes, upcomingRes, newReleasesRes, platformsRes] = await Promise.all([
       fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/recommended-games`, { next: { revalidate: 3600 } }),
       fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/top-rated-games`, { next: { revalidate: 3600 } }),
       fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/upcoming-games`, { next: { revalidate: 3600 } }),
@@ -72,19 +68,14 @@ async function getData() {
     ]);
 
     // Parse responses with minimal fallbacks
-    const featuredGame = featuredRes.ok ? await featuredRes.json() : null;
     const recommendedGames = recommendedRes.ok ? await recommendedRes.json() : [];
     const topRatedGames = topRatedRes.ok ? await topRatedRes.json() : [];
     const upcomingGames = upcomingRes.ok ? await upcomingRes.json() : [];
     const newReleaseGames = newReleasesRes.ok ? await newReleasesRes.json() : [];
     const platforms = platformsRes.ok ? await platformsRes.json() : [];
 
-    // Précharger d'autres données en arrière-plan, sans attendre la réponse
-    // pour ne pas ralentir le chargement initial
-    preloadPopularData().catch(console.error);
 
     return {
-      featuredGame,
       recommendedGames,
       topRatedGames,
       upcomingGames,
