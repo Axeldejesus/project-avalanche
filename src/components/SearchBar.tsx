@@ -87,7 +87,15 @@ export default function SearchBar() {
           className={styles.searchInput}
         />
         <button type="submit" className={styles.searchButton}>
-          <FiSearch />
+          {isLoading ? (
+            <div className={styles.loadingIndicator}>
+              <span className={styles.loadingDot}></span>
+              <span className={styles.loadingDot}></span>
+              <span className={styles.loadingDot}></span>
+            </div>
+          ) : (
+            <FiSearch />
+          )}
         </button>
       </form>
       
@@ -107,14 +115,6 @@ export default function SearchBar() {
               <div className={styles.resultItemRating}>★ {game.rating.toFixed(1)}</div>
             </div>
           ))}
-        </div>
-      )}
-      
-      {isLoading && (
-        <div className={styles.loadingIndicator}>
-          <span className={styles.loadingDot}></span>
-          <span className={styles.loadingDot}></span>
-          <span className={styles.loadingDot}></span>
         </div>
       )}
     </div>

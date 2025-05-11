@@ -104,37 +104,36 @@
   font-weight: 600;
 }
 
+/* Update loading indicator styles to look better inside the search button */
 .loadingIndicator {
-  position: absolute;
-  right: 12px;
   display: flex;
   align-items: center;
+  justify-content: center;
 }
 
 .loadingDot {
-  width: 6px;
-  height: 6px;
-  background-color: #7289da;
-  border-radius: 50%;
+  width: 4px;
+  height: 4px;
   margin: 0 2px;
-  animation: loadingAnimation 1.2s infinite ease-in-out;
+  background-color: currentColor;
+  border-radius: 50%;
+  display: inline-block;
+  animation: dotPulse 1.4s infinite ease-in-out both;
+}
+
+.loadingDot:nth-child(1) {
+  animation-delay: -0.32s;
 }
 
 .loadingDot:nth-child(2) {
-  animation-delay: 0.2s;
+  animation-delay: -0.16s;
 }
 
-.loadingDot:nth-child(3) {
-  animation-delay: 0.4s;
-}
-
-@keyframes loadingAnimation {
+@keyframes dotPulse {
   0%, 80%, 100% {
-    transform: scale(0.6);
-    opacity: 0.6;
+    transform: scale(0);
   }
   40% {
     transform: scale(1);
-    opacity: 1;
   }
 }
