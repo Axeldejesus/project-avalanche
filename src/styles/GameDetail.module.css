@@ -1,0 +1,407 @@
+.gameDetailContainer {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 40px 20px;
+  color: #e4e6eb;
+}
+
+.backButton {
+  display: inline-flex;
+  align-items: center;
+  color: #a0a0a0;
+  font-size: 14px;
+  margin-bottom: 30px;
+  transition: color 0.2s;
+}
+
+.backButton:hover {
+  color: #ffffff;
+}
+
+.backButton svg {
+  margin-right: 8px;
+}
+
+.gameHeader {
+  display: flex;
+  gap: 30px;
+  margin-bottom: 40px;
+}
+
+.coverWrapper {
+  flex-shrink: 0;
+  width: 270px;
+  height: 360px;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+  position: relative;
+}
+
+.gameCover {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.gameHeaderInfo {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.gameTitle {
+  font-size: 36px;
+  font-weight: 700;
+  margin: 0;
+  padding: 0;
+  color: #ffffff;
+}
+
+.gameMeta {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.gameGenres {
+  color: #a0a0a0;
+  font-size: 14px;
+}
+
+.gameRatingBlock {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.gameRating {
+  display: flex;
+  align-items: center;
+  background-color: #ffcc00;
+  color: #000000;
+  padding: 6px 12px;
+  border-radius: 30px;
+  font-weight: 700;
+  font-size: 16px;
+}
+
+.starIcon {
+  margin-right: 4px;
+}
+
+.ratingCount {
+  font-size: 14px;
+  color: #a0a0a0;
+}
+
+.gameActions {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.primaryButton {
+  background-color: #7289da;
+  color: white;
+  border: none;
+  font-weight: 600;
+  padding: 0 20px;
+  height: 40px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.primaryButton:hover {
+  background-color: #5a70c6;
+}
+
+.secondaryButton {
+  display: flex;
+  align-items: center;
+  background-color: transparent;
+  color: #e4e6eb;
+  border: 1px solid #444444;
+  font-weight: 500;
+  padding: 0 20px;
+  height: 40px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s, border-color 0.2s;
+}
+
+.secondaryButton:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+  border-color: #666666;
+}
+
+.iconButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: transparent;
+  color: #e4e6eb;
+  border: 1px solid #444444;
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s, border-color 0.2s;
+}
+
+.iconButton:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+  border-color: #666666;
+}
+
+.actionIcon {
+  width: 18px;
+  height: 18px;
+}
+
+.releaseInfo, .developerInfo, .platformInfo {
+  display: flex;
+  align-items: center;
+  color: #a0a0a0;
+  font-size: 14px;
+}
+
+.infoIcon {
+  margin-right: 8px;
+  color: #7289da;
+}
+
+.gameContent {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: 30px;
+}
+
+.gameMainContent {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+}
+
+.gameSummary h2, .gameScreenshots h2, .similarGames h2 {
+  font-size: 22px;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+
+.gameSummary h3 {
+  font-size: 18px;
+  font-weight: 600;
+  margin-top: 24px;
+  margin-bottom: 12px;
+}
+
+.gameSummary p {
+  line-height: 1.6;
+  color: #cccccc;
+  margin-bottom: 16px;
+}
+
+.screenshotsGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+.screenshotWrapper {
+  border-radius: 8px;
+  overflow: hidden;
+  height: 180px;
+  position: relative;
+}
+
+.screenshot {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s;
+}
+
+.screenshotWrapper:hover .screenshot {
+  transform: scale(1.05);
+}
+
+.similarGames h2 {
+  margin-bottom: 20px;
+}
+
+.similarGamesGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+.similarGameCard {
+  border-radius: 8px;
+  overflow: hidden;
+  transition: transform 0.3s ease;
+  position: relative;
+  aspect-ratio: 3/4;
+}
+
+.similarGameCard:hover {
+  transform: translateY(-5px);
+}
+
+.similarGameCover {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.similarGameTitle {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 12px;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.9), transparent);
+  color: white;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.gameSidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.sidebarSection {
+  background-color: rgba(255, 255, 255, 0.04);
+  border-radius: 10px;
+  overflow: hidden;
+  padding: 20px;
+}
+
+.sidebarSection h3 {
+  margin-top: 0;
+  margin-bottom: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.sidebarContent {
+  font-size: 14px;
+  color: #a0a0a0;
+}
+
+.releaseDatesList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.releaseDatesList li {
+  margin-bottom: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.releaseDatesList li:last-child {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.releasePlatform {
+  font-weight: 500;
+  color: #cccccc;
+}
+
+.releaseDate {
+  margin-left: 4px;
+}
+
+.errorContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 70vh;
+  text-align: center;
+  padding: 20px;
+}
+
+.errorContainer h1 {
+  font-size: 28px;
+  margin-bottom: 16px;
+}
+
+.errorContainer p {
+  margin-bottom: 24px;
+  color: #a0a0a0;
+}
+
+.backLink {
+  display: inline-flex;
+  align-items: center;
+  background-color: #7289da;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 8px;
+  text-decoration: none;
+  transition: background-color 0.2s;
+}
+
+.backLink:hover {
+  background-color: #5a70c6;
+}
+
+.backIcon {
+  margin-right: 8px;
+}
+
+/* Media queries for responsiveness */
+@media (max-width: 1024px) {
+  .gameHeader {
+    flex-direction: column;
+  }
+  
+  .coverWrapper {
+    width: 200px;
+    height: 267px;
+    margin-bottom: 20px;
+  }
+  
+  .gameContent {
+    grid-template-columns: 1fr;
+  }
+  
+  .similarGamesGrid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .similarGamesGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .screenshotsGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .similarGamesGrid {
+    grid-template-columns: 1fr;
+  }
+  
+  .gameActions {
+    flex-wrap: wrap;
+  }
+  
+  .primaryButton, .secondaryButton {
+    width: 100%;
+  }
+}

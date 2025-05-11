@@ -1,3 +1,6 @@
+'use client';
+
+import { useRouter } from 'next/navigation';
 import styles from '../styles/GameCard.module.css';
 
 interface Game {
@@ -13,8 +16,14 @@ interface GameCardProps {
 }
 
 const GameCard: React.FC<GameCardProps> = ({ game }) => {
+  const router = useRouter();
+  
+  const handleClick = () => {
+    router.push(`/games/${game.id}`);
+  };
+  
   return (
-    <div className={styles.card}>
+    <div className={styles.card} onClick={handleClick}>
       <div className={styles.imageContainer}>
         <img src={game.cover} alt={game.name} className={styles.image} />
       </div>

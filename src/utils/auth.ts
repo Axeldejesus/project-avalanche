@@ -6,8 +6,24 @@ interface AuthResponse {
   token_type: string;
 }
 
+// Cache pour stocker le token et éviter des appels répétés
+let tokenCache: {
+  token: AuthResponse | null;
+  expiry: number | null;
+} = {
+  token: null,
+  expiry: null
+};
+
 export default async function getAuth(): Promise<AuthResponse> {
   try {
+    // Vérifier si nous avons un token en cache qui est toujours valide
+    const now = Date.now();
+    if (tokenCache.token && tokenCache.expiry && now < tokenCache.expiry) {
+      console.log('Using cached auth token');
+      return tokenCache.token;
+    }
+
     const CLIENT_ID = process.env.IGDB_CLIENT_ID;
     const CLIENT_SECRET = process.env.IGDB_SECRET_KEY;
     
@@ -24,7 +40,13 @@ export default async function getAuth(): Promise<AuthResponse> {
       throw new Error(`Authentication failed: ${response.status}`);
     }
     
-    return await response.json();
+    const token = await response.json();
+    
+    // Mettre en cache le token avec un temps d'expiration (90% de la durée pour être prudent)
+    tokenCache.token = token;
+    tokenCache.expiry = now + (token.expires_in * 900); // 90% de la durée en secondes
+    
+    return token;
   } catch (error) {
     console.error('Authentication error:', error);
     throw error;

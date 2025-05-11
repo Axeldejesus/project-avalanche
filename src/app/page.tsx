@@ -4,6 +4,7 @@ import Sidebar from '../components/Sidebar';
 import GameCard from '../components/GameCard';
 import PlatformImage from '../components/PlatformImage';
 import AuthButtonsWrapper from '../components/AuthButtonsWrapper';
+import SearchBar from '../components/SearchBar';
 
 // React Icons
 import { FiSearch, FiHome, FiTrendingUp, FiPackage } from 'react-icons/fi';
@@ -119,10 +120,7 @@ export default async function Home() {
         </nav>
         
         <div className={styles.search}>
-          <input type="text" placeholder="Search games..." />
-          <button>
-            <FiSearch />
-          </button>
+          <SearchBar />
         </div>
         
         <AuthButtonsWrapper />
