@@ -6,7 +6,10 @@ import {
   signOut,
   onAuthStateChanged,
   User,
-  Auth
+  Auth,
+  deleteUser,
+  reauthenticateWithCredential,
+  EmailAuthProvider
 } from "firebase/auth";
 import { 
   getFirestore, 
@@ -17,7 +20,8 @@ import {
   Firestore,
   query,
   where,
-  getDocs
+  getDocs,
+  deleteDoc
 } from "firebase/firestore";
 
 // Check if we're running on the client (browser) or server
@@ -223,6 +227,54 @@ export const updateUserProfile = async (userId: string, data: any) => {
     return {
       success: false,
       error: error.message
+    };
+  }
+};
+
+// Service de suppression de compte
+export const deleteUserAccount = async (password: string) => {
+  if (!isClient || !auth) {
+    console.error('Firebase auth is not initialized');
+    return { success: false, error: 'Firebase not initialized' };
+  }
+
+  try {
+    const user = auth.currentUser;
+    
+    if (!user || !user.email) {
+      return { 
+        success: false, 
+        error: 'No authenticated user found or email missing' 
+      };
+    }
+    
+    // Réauthentifier l'utilisateur avant de supprimer le compte
+    const credential = EmailAuthProvider.credential(user.email, password);
+    await reauthenticateWithCredential(user, credential);
+    
+    // Supprimer les données utilisateur dans Firestore d'abord
+    if (db) {
+      const userRef = doc(db, "utilisateur", user.uid);
+      await deleteDoc(userRef);
+    }
+    
+    // Supprimer le compte utilisateur dans Firebase Auth
+    await deleteUser(user);
+    
+    return { success: true };
+  } catch (error: any) {
+    console.error("Erreur lors de la suppression du compte:", error);
+    
+    if (error.code === 'auth/wrong-password') {
+      return {
+        success: false,
+        error: 'Mot de passe incorrect'
+      };
+    }
+    
+    return {
+      success: false,
+      error: error.message || 'Une erreur est survenue lors de la suppression du compte'
     };
   }
 };

@@ -1,0 +1,121 @@
+.profileContainer {
+  padding: 2rem;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.profileTitle {
+  font-size: 2rem;
+  margin-bottom: 2rem;
+  color: #fff;
+}
+
+.profileCard {
+  background-color: rgba(30, 30, 40, 0.8);
+  border-radius: 12px;
+  padding: 2rem;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+
+.profileHeader {
+  display: flex;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.profileAvatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background-color: #6200ee;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 2.5rem;
+  margin-right: 1.5rem;
+}
+
+.profileInfo {
+  flex: 1;
+}
+
+.profileUsername {
+  font-size: 1.8rem;
+  margin: 0 0 0.5rem 0;
+  color: #fff;
+}
+
+.profileEmail {
+  font-size: 1rem;
+  color: #b3b3b3;
+  margin: 0 0 0.5rem 0;
+}
+
+.profileJoinDate {
+  font-size: 0.9rem;
+  color: #808080;
+  margin: 0;
+}
+
+.profileActions {
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+}
+
+.logoutButton {
+  background-color: #e53935;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.logoutButton:hover {
+  background-color: #c62828;
+  transform: translateY(-2px);
+}
+
+.deleteAccountButton {
+  background-color: transparent;
+  color: #e53935;
+  border: 1px solid #e53935;
+  border-radius: 4px;
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.deleteAccountButton:hover {
+  background-color: rgba(229, 57, 53, 0.1);
+  transform: translateY(-2px);
+}
+
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 300px;
+  font-size: 1.2rem;
+  color: #b3b3b3;
+}
+
+.notLoggedIn {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 300px;
+  font-size: 1.2rem;
+  color: #b3b3b3;
+}

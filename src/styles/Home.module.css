@@ -150,6 +150,11 @@
   font-weight: bold;
 }
 
+.authLoading {
+  width: 80px; /* Match approximate width of the buttons to prevent layout shift */
+  height: 40px;
+}
+
 .mainLayout {
   display: flex;
   padding: 1rem 2rem;
