@@ -59,6 +59,14 @@ if (isClient) {
   }
 }
 
+// Helper function to safely get Firestore instance
+export function ensureFirestore(): Firestore {
+  if (!isClient || !db) {
+    throw new Error('Firestore is not initialized. This operation can only be performed in a browser environment.');
+  }
+  return db;
+}
+
 // Service d'inscription - Add safety checks
 export const registerUser = async (email: string, password: string, username: string) => {
   if (!isClient || !auth) {

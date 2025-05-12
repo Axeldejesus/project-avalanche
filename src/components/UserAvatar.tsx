@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { FiCamera } from 'react-icons/fi';
 import styles from '../styles/UserAvatar.module.css';
+import { getProfileImageUrl } from '../services/imageService';
 
 interface UserAvatarProps {
   username: string;
@@ -21,6 +22,9 @@ const UserAvatar: React.FC<UserAvatarProps> = ({
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const firstLetter = username.charAt(0).toUpperCase();
+  
+  // Process the image URL to ensure it's valid
+  const processedImageUrl = imageUrl ? getProfileImageUrl(imageUrl) : undefined;
   
   const handleAvatarClick = () => {
     if (!editable) {
@@ -48,9 +52,9 @@ const UserAvatar: React.FC<UserAvatarProps> = ({
       <div 
         className={`${styles.avatar} ${styles[`avatar-${size}`]}`}
         onClick={handleAvatarClick}
-        style={imageUrl ? { backgroundImage: `url(${imageUrl})`, backgroundSize: 'cover' } : {}}
+        style={processedImageUrl ? { backgroundImage: `url(${processedImageUrl})`, backgroundSize: 'cover' } : {}}
       >
-        {!imageUrl && firstLetter}
+        {!processedImageUrl && firstLetter}
       </div>
       
       {editable && (

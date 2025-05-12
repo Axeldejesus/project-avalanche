@@ -7,8 +7,8 @@ import { logoutUser, auth, getUserProfile } from '../services/authenticate';
 import { User } from 'firebase/auth';
 import { onAuthStateChange } from '../services/authenticate';
 import DeleteAccountModal from './modals/DeleteAccountModal';
-import { uploadProfileImage } from '../services/storage';
 import UserAvatar from './UserAvatar';
+import { uploadProfileImage } from '../services/imageService';
 
 const ProfileContent: React.FC = () => {
   const [userProfile, setUserProfile] = useState<any>(null);
@@ -76,7 +76,8 @@ const ProfileContent: React.FC = () => {
         // Update local state with the new image URL
         setUserProfile({
           ...userProfile,
-          profileImageUrl: result.imageUrl
+          profileImageUrl: result.imageUrl,
+          profilePicture: true
         });
       } else {
         setUploadError(result.error || 'Failed to upload image');

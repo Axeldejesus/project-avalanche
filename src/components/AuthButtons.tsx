@@ -14,7 +14,10 @@ const AuthButtons: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [userProfile, setUserProfile] = useState<any>(null);
-  
+  const [profileUpdateTimestamp, setProfileUpdateTimestamp] = useState<string | null>(
+    localStorage.getItem('profileImageUpdated')
+  );
+
   // Initialize state from localStorage if available (to prevent flash)
   useEffect(() => {
     // Check localStorage for cached auth state
@@ -54,7 +57,40 @@ const AuthButtons: React.FC = () => {
     
     return () => unsubscribe();
   }, []);
-  
+
+  // Add new effect to check for profile image updates
+  useEffect(() => {
+    // Function to check if profile image was updated
+    const checkProfileUpdates = () => {
+      const newTimestamp = localStorage.getItem('profileImageUpdated');
+      if (newTimestamp !== profileUpdateTimestamp) {
+        setProfileUpdateTimestamp(newTimestamp);
+        // If user is logged in, refresh their profile
+        if (currentUser) {
+          getUserProfile(currentUser.uid).then(profileResult => {
+            if (profileResult.success) {
+              setUserProfile(profileResult.data);
+            }
+          });
+        }
+      }
+    };
+    
+    // Check immediately (for when returning to the page)
+    checkProfileUpdates();
+    
+    // Also set up an interval to periodically check
+    const intervalId = setInterval(checkProfileUpdates, 5000);
+    
+    // Set up event listener for visibility changes
+    document.addEventListener('visibilitychange', checkProfileUpdates);
+    
+    return () => {
+      clearInterval(intervalId);
+      document.removeEventListener('visibilitychange', checkProfileUpdates);
+    };
+  }, [currentUser, profileUpdateTimestamp]);
+
   const openLoginModal = () => {
     setIsLoginModalOpen(true);
     setIsRegisterModalOpen(false);
