@@ -7,7 +7,8 @@ export default function SkeletonGameDetail() {
     <div className={styles.gameDetailContainer}>
       <div className={styles.topBar}>
         <div className={`${styles.backButton} skeleton`} style={{ width: '120px', height: '20px' }}></div>
-        <div className={styles.searchBarContainer} style={{ visibility: 'hidden' }}></div>
+        {/* Hide the search bar in skeleton state */}
+        <div className={styles.searchBarContainer} style={{ visibility: 'hidden', width: '300px' }}></div>
       </div>
       
       <div className={styles.gameHeader}>

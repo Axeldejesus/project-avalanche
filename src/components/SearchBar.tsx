@@ -9,8 +9,9 @@ interface SearchResult {
   id: number;
   name: string;
   cover: string;
-  rating: number;
+  rating?: number;  // Make rating optional
   genres?: string;
+  releaseYear?: number;
 }
 
 export default function SearchBar() {
@@ -22,13 +23,11 @@ export default function SearchBar() {
   const router = useRouter();
   const searchRef = useRef<HTMLDivElement>(null);
   
-  // Cache client-side des résultats de recherche précédents
   const cachedSearchResults = useMemo(() => {
     return cachedResults[query] || null;
   }, [query, cachedResults]);
   
   useEffect(() => {
-    // Add event listener to close dropdown when clicking outside
     function handleClickOutside(event: MouseEvent) {
       if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
         setShowResults(false);
@@ -48,7 +47,6 @@ export default function SearchBar() {
         return;
       }
       
-      // Utiliser les résultats en cache si disponibles
       if (cachedSearchResults) {
         setResults(cachedSearchResults);
         setShowResults(true);
@@ -62,7 +60,6 @@ export default function SearchBar() {
         setResults(data);
         setShowResults(true);
         
-        // Mettre en cache les résultats pour cette requête
         setCachedResults(prev => ({
           ...prev,
           [query]: data
@@ -129,9 +126,10 @@ export default function SearchBar() {
               <img src={game.cover} alt={game.name} className={styles.resultItemImage} />
               <div className={styles.resultItemInfo}>
                 <div className={styles.resultItemName}>{game.name}</div>
-                {game.genres && <div className={styles.resultItemGenre}>{game.genres}</div>}
+                <div className={styles.resultItemDetails}>
+                  {game.releaseYear && <span className={styles.resultItemYear}>({game.releaseYear})</span>}
+                </div>
               </div>
-              <div className={styles.resultItemRating}>★ {game.rating.toFixed(1)}</div>
             </div>
           ))}
         </div>
