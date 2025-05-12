@@ -1,19 +1,86 @@
+.avatarContainer {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
 .avatar {
-  width: 40px;
-  height: 40px;
   border-radius: 50%;
-  background-color: #6200ee;
+  background-color: #7c3aed;
   color: white;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: bold;
-  font-size: 1.2rem;
   cursor: pointer;
+  position: relative;
+  overflow: hidden;
   transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Avatar sizes */
+.avatar-small {
+  width: 60px;
+  height: 60px;
+  font-size: 1.2rem;
+}
+
+.avatar-medium {
+  width: 70px;
+  height: 70px;
+  font-size: 1.8rem;
+}
+
+.avatar-large {
+  width: 100px;
+  height: 100px;
+  font-size: 2.5rem;
 }
 
 .avatar:hover {
   transform: scale(1.05);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+}
+
+.uploadText {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  color: #b3b3b3;
+  font-size: 0.8rem;
+  cursor: pointer;
+  padding: 4px 10px;
+  border-radius: 12px;
+  background-color: rgba(124, 58, 237, 0.1);
+  transition: all 0.2s ease;
+}
+
+.uploadText:hover {
+  background-color: rgba(124, 58, 237, 0.2);
+  color: white;
+}
+
+.cameraIcon {
+  margin-right: 4px;
+  font-size: 0.9rem;
+}
+
+.fileInput {
+  display: none;
+}
+
+/* Container sizes */
+.size-small .uploadText {
+  font-size: 0.7rem;
+  padding: 3px 8px;
+  margin-top: 4px;
+}
+
+.size-small .cameraIcon {
+  font-size: 0.8rem;
 }

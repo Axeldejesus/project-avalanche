@@ -7,11 +7,15 @@ import { logoutUser, auth, getUserProfile } from '../services/authenticate';
 import { User } from 'firebase/auth';
 import { onAuthStateChange } from '../services/authenticate';
 import DeleteAccountModal from './modals/DeleteAccountModal';
+import { uploadProfileImage } from '../services/storage';
+import UserAvatar from './UserAvatar';
 
 const ProfileContent: React.FC = () => {
   const [userProfile, setUserProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [uploadError, setUploadError] = useState('');
+  const [uploadSuccess, setUploadSuccess] = useState('');
   const router = useRouter();
 
   useEffect(() => {
@@ -55,6 +59,33 @@ const ProfileContent: React.FC = () => {
     router.push('/');
   };
 
+  const handleImageUpload = async (file: File) => {
+    setUploadError('');
+    setUploadSuccess('');
+    
+    if (!auth?.currentUser?.uid) {
+      setUploadError('User not authenticated');
+      return;
+    }
+    
+    try {
+      const result = await uploadProfileImage(auth.currentUser.uid, file);
+      
+      if (result.success) {
+        setUploadSuccess('Profile picture updated successfully');
+        // Update local state with the new image URL
+        setUserProfile({
+          ...userProfile,
+          profileImageUrl: result.imageUrl
+        });
+      } else {
+        setUploadError(result.error || 'Failed to upload image');
+      }
+    } catch (error: any) {
+      setUploadError(error.message || 'An unexpected error occurred');
+    }
+  };
+
   if (loading) {
     return <div className={styles.loading}>Loading profile...</div>;
   }
@@ -69,8 +100,16 @@ const ProfileContent: React.FC = () => {
       
       <div className={styles.profileCard}>
         <div className={styles.profileHeader}>
-          <div className={styles.profileAvatar}>
-            {userProfile.username.charAt(0).toUpperCase()}
+          <div className={styles.profileAvatarContainer}>
+            <UserAvatar 
+              username={userProfile.username} 
+              imageUrl={userProfile.profileImageUrl}
+              editable={true}
+              onImageUpload={handleImageUpload}
+              size="large"
+            />
+            {uploadError && <div className={styles.errorMessage}>{uploadError}</div>}
+            {uploadSuccess && <div className={styles.successMessage}>{uploadSuccess}</div>}
           </div>
           <div className={styles.profileInfo}>
             <h2 className={styles.profileUsername}>{userProfile.username}</h2>

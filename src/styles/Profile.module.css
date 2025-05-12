@@ -8,26 +8,38 @@
   font-size: 2rem;
   margin-bottom: 2rem;
   color: #fff;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .profileCard {
   background-color: rgba(30, 30, 40, 0.8);
   border-radius: 12px;
   padding: 2rem;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.profileCard:hover {
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.4);
 }
 
 .profileHeader {
   display: flex;
+  margin-bottom: 2.5rem;
   align-items: center;
-  margin-bottom: 2rem;
+}  
+
+.profileAvatarContainer {
+  margin-right: 1.5rem;
+  position: relative;
 }
 
 .profileAvatar {
-  width: 80px;
-  height: 80px;
+  width: 90px;
+  height: 90px;
   border-radius: 50%;
-  background-color: #6200ee;
+  background-color: #7c3aed;
   color: white;
   display: flex;
   align-items: center;
@@ -35,6 +47,7 @@
   font-weight: bold;
   font-size: 2.5rem;
   margin-right: 1.5rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 .profileInfo {
@@ -43,79 +56,122 @@
 
 .profileUsername {
   font-size: 1.8rem;
-  margin: 0 0 0.5rem 0;
-  color: #fff;
+  margin-bottom: 0.75rem;
+  color: #ffffff;
+  font-weight: 600;
 }
 
 .profileEmail {
   font-size: 1rem;
   color: #b3b3b3;
-  margin: 0 0 0.5rem 0;
+  margin-bottom: 0.75rem;
 }
 
 .profileJoinDate {
   font-size: 0.9rem;
-  color: #808080;
-  margin: 0;
+  color: #9ca3af;
+  font-style: italic;
 }
 
 .profileActions {
-  margin-top: 2rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
   display: flex;
-  justify-content: flex-end;
   gap: 1rem;
+  margin-top: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.logoutButton, 
+.deleteAccountButton {
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .logoutButton {
-  background-color: #e53935;
+  background-color: #7c3aed;
   color: white;
   border: none;
-  border-radius: 4px;
-  padding: 0.75rem 1.5rem;
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
+  box-shadow: 0 4px 6px rgba(124, 58, 237, 0.3);
 }
 
 .logoutButton:hover {
-  background-color: #c62828;
+  background-color: #6d28d9;
   transform: translateY(-2px);
 }
 
 .deleteAccountButton {
   background-color: transparent;
-  color: #e53935;
-  border: 1px solid #e53935;
-  border-radius: 4px;
-  padding: 0.75rem 1.5rem;
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
+  color: #ef4444;
+  border: 1px solid #ef4444;
 }
 
 .deleteAccountButton:hover {
-  background-color: rgba(229, 57, 53, 0.1);
+  background-color: rgba(239, 68, 68, 0.1);
   transform: translateY(-2px);
 }
 
-.loading {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 300px;
+.loading, 
+.notLoggedIn {
+  text-align: center;
+  padding: 2rem;
   font-size: 1.2rem;
-  color: #b3b3b3;
+  color: #d1d5db;
+  min-height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.notLoggedIn {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 300px;
-  font-size: 1.2rem;
-  color: #b3b3b3;
+.errorMessage,
+.successMessage {
+  margin-top: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  text-align: center;
+  max-width: 250px;
+}
+
+.errorMessage {
+  color: #ef4444;
+  background-color: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.successMessage {
+  color: #10b981;
+  background-color: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .profileHeader {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .profileAvatarContainer {
+    margin-right: 0;
+    margin-bottom: 1.5rem;
+  }
+  
+  .profileInfo {
+    text-align: center;
+    width: 100%;
+  }
+  
+  .profileActions {
+    justify-content: center;
+  }
+  
+  .profileCard {
+    padding: 1.5rem;
+  }
 }

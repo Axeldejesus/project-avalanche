@@ -80,7 +80,11 @@ const AuthButtons: React.FC = () => {
   
   // If user is logged in, show avatar
   if (currentUser && userProfile) {
-    return <UserAvatar username={userProfile.username} />;
+    return <UserAvatar 
+      username={userProfile.username} 
+      imageUrl={userProfile.profileImageUrl}
+      size="small"
+    />;
   }
   
   // Otherwise show login/register buttons
