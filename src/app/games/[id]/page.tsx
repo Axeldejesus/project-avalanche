@@ -8,6 +8,7 @@ import GameCard from '@/components/GameCard';
 import SearchBar from '@/components/SearchBar';
 import GameVideosWrapper from '@/components/GameVideosWrapper';
 import SkeletonGameDetail from '@/components/SkeletonGameDetail';
+import ScreenshotGallery from '@/components/ScreenshotGallery';
 
 interface Developer {
   name: string;
@@ -90,11 +91,10 @@ async function getGameDetail(id: string): Promise<GameDetail | null> {
 }
 
 export default async function GameDetailPage({ params }: { params: { id: string } }) {
-  // Attendre que les paramètres soient disponibles
-  const { id } = await params;
+  // Get parameters
+  const { id } = params;
   
-  // Ajouter des indices pour que le cache soit préparé pendant la navigation
-  // Ce code s'exécutera en arrière-plan après le rendu initial
+  // Prefetch related data in background
   fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/game-videos/${id}`, { 
     cache: 'force-cache' 
   }).catch(e => console.log('Préchargement des vidéos en arrière-plan'));
@@ -210,17 +210,10 @@ export default async function GameDetailPage({ params }: { params: { id: string 
           {gameDetail.screenshots.length > 0 && (
             <section className={styles.gameScreenshots}>
               <h2>Screenshots</h2>
-              <div className={styles.screenshotsGrid}>
-                {gameDetail.screenshots.map((screenshot, index) => (
-                  <div key={index} className={styles.screenshotWrapper}>
-                    <img 
-                      src={screenshot} 
-                      alt={`${gameDetail.name} screenshot ${index + 1}`} 
-                      className={styles.screenshot} 
-                    />
-                  </div>
-                ))}
-              </div>
+              <ScreenshotGallery 
+                screenshots={gameDetail.screenshots} 
+                gameName={gameDetail.name} 
+              />
             </section>
           )}
           
