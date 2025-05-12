@@ -2,6 +2,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import styles from '../styles/Home.module.css';
 import Sidebar from '../components/Sidebar';
+import Header from '../components/Header';
 import GameCard from '../components/GameCard';
 import PlatformImage from '../components/PlatformImage';
 import AuthButtonsWrapper from '../components/AuthButtonsWrapper';
@@ -108,23 +109,7 @@ export default async function Home() {
 
   return (
     <div className={styles.container}>
-      <header className={styles.header}>
-        <div className={styles.logo}>
-          <Image src="/logo-avalanche.png" alt="Avalanche" width={100} height={30} />
-        </div>
-        
-        <nav className={styles.nav}>
-          <a className={styles.active}><span className={styles.navItem}><FiHome className={styles.navIcon} /> <span>Home</span></span></a>
-          <a><span className={styles.navItem}><RiGamepadFill className={styles.navIcon} /> <span>Games</span></span></a>
-          <a><span className={styles.navItem}><BsCollectionPlay className={styles.navIcon} /> <span>Collections</span></span></a>
-        </nav>
-        
-        <div className={styles.search}>
-          <SearchBar />
-        </div>
-        
-        <AuthButtonsWrapper />
-      </header>
+      <Header />
 
       <div className={styles.mainLayout}>
         <Sidebar />
