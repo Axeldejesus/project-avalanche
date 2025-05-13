@@ -8,14 +8,25 @@
 .backButton {
   display: inline-flex;
   align-items: center;
-  color: #a0a0a0;
+  justify-content: center;
+  color: #e4e6eb;
   font-size: 14px;
   margin-bottom: 30px;
-  transition: color 0.2s;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  background-color: rgba(114, 137, 218, 0.1);
+  padding: 8px 16px;
+  border: none;
+  border-radius: 8px;
+  font-weight: 500;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
 }
 
 .backButton:hover {
   color: #ffffff;
+  background-color: rgba(114, 137, 218, 0.2);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
 }
 
 .backButton svg {

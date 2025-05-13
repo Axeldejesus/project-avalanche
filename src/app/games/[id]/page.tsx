@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { FiArrowLeft, FiStar, FiCalendar, FiMonitor, FiUsers } from 'react-icons/fi';
+import { FiStar, FiCalendar, FiMonitor, FiUsers, FiArrowLeft } from 'react-icons/fi';
 import { BadgeCheck, Share2 } from 'lucide-react';
 import styles from '../../../styles/GameDetail.module.css';
 import { Button } from '@/components/ui/button';
@@ -9,6 +9,7 @@ import SearchBar from '@/components/SearchBar';
 import GameVideosWrapper from '@/components/GameVideosWrapper';
 import SkeletonGameDetail from '@/components/SkeletonGameDetail';
 import ScreenshotGallery from '@/components/ScreenshotGallery';
+import BackButton from '@/components/BackButton';
 
 interface Developer {
   name: string;
@@ -124,9 +125,7 @@ export default async function GameDetailPage({ params }: { params: { id: string 
   return (
     <div className={styles.gameDetailContainer}>
       <div className={styles.topBar}>
-        <Link href="/" className={styles.backButton}>
-          <FiArrowLeft /> Back to Home
-        </Link>
+        <BackButton />
         <div className={styles.searchBarContainer}>
           <SearchBar />
         </div>

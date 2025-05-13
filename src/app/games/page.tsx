@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import Header from '@/components/Header';
 import GameCard from '@/components/GameCard';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
@@ -20,10 +21,20 @@ export default function GamesPage() {
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(100); // Valeur par défaut élevée pour permettre de parcourir l'API complète
+  const router = useRouter();
 
   useEffect(() => {
     fetchGames();
   }, [page]);
+
+  useEffect(() => {
+    // Set a flag to indicate the user is on the games page
+    sessionStorage.setItem('cameFromGames', 'true');
+    
+    return () => {
+      // We'll leave this value in sessionStorage in case user navigates to a game detail page
+    };
+  }, []);
 
   const fetchGames = async () => {
     setLoading(true);
@@ -55,6 +66,12 @@ export default function GamesPage() {
     if (page > 1) {
       setPage(page - 1);
     }
+  };
+
+  const handleGameClick = (gameId: number) => {
+    // Set the flag explicitly before navigation
+    sessionStorage.setItem('cameFromGames', 'true');
+    router.push(`/games/${gameId}`);
   };
 
   return (
@@ -89,7 +106,9 @@ export default function GamesPage() {
         ) : (
           <div className={styles.gameGrid}>
             {games.map(game => (
-              <GameCard key={game.id} game={game} />
+              <div key={game.id} onClick={() => handleGameClick(game.id)}>
+                <GameCard game={game} />
+              </div>
             ))}
             {games.length === 0 && (
               <div className={styles.noGames}>No games found</div>

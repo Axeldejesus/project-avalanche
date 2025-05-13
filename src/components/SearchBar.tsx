@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { FiSearch } from 'react-icons/fi';
 import styles from '../styles/SearchBar.module.css';
 
@@ -21,6 +21,7 @@ export default function SearchBar() {
   const [showResults, setShowResults] = useState(false);
   const [cachedResults, setCachedResults] = useState<Record<string, SearchResult[]>>({});
   const router = useRouter();
+  const pathname = usePathname(); // Get current path
   const searchRef = useRef<HTMLDivElement>(null);
   
   const cachedSearchResults = useMemo(() => {
@@ -79,6 +80,21 @@ export default function SearchBar() {
   }, [query, cachedSearchResults]);
   
   const handleResultClick = (gameId: number) => {
+    // FIX: Preserve the cameFromGames flag when on the games list page
+    if (pathname === '/games') {
+      // We're on the games list page, so ensure we remember that
+      sessionStorage.setItem('cameFromGames', 'true');
+    } else if (pathname === '/') {
+      // If we're on the home page, clear cameFromGames and set cameFromHome
+      sessionStorage.removeItem('cameFromGames');
+      sessionStorage.setItem('cameFromHome', 'true');
+    } else if (!pathname.startsWith('/games/')) {
+      // For any other page that's not a game detail page, clear navigation flags
+      sessionStorage.removeItem('cameFromGames');
+      sessionStorage.removeItem('cameFromHome');
+    }
+    // If we're on a game detail page (/games/[id]), we don't modify the navigation flags
+    
     router.push(`/games/${gameId}`);
     setShowResults(false);
     setQuery('');
