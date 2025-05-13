@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Header from '@/components/Header';
 import GameCard from '@/components/GameCard';
-import { ArrowLeft, ArrowRight } from 'lucide-react';
+import { ArrowLeft, ArrowRight, GamepadIcon } from 'lucide-react';
 import styles from './games.module.css';
 
 interface Game {
@@ -80,6 +80,10 @@ export default function GamesPage() {
       
       <main className={styles.main}>
         <h1 className={styles.title}>Game Library</h1>
+        <p className={styles.subtitle}>
+          <GamepadIcon size={16} style={{ display: 'inline', marginRight: '6px', verticalAlign: 'middle' }} />
+          Find your game
+        </p>
         
         <div className={styles.pagination}>
           <button 
@@ -87,15 +91,15 @@ export default function GamesPage() {
             disabled={page === 1}
             className={styles.paginationButton}
           >
-            <ArrowLeft size={20} /> Previous
+            <ArrowLeft size={16} /> Prev
           </button>
-          <span className={styles.pageIndicator}>Page {page}</span>
+          <span className={styles.pageIndicator}>{page}</span>
           <button 
             onClick={handleNextPage} 
             disabled={games.length === 0}
             className={styles.paginationButton}
           >
-            Next <ArrowRight size={20} />
+            Next <ArrowRight size={16} />
           </button>
         </div>
         
