@@ -47,8 +47,10 @@
   color: #ffffff;
 }
 
+/* Ensure active state renders correctly for nav items */
 .nav a.active {
   position: relative;
+  color: #ffffff;
 }
 
 .nav a.active:after {
@@ -137,8 +139,8 @@
 }
 
 .userButton {
-  width: 40px;
-  height: 40px;
+  width: 60px;  /* Increased from 40px */
+  height: 60px; /* Increased from 40px */
   border-radius: 50%;
   background-color: #6c5ce7;
   color: #ffffff;
@@ -148,6 +150,48 @@
   align-items: center;
   justify-content: center;
   font-weight: bold;
+  overflow: hidden; /* Add this to ensure the image stays within the button */
+}
+
+.userAvatar {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+/* Styling for active profile button */
+.userButtonActive {
+  position: relative;
+  border: 2px solid #6c5ce7;
+  box-shadow: 0 0 0 2px rgba(108, 92, 231, 0.3);
+}
+
+.userButtonActive::after {
+  content: '';
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  bottom: -4px;
+  left: -4px;
+  border: 2px solid #6c5ce7;
+  border-radius: 50%;
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.4;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
 }
 
 .authLoading {

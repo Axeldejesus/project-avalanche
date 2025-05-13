@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
+import { usePathname } from 'next/navigation';
+import Link from 'next/link';
 import styles from '../styles/Home.module.css';
 import LoginModal from './modals/LoginModal';
 import RegisterModal from './modals/RegisterModal';
@@ -17,6 +19,10 @@ const AuthButtons: React.FC = () => {
   const [profileUpdateTimestamp, setProfileUpdateTimestamp] = useState<string | null>(
     localStorage.getItem('profileImageUpdated')
   );
+
+  // Add pathname to detect current route
+  const pathname = usePathname();
+  const isProfilePage = pathname === '/profile' || pathname.startsWith('/profile/');
 
   // Initialize state from localStorage if available (to prevent flash)
   useEffect(() => {
@@ -116,11 +122,29 @@ const AuthButtons: React.FC = () => {
   
   // If user is logged in, show avatar
   if (currentUser && userProfile) {
-    return <UserAvatar 
-      username={userProfile.username} 
-      imageUrl={userProfile.profileImageUrl}
-      size="small"
-    />;
+    return (
+      <div className={styles.userMenu}>
+        <Link href="/profile">
+          <div className={`${styles.userButton} ${isProfilePage ? styles.userButtonActive : ''}`}>
+            {userProfile.profileImageUrl ? (
+              <div 
+                className={styles.userAvatar}
+                style={{ 
+                  backgroundImage: `url(${userProfile.profileImageUrl})`,
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                  width: '100%',
+                  height: '100%',
+                  borderRadius: '50%'
+                }}
+              />
+            ) : (
+              userProfile.username?.[0]?.toUpperCase() || 'A'
+            )}
+          </div>
+        </Link>
+      </div>
+    );
   }
   
   // Otherwise show login/register buttons

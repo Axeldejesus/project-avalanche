@@ -52,7 +52,11 @@ const UserAvatar: React.FC<UserAvatarProps> = ({
       <div 
         className={`${styles.avatar} ${styles[`avatar-${size}`]}`}
         onClick={handleAvatarClick}
-        style={processedImageUrl ? { backgroundImage: `url(${processedImageUrl})`, backgroundSize: 'cover' } : {}}
+        style={processedImageUrl ? { 
+          backgroundImage: `url(${processedImageUrl})`, 
+          backgroundSize: 'cover',
+          backgroundPosition: 'center' 
+        } : {}}
       >
         {!processedImageUrl && firstLetter}
       </div>
