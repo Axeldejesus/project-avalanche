@@ -24,36 +24,54 @@
 
 .pagination {
   display: flex;
-  justify-content: flex-end;
+  justify-content: center;
   align-items: center;
   margin-bottom: 2rem;
-  gap: 1rem;
+  gap: 1.5rem;
 }
 
 .paginationButton {
   display: flex;
   align-items: center;
-  background-color: #2a2a2a;
+  justify-content: center;
+  gap: 8px;
+  background-color: #6c5ce7;
   border: none;
   color: white;
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: all 0.3s ease;
+  font-weight: 600;
+  font-size: 0.95rem;
+  box-shadow: 0 4px 6px rgba(108, 92, 231, 0.25);
 }
 
 .paginationButton:hover:not(:disabled) {
-  background-color: #3a3a3a;
+  background-color: #5649c0;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(108, 92, 231, 0.3);
+}
+
+.paginationButton:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(108, 92, 231, 0.2);
 }
 
 .paginationButton:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+  background-color: #a0a0a0;
+  box-shadow: none;
 }
 
 .pageIndicator {
-  font-size: 0.9rem;
-  color: #a0a0a0;
+  font-size: 1rem;
+  color: #ffffff;
+  font-weight: 500;
+  padding: 0.5rem 1rem;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
 }
 
 .gameGrid {

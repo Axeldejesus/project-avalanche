@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Header from '@/components/Header';
 import GameCard from '@/components/GameCard';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ArrowLeft, ArrowRight } from 'lucide-react';
 import styles from './games.module.css';
 
 interface Game {
@@ -19,7 +19,7 @@ export default function GamesPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(5); // Will be updated when we have total count
+  const [totalPages, setTotalPages] = useState(100); // Valeur par défaut élevée pour permettre de parcourir l'API complète
 
   useEffect(() => {
     fetchGames();
@@ -34,8 +34,11 @@ export default function GamesPage() {
       }
       const data = await response.json();
       setGames(data.games);
-      // If backend provides total count, we can calculate total pages
-      // setTotalPages(Math.ceil(data.totalCount / 20));
+      
+      // Si l'API renvoie 0 jeux, c'est qu'on a atteint la fin
+      if (data.games.length === 0 && page > 1) {
+        setPage(page - 1);
+      }
     } catch (err) {
       setError('Error loading games. Please try again later.');
       console.error(err);
@@ -45,9 +48,7 @@ export default function GamesPage() {
   };
 
   const handleNextPage = () => {
-    if (page < totalPages) {
-      setPage(page + 1);
-    }
+    setPage(page + 1);
   };
 
   const handlePrevPage = () => {
@@ -69,15 +70,15 @@ export default function GamesPage() {
             disabled={page === 1}
             className={styles.paginationButton}
           >
-            <ChevronLeft size={20} /> Prev
+            <ArrowLeft size={20} /> Previous
           </button>
-          <span className={styles.pageIndicator}>Page {page} of {totalPages}</span>
+          <span className={styles.pageIndicator}>Page {page}</span>
           <button 
             onClick={handleNextPage} 
-            disabled={page === totalPages}
+            disabled={games.length === 0}
             className={styles.paginationButton}
           >
-            Next <ChevronRight size={20} />
+            Next <ArrowRight size={20} />
           </button>
         </div>
         
