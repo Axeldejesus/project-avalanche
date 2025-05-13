@@ -170,7 +170,6 @@ export default async function Home() {
                             </div>
                           </div>
                           <div className={styles.newReleaseRating}>
-                            <span className={styles.newReleaseStars}>★ {game.rating.toFixed(1)}</span>
                             <span className={styles.newReleaseDate}>{formatReleaseDate(game.release_date)}</span>
                           </div>
                         </div>
