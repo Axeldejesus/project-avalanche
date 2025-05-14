@@ -41,6 +41,14 @@ const GameCalendarModal: React.FC<GameCalendarModalProps> = ({ isOpen, onClose }
   const [year, setYear] = useState(2025); // Default to 2025 as specified
   const router = useRouter();
   
+  // Reset platform and year when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      setSelectedPlatforms([PLATFORMS.PS5]);
+      setYear(2025);
+    }
+  }, [isOpen]);
+
   // Months array for display order
   const months = [
     'January', 'February', 'March', 'April', 'May', 'June',

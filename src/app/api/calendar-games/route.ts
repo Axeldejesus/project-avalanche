@@ -36,8 +36,8 @@ export async function GET(request: Request): Promise<NextResponse> {
     const platforms = platformsParam ? platformsParam.split(',').map(Number) : [];
     
     // Calculate timestamps for the start and end of the year
-    const startOfYear = new Date(year, 0, 1).getTime() / 1000;
-    const endOfYear = new Date(year, 11, 31, 23, 59, 59).getTime() / 1000;
+    const startOfYear = Math.floor(new Date(year, 0, 1, 0, 0, 0).getTime() / 1000);
+    const endOfYear = Math.floor(new Date(year, 11, 31, 23, 59, 59).getTime() / 1000);
     
     // Build the platform filter if needed
     let platformFilter = '';
@@ -45,27 +45,47 @@ export async function GET(request: Request): Promise<NextResponse> {
       platformFilter = ` & platforms = (${platforms.join(',')})`;
     }
     
-    const games = await igdbRequest<IGame>('games', `
-      fields name, cover.image_id, first_release_date, platforms.id;
-      where first_release_date >= ${startOfYear} & first_release_date < ${endOfYear} 
-      & cover.image_id != null${platformFilter};
-      sort first_release_date asc;
-      limit 500;
-    `);
+    // Pagination IGDB : fetch tous les jeux de l'année par batchs de 500
+    let allGames: IGame[] = [];
+    let offset = 0;
+    const limit = 500;
+    let keepFetching = true;
+
+    while (keepFetching) {
+      const batch = await igdbRequest<IGame>('games', `
+        fields name, cover.image_id, first_release_date, platforms.id;
+        where first_release_date >= ${startOfYear} & first_release_date <= ${endOfYear} 
+        & cover.image_id != null${platformFilter};
+        sort first_release_date asc;
+        limit ${limit};
+        offset ${offset};
+      `);
+
+      if (batch && batch.length > 0) {
+        allGames = allGames.concat(batch);
+        if (batch.length < limit) {
+          keepFetching = false;
+        } else {
+          offset += limit;
+        }
+      } else {
+        keepFetching = false;
+      }
+    }
     
     // Organize games by month
     const calendarGames: CalendarGames = {};
-    
-    // Initialize all months with empty arrays
     months.forEach(month => {
       calendarGames[month] = [];
     });
     
-    if (games && games.length > 0) {
-      games.forEach(game => {
+    if (allGames.length > 0) {
+      allGames.forEach(game => {
+        if (!game.first_release_date) return;
         const releaseDate = new Date(game.first_release_date * 1000);
-        const monthName = months[releaseDate.getMonth()];
-        
+        const monthIdx = releaseDate.getMonth();
+        const monthName = months[monthIdx];
+        if (!monthName) return;
         calendarGames[monthName].push({
           id: game.id,
           name: game.name,
@@ -79,6 +99,7 @@ export async function GET(request: Request): Promise<NextResponse> {
     return NextResponse.json(calendarGames);
   } catch (error) {
     console.error('Error fetching calendar games:', error);
+    // Ne jamais retourner de jeux fictifs ici
     return NextResponse.json({ error: 'Failed to fetch calendar data' }, { status: 500 });
   }
 }
