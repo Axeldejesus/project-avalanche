@@ -37,7 +37,7 @@ const GameCalendarModal: React.FC<GameCalendarModalProps> = ({ isOpen, onClose }
   const [calendarGames, setCalendarGames] = useState<CalendarGames>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedPlatforms, setSelectedPlatforms] = useState<number[]>([]);
+  const [selectedPlatforms, setSelectedPlatforms] = useState<number[]>([PLATFORMS.PS5]);
   const [year, setYear] = useState(2025); // Default to 2025 as specified
   const router = useRouter();
   
@@ -80,13 +80,12 @@ const GameCalendarModal: React.FC<GameCalendarModalProps> = ({ isOpen, onClose }
   };
   
   const togglePlatformFilter = (platformId: number) => {
-    setSelectedPlatforms(prev => {
-      if (prev.includes(platformId)) {
-        return prev.filter(id => id !== platformId);
-      } else {
-        return [...prev, platformId];
-      }
-    });
+      // Si on clique sur le filtre déjà actif, on ne fait rien
+    if (selectedPlatforms.includes(platformId)) {
+      return;
+    }
+    // Sinon, on remplace le filtre actuel par le nouveau (pas de cumul)
+    setSelectedPlatforms([platformId]);
   };
   
   const handleGameClick = (gameId: number) => {
