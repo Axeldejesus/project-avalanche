@@ -1,6 +1,9 @@
 .sidebar {
-  width: 240px;
-  padding-right: 20px;
+  width: 280px;
+  padding: 1.5rem 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
 }
 
 .sidebar h3 {
@@ -54,21 +57,46 @@
   margin-bottom: 24px;
 }
 
-.completedBox, .collectionBox {
-  padding: 16px;
-  background-color: #1a1a1a;
+.calendarBox {
+  background: linear-gradient(135deg, rgba(123, 31, 162, 0.1), rgba(103, 58, 183, 0.1));
   border-radius: 12px;
-  margin-bottom: 16px;
+  padding: 1.25rem;
+  border: 1px solid rgba(103, 58, 183, 0.2);
+  margin-bottom: 1rem;
 }
 
-.completedBox h3, .collectionBox h3 {
-  margin-bottom: 8px;
+.calendarBox h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: #e4e6eb;
 }
 
-.completedBox p, .collectionBox p {
-  color: #b3b3b3;
-  font-size: 13px;
-  margin-bottom: 12px;
+.calendarBox p {
+  font-size: 0.9rem;
+  color: #b0b3b8;
+  margin-bottom: 1rem;
+}
+
+.completedBox {
+  background: linear-gradient(135deg, rgba(56, 142, 60, 0.1), rgba(76, 175, 80, 0.1));
+  border-radius: 12px;
+  padding: 1.25rem;
+  border: 1px solid rgba(76, 175, 80, 0.2);
+  margin-bottom: 1rem;
+}
+
+.completedBox h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: #e4e6eb;
+}
+
+.completedBox p {
+  font-size: 0.9rem;
+  color: #b0b3b8;
+  margin-bottom: 1rem;
 }
 
 .completedBox button, .collectionBox button {
@@ -81,4 +109,24 @@
   cursor: pointer;
   font-size: 14px;
   font-weight: 500;
+}
+
+.collectionBox {
+  background: linear-gradient(135deg, rgba(25, 118, 210, 0.1), rgba(33, 150, 243, 0.1));
+  border-radius: 12px;
+  padding: 1.25rem;
+  border: 1px solid rgba(33, 150, 243, 0.2);
+}
+
+.collectionBox h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: #e4e6eb;
+}
+
+.collectionBox p {
+  font-size: 0.9rem;
+  color: #b0b3b8;
+  margin-bottom: 1rem;
 }

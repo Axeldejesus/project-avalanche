@@ -9,9 +9,10 @@ interface ModalProps {
   onClose: () => void;
   title: string;
   children: React.ReactNode;
+  className?: string; // Add this optional className prop
 }
 
-const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children }) => {
+const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, className }) => {
   const modalRef = useRef<HTMLDivElement>(null);
   
   // Ferme la modale en appuyant sur Escape
@@ -49,7 +50,7 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children }) => {
       className={`${styles.overlay} ${isOpen ? styles.active : ''}`} 
       onClick={handleOverlayClick}
     >
-      <div className={styles.modal} ref={modalRef}>
+      <div className={`${styles.modal} ${className || ''}`} ref={modalRef}>
         <div className={styles.header}>
           <h2 className={styles.title}>{title}</h2>
           <button className={styles.closeButton} onClick={onClose}>

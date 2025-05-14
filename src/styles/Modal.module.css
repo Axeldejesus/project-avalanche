@@ -6,8 +6,8 @@
   bottom: 0;
   background-color: rgba(0, 0, 0, 0.7);
   display: flex;
-  justify-content: center;
   align-items: center;
+  justify-content: center;
   z-index: 1000;
   opacity: 0;
   visibility: hidden;
@@ -22,14 +22,13 @@
 .modal {
   background-color: #1a1a1a;
   border-radius: 12px;
-  width: 400px;
-  max-width: 90%;
+  width: 90%;
+  max-width: 600px; /* Default max-width, can be overridden with className */
   max-height: 90vh;
-  overflow-y: auto;
-  padding: 24px;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
-  transform: translateY(20px);
-  transition: transform 0.3s;
+  overflow: hidden;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
 }
 
 .overlay.active .modal {
@@ -40,31 +39,31 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 24px;
+  padding: 16px 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .title {
-  font-size: 22px;
+  font-size: 1.25rem;
   font-weight: 600;
   color: #ffffff;
+  margin: 0;
 }
 
 .closeButton {
   background: transparent;
   border: none;
-  color: #b3b3b3;
-  font-size: 20px;
+  color: #aaaaaa;
+  font-size: 1.5rem;
   cursor: pointer;
+  padding: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 4px;
-  border-radius: 4px;
-  transition: background-color 0.2s;
+  transition: color 0.2s;
 }
 
 .closeButton:hover {
-  background-color: rgba(255, 255, 255, 0.1);
   color: #ffffff;
 }
 
