@@ -37,28 +37,32 @@
 .platformButton {
   display: flex;
   align-items: center;
-  padding: 6px 12px;
-  background-color: rgba(255, 255, 255, 0.1);
-  border: 1px solid transparent;
+  justify-content: center;
+  gap: 8px;
+  background-color: #2a2a2a;
+  border: 1px solid #3a3a3a;
   border-radius: 6px;
+  padding: 8px 12px;
   font-size: 14px;
-  color: #e5e5e5;
+  font-weight: 500;
+  color: white;
   cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.platformButton span {
-  margin-left: 6px;
+  transition: background-color 0.2s, transform 0.2s;
 }
 
 .platformButton:hover {
-  background-color: rgba(255, 255, 255, 0.15);
+  background-color: #333333;
+  transform: translateY(-2px);
 }
 
 .platformButtonActive {
   background-color: rgba(108, 92, 231, 0.2);
   border-color: #6c5ce7;
   color: #ffffff;
+}
+
+.platformButtonActive:hover {
+  background-color: rgba(108, 92, 231, 0.3);
 }
 
 .monthsGrid {

@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import styles from '../styles/Sidebar.module.css';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Button } from '@/components/ui/button';
 import { BadgeCheck, FolderPlus, ChevronRight, Calendar } from 'lucide-react';
 import GameCalendarModal from './modals/GameCalendarModal';
 
@@ -39,28 +38,28 @@ const Sidebar: React.FC = () => {
       <div className={styles.calendarBox}>
         <h3>Release Calendar</h3>
         <p>Track upcoming game releases</p>
-        <Button variant="default" onClick={openCalendarModal}>
+        <button className={styles.button} onClick={openCalendarModal}>
           <Calendar className="mr-2" size={16} />
           View Calendar
-        </Button>
+        </button>
       </div>
       
       <div className={styles.completedBox}>
         <h3>Completed</h3>
         <p>Track your finished games</p>
-        <Button variant="secondary">
+        <button className={styles.button}>
           <BadgeCheck className="mr-2" size={16} />
           View All
-        </Button>
+        </button>
       </div>
       
       <div className={styles.collectionBox}>
         <h3>Create Collection</h3>
         <p>Organize your game library</p>
-        <Button variant="default">
+        <button className={`${styles.button} ${styles.buttonPrimary}`}>
           <FolderPlus className="mr-2" size={16} />
           Create
-        </Button>
+        </button>
       </div>
       
       <GameCalendarModal 

@@ -111,6 +111,61 @@
   font-weight: 500;
 }
 
+/* Add new standardized button styles */
+.button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background-color: #2a2a2a;
+  border: 1px solid #3a3a3a;
+  border-radius: 6px;
+  padding: 12px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #6c5ce7;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.2s;
+  width: 100%;
+}
+
+.button:hover {
+  background-color: #333333;
+  transform: translateY(-2px);
+}
+
+.buttonPrimary {
+  background-color: rgba(108, 92, 231, 0.2);
+  border: 1px solid rgba(108, 92, 231, 0.3);
+  color: #6c5ce7;
+}
+
+.buttonPrimary:hover {
+  background-color: rgba(108, 92, 231, 0.3);
+}
+
+.calendarBox button, 
+.completedBox button, 
+.collectionBox button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 12px;
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.2s;
+}
+
+.calendarBox button:hover, 
+.completedBox button:hover, 
+.collectionBox button:hover {
+  transform: translateY(-2px);
+}
+
 .collectionBox {
   background: linear-gradient(135deg, rgba(25, 118, 210, 0.1), rgba(33, 150, 243, 0.1));
   border-radius: 12px;
