@@ -92,8 +92,7 @@ async function getGameDetail(id: string): Promise<GameDetail | null> {
 }
 
 export default async function GameDetailPage({ params }: { params: { id: string } }) {
-  // Get parameters
-  const { id } = params;
+  const { id } = await params;
   
   // Prefetch related data in background
   fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/game-videos/${id}`, { 
