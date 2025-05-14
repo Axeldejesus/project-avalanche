@@ -59,13 +59,13 @@ const ErrorMessage = ({ message }: { message: string }) => (
 
 async function getData() {
   try {
-    // En App Router, nous pouvons utiliser fetch directement du serveur
+    // Réduire le délai de revalidation à 10 secondes pour les tests
     const [recommendedRes, topRatedRes, upcomingRes, newReleasesRes, platformsRes] = await Promise.all([
-      fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/recommended-games`, { next: { revalidate: 3600 } }),
-      fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/top-rated-games`, { next: { revalidate: 3600 } }),
-      fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/upcoming-games`, { next: { revalidate: 3600 } }),
-      fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/new-releases`, { next: { revalidate: 3600 } }),
-      fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/platforms`, { next: { revalidate: 3600 } })
+      fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/recommended-games`, { next: { revalidate: 10 } }),
+      fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/top-rated-games`, { next: { revalidate: 10 } }),
+      fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/upcoming-games`, { next: { revalidate: 10 } }),
+      fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/new-releases`, { next: { revalidate: 10 } }),
+      fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/platforms`, { next: { revalidate: 10 } })
     ]);
 
     // Parse responses with minimal fallbacks
