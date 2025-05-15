@@ -1,47 +1,5 @@
 import HomePage from './page-client';
 
-// Types
-interface Game {
-  id: number;
-  name: string;
-  cover: string;
-  rating: number;
-  genres?: string;
-  release_date?: number;
-  background?: string;
-  description?: string;
-  reviews?: number;
-}
-
-interface NewReleaseGame {
-  id: number;
-  name: string;
-  cover: string;
-  release_date: number;
-  rating: number;
-}
-
-interface UpcomingGame {
-  id: number;
-  name: string;
-  cover: string;
-  release_date: number;
-  genres?: string;
-  rating?: number;
-}
-
-interface Platform {
-  id: number;
-  name: string;
-  icon: string;
-}
-
-// Message d'erreur simple pour les sections
-const ErrorMessage = ({ message }: { message: string }) => (
-  <div style={{ padding: '2rem', textAlign: 'center', color: '#b3b3b3' }}>
-    <p>{message}</p>
-  </div>
-);
 
 async function getData() {
   try {

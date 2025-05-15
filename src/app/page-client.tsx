@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import styles from '../styles/Home.module.css';
 import Sidebar from '../components/Sidebar';
 import Header from '../components/Header';
@@ -80,6 +81,7 @@ const HomePage: React.FC<HomePageProps> = ({
   platforms 
 }) => {
   const [isCalendarModalOpen, setIsCalendarModalOpen] = useState(false);
+  const router = useRouter();
   
   const openCalendarModal = () => {
     setIsCalendarModalOpen(true);
@@ -87,6 +89,15 @@ const HomePage: React.FC<HomePageProps> = ({
   
   const closeCalendarModal = () => {
     setIsCalendarModalOpen(false);
+  };
+
+  // Nouvelle fonction pour naviguer vers la page de détail du jeu
+  const navigateToGameDetail = (gameId: number, event: React.MouseEvent) => {
+    event.preventDefault();
+    // Définir le flag pour indiquer que l'utilisateur vient de la page d'accueil
+    sessionStorage.removeItem('cameFromGames');
+    sessionStorage.setItem('cameFromHome', 'true');
+    router.push(`/games/${gameId}`);
   };
 
   return (
@@ -141,22 +152,25 @@ const HomePage: React.FC<HomePageProps> = ({
                 
                 {newReleaseGames.length > 0 ? (
                   newReleaseGames.map((game: NewReleaseGame) => (
-                    <Link href={`/games/${game.id}`} key={game.id} className={styles.newReleaseLink}>
-                      <div className={styles.newReleaseCard}>
-                        <img src={game.cover} alt={game.name} className={styles.newReleaseImage} />
-                        <div className={styles.newReleaseInfo}>
-                          <div className={`${styles.newReleaseName} ${styles.titleWithTooltip}`}>
-                            {game.name}
-                            <div className={styles.imageTooltip}>
-                              <img src={game.cover} alt={game.name} className={styles.tooltipImage} />
-                            </div>
-                          </div>
-                          <div className={styles.newReleaseRating}>
-                            <span className={styles.newReleaseDate}>{formatReleaseDate(game.release_date)}</span>
+                    <div 
+                      key={game.id} 
+                      className={styles.newReleaseCard} 
+                      onClick={(e) => navigateToGameDetail(game.id, e)}
+                      style={{ cursor: 'pointer' }}
+                    >
+                      <img src={game.cover} alt={game.name} className={styles.newReleaseImage} />
+                      <div className={styles.newReleaseInfo}>
+                        <div className={`${styles.newReleaseName} ${styles.titleWithTooltip}`}>
+                          {game.name}
+                          <div className={styles.imageTooltip}>
+                            <img src={game.cover} alt={game.name} className={styles.tooltipImage} />
                           </div>
                         </div>
+                        <div className={styles.newReleaseRating}>
+                          <span className={styles.newReleaseDate}>{formatReleaseDate(game.release_date)}</span>
+                        </div>
                       </div>
-                    </Link>
+                    </div>
                   ))
                 ) : (
                   <ErrorMessage message="Aucune nouvelle sortie trouvée" />
@@ -176,23 +190,26 @@ const HomePage: React.FC<HomePageProps> = ({
                 
                 {upcomingGames.length > 0 ? (
                   upcomingGames.slice(0, 3).map((game: UpcomingGame) => (
-                    <Link href={`/games/${game.id}`} key={game.id} className={styles.newReleaseLink}>
-                      <div className={styles.newReleaseCard}>
-                        <img src={game.cover} alt={game.name} className={styles.newReleaseImage} />
-                        <div className={styles.newReleaseInfo}>
-                          <div className={`${styles.newReleaseName} ${styles.titleWithTooltip}`}>
-                            {game.name}
-                            <div className={styles.imageTooltip}>
-                              <img src={game.cover} alt={game.name} className={styles.tooltipImage} />
-                            </div>
-                          </div>
-                          <div className={styles.newReleaseRating}>
-                            <span className={styles.newReleaseDate}>{formatReleaseDate(game.release_date)}</span>
-                            <span className={styles.upcomingGenre}>{game.genres || 'Game'}</span>
+                    <div 
+                      key={game.id} 
+                      className={styles.newReleaseCard} 
+                      onClick={(e) => navigateToGameDetail(game.id, e)}
+                      style={{ cursor: 'pointer' }}
+                    >
+                      <img src={game.cover} alt={game.name} className={styles.newReleaseImage} />
+                      <div className={styles.newReleaseInfo}>
+                        <div className={`${styles.newReleaseName} ${styles.titleWithTooltip}`}>
+                          {game.name}
+                          <div className={styles.imageTooltip}>
+                            <img src={game.cover} alt={game.name} className={styles.tooltipImage} />
                           </div>
                         </div>
+                        <div className={styles.newReleaseRating}>
+                          <span className={styles.newReleaseDate}>{formatReleaseDate(game.release_date)}</span>
+                          <span className={styles.upcomingGenre}>{game.genres || 'Game'}</span>
+                        </div>
                       </div>
-                    </Link>
+                    </div>
                   ))
                 ) : (
                   <ErrorMessage message="Aucune sortie à venir trouvée" />
