@@ -19,6 +19,9 @@ const AuthButtons: React.FC = () => {
   const [profileUpdateTimestamp, setProfileUpdateTimestamp] = useState<string | null>(
     localStorage.getItem('profileImageUpdated')
   );
+  const [usernameUpdateTimestamp, setUsernameUpdateTimestamp] = useState<string | null>(
+    localStorage.getItem('profileUsernameUpdated')
+  );
 
   // Add pathname to detect current route
   const pathname = usePathname();
@@ -48,7 +51,7 @@ const AuthButtons: React.FC = () => {
         
         // Get the user's profile from Firestore
         const profileResult = await getUserProfile(user.uid);
-        if (profileResult.success) {
+        if (profileResult.success && profileResult.data) {  // Added check for data
           setUserProfile(profileResult.data);
         }
       } else {
@@ -64,17 +67,24 @@ const AuthButtons: React.FC = () => {
     return () => unsubscribe();
   }, []);
 
-  // Add new effect to check for profile image updates
+  // Add enhanced effect to check for profile updates (both image and username)
   useEffect(() => {
-    // Function to check if profile image was updated
+    // Function to check if profile was updated
     const checkProfileUpdates = () => {
-      const newTimestamp = localStorage.getItem('profileImageUpdated');
-      if (newTimestamp !== profileUpdateTimestamp) {
-        setProfileUpdateTimestamp(newTimestamp);
+      const newImageTimestamp = localStorage.getItem('profileImageUpdated');
+      const newUsernameTimestamp = localStorage.getItem('profileUsernameUpdated');
+      
+      // Check if either image or username was updated
+      if (newImageTimestamp !== profileUpdateTimestamp || 
+          newUsernameTimestamp !== usernameUpdateTimestamp) {
+        
+        setProfileUpdateTimestamp(newImageTimestamp);
+        setUsernameUpdateTimestamp(newUsernameTimestamp);
+        
         // If user is logged in, refresh their profile
         if (currentUser) {
           getUserProfile(currentUser.uid).then(profileResult => {
-            if (profileResult.success) {
+            if (profileResult.success && profileResult.data) {  // Added check for data
               setUserProfile(profileResult.data);
             }
           });
@@ -95,7 +105,7 @@ const AuthButtons: React.FC = () => {
       clearInterval(intervalId);
       document.removeEventListener('visibilitychange', checkProfileUpdates);
     };
-  }, [currentUser, profileUpdateTimestamp]);
+  }, [currentUser, profileUpdateTimestamp, usernameUpdateTimestamp]);
 
   const openLoginModal = () => {
     setIsLoginModalOpen(true);

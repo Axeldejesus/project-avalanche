@@ -3,12 +3,13 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import styles from '../styles/Profile.module.css';
-import { logoutUser, auth, getUserProfile } from '../services/authenticate';
+import { logoutUser, auth, getUserProfile, updateUserProfile } from '../services/authenticate';
 import { User } from 'firebase/auth';
 import { onAuthStateChange } from '../services/authenticate';
 import DeleteAccountModal from './modals/DeleteAccountModal';
 import UserAvatar from './UserAvatar';
 import { uploadProfileImage } from '../services/imageService';
+import { FiEdit2, FiCheck, FiX } from 'react-icons/fi';
 
 const ProfileContent: React.FC = () => {
   const [userProfile, setUserProfile] = useState<any>(null);
@@ -16,6 +17,10 @@ const ProfileContent: React.FC = () => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [uploadError, setUploadError] = useState('');
   const [uploadSuccess, setUploadSuccess] = useState('');
+  const [isEditingUsername, setIsEditingUsername] = useState(false);
+  const [newUsername, setNewUsername] = useState('');
+  const [usernameError, setUsernameError] = useState('');
+  const [usernameSuccess, setUsernameSuccess] = useState('');
   const router = useRouter();
 
   useEffect(() => {
@@ -24,8 +29,9 @@ const ProfileContent: React.FC = () => {
         // Get user profile from Firestore
         setLoading(true);
         const profileResult = await getUserProfile(user.uid);
-        if (profileResult.success) {
+        if (profileResult.success && profileResult.data) {  // Added check for data
           setUserProfile(profileResult.data);
+          setNewUsername(profileResult.data.username || '');
         }
         setLoading(false);
       } else {
@@ -87,6 +93,57 @@ const ProfileContent: React.FC = () => {
     }
   };
 
+  const startEditingUsername = () => {
+    setNewUsername(userProfile.username || '');
+    setUsernameError('');
+    setUsernameSuccess('');
+    setIsEditingUsername(true);
+  };
+
+  const cancelEditingUsername = () => {
+    setIsEditingUsername(false);
+    setUsernameError('');
+  };
+
+  const saveUsername = async () => {
+    setUsernameError('');
+    setUsernameSuccess('');
+    
+    // Validate username
+    if (!newUsername || newUsername.trim().length < 3) {
+      setUsernameError('Username must be at least 3 characters');
+      return;
+    }
+    
+    if (!auth?.currentUser?.uid) {
+      setUsernameError('User not authenticated');
+      return;
+    }
+    
+    try {
+      const result = await updateUserProfile(auth.currentUser.uid, {
+        username: newUsername.trim()
+      });
+      
+      if (result.success) {
+        // Update local state
+        setUserProfile({
+          ...userProfile,
+          username: newUsername.trim()
+        });
+        setUsernameSuccess('Username updated successfully');
+        setIsEditingUsername(false);
+        
+        // Update localStorage to notify other components
+        localStorage.setItem('profileUsernameUpdated', Date.now().toString());
+      } else {
+        setUsernameError(result.error || 'Failed to update username');
+      }
+    } catch (error: any) {
+      setUsernameError(error.message || 'An unexpected error occurred');
+    }
+  };
+
   if (loading) {
     return <div className={styles.loading}>Loading profile...</div>;
   }
@@ -113,7 +170,35 @@ const ProfileContent: React.FC = () => {
             {uploadSuccess && <div className={styles.successMessage}>{uploadSuccess}</div>}
           </div>
           <div className={styles.profileInfo}>
-            <h2 className={styles.profileUsername}>{userProfile.username}</h2>
+            {isEditingUsername ? (
+              <div className={styles.usernameEditContainer}>
+                <input
+                  type="text"
+                  value={newUsername}
+                  onChange={(e) => setNewUsername(e.target.value)}
+                  className={styles.usernameInput}
+                  placeholder="Enter new username"
+                  autoFocus
+                />
+                <div className={styles.usernameEditButtons}>
+                  <button onClick={saveUsername} className={styles.usernameEditButton}>
+                    <FiCheck />
+                  </button>
+                  <button onClick={cancelEditingUsername} className={styles.usernameEditButton}>
+                    <FiX />
+                  </button>
+                </div>
+                {usernameError && <div className={styles.usernameErrorMessage}>{usernameError}</div>}
+              </div>
+            ) : (
+              <div className={styles.usernameContainer}>
+                <h2 className={styles.profileUsername}>{userProfile.username}</h2>
+                <button onClick={startEditingUsername} className={styles.editButton} aria-label="Edit username">
+                  <FiEdit2 />
+                </button>
+                {usernameSuccess && <div className={styles.usernameSuccessMessage}>{usernameSuccess}</div>}
+              </div>
+            )}
             <p className={styles.profileEmail}>{userProfile.email}</p>
             <p className={styles.profileJoinDate}>Member since: {new Date(userProfile.createdAt).toLocaleDateString()}</p>
           </div>
