@@ -54,7 +54,6 @@ interface Platform {
 
 interface HomePageProps {
   recommendedGames: Game[];
-  topRatedGames: Game[];
   upcomingGames: UpcomingGame[];
   newReleaseGames: NewReleaseGame[];
   platforms: Platform[];
@@ -76,7 +75,6 @@ function formatReleaseDate(timestamp: number): string {
 
 const HomePage: React.FC<HomePageProps> = ({ 
   recommendedGames, 
-  topRatedGames, 
   upcomingGames, 
   newReleaseGames, 
   platforms 
