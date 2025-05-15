@@ -13,9 +13,50 @@ export async function GET(request: Request) {
     const genres = searchParams.get('genres');
     const search = searchParams.get('search');
     const releaseYear = searchParams.get('releaseYear');
+    const releaseStatus = searchParams.get('releaseStatus');
+    const sort = searchParams.get('sort') || 'default'; // Nouveau paramètre de tri
+    
+    console.log(`Paramètres de recherche: page=${page}, platforms=${platforms}, genres=${genres}, search=${search}, releaseYear=${releaseYear}, releaseStatus=${releaseStatus}, sort=${sort}`);
     
     // Construire les conditions de filtre
     let whereConditions = 'where cover.image_id != null';
+    
+    // Déterminer le type de tri
+    let sortCondition = 'sort rating desc';
+    
+    // Si le statut est "released", changer le tri pour montrer les jeux récents en premier
+    if (releaseStatus === 'released') {
+      // Utiliser first_release_date desc pour les jeux déjà sortis
+      sortCondition = 'sort first_release_date desc';
+      console.log('Tri modifié: par date de sortie décroissante (plus récent en premier)');
+    }
+    
+    // Utiliser le tri spécifié si fourni
+    if (sort === 'rating') {
+      sortCondition = 'sort rating desc';
+    } else if (sort === 'release_desc') {
+      sortCondition = 'sort first_release_date desc';
+    } else if (sort === 'release_asc') {
+      sortCondition = 'sort first_release_date asc';
+    } else if (sort === 'name') {
+      sortCondition = 'sort name asc';
+    }
+    
+    // Amélioration du filtre pour les jeux sortis
+    if (releaseStatus) {
+      const currentTimestamp = Math.floor(Date.now() / 1000);
+      console.log(`Current timestamp: ${currentTimestamp}, date actuelle: ${new Date(currentTimestamp * 1000).toISOString()}`);
+      
+      if (releaseStatus === 'released') {
+        // Games that have already been released - USING IMPROVED APPROACH
+        whereConditions += ` & first_release_date < ${currentTimestamp}`;
+        console.log(`Filtre pour jeux sortis ajouté: first_release_date < ${currentTimestamp}`);
+      } else if (releaseStatus === 'upcoming') {
+        // Games that have not been released yet
+        whereConditions += ` & first_release_date > ${currentTimestamp} & first_release_date != null`;
+        console.log(`Filtre pour jeux à venir ajouté: first_release_date > ${currentTimestamp}`);
+      }
+    }
     
     if (platforms) {
       const platformIds = platforms.split(',').map(p => parseInt(p));
@@ -49,17 +90,27 @@ export async function GET(request: Request) {
     }
     
     console.log(`Requête IGDB complète: ${whereConditions}`);
+    console.log(`Tri utilisé: ${sortCondition}`);
     
     const games = await igdbRequest('games', `
       fields name, cover.image_id, first_release_date, rating, genres.name, genres.id;
       ${whereConditions};
-      sort rating desc;
+      ${sortCondition};
       limit ${limit};
       offset ${offset};
     `);
     
-    // Ajout de logs pour débogage
+    // Amélioration des logs pour débogage
     console.log(`Nombre de jeux trouvés: ${games?.length || 0}`);
+    if (games && games.length > 0) {
+      // Afficher quelques exemples de jeux pour débogage
+      console.log('Exemples de jeux retournés:');
+      games.slice(0, 3).forEach((game: any, index: number) => {
+        console.log(`Jeu ${index + 1}: ${game.name}, ID: ${game.id}, Date de sortie: ${game.first_release_date ? new Date(game.first_release_date * 1000).toISOString() : 'non définie'}`);
+      });
+    } else {
+      console.log('Aucun jeu trouvé avec les filtres actuels');
+    }
     
     if (!games) {
       return NextResponse.json({ games: [] });

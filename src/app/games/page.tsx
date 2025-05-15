@@ -18,8 +18,10 @@ interface Game {
 interface FilterOptions {
   platforms: number[];
   genres: number[];
-  releaseYear: number | null; // Remplace yearStart et yearEnd par une seule année
+  releaseYear: number | null;
   searchQuery: string;
+  releaseStatus: 'all' | 'released' | 'upcoming';
+  sort: string; // New sort option
 }
 
 // Options de filtre constantes
@@ -35,6 +37,22 @@ const PLATFORMS = [
 // Générer les années pour les menus déroulants
 const YEARS = Array.from({ length: new Date().getFullYear() - 1980 + 1 }, (_, i) => new Date().getFullYear() - i);
 
+// Release status options
+const RELEASE_STATUS = [
+  { value: 'all', label: 'All Games' },
+  { value: 'released', label: 'Released Games' },
+  { value: 'upcoming', label: 'Upcoming Games' }
+];
+
+// Options de tri
+const SORT_OPTIONS = [
+  { value: 'default', label: 'Default Sorting' },
+  { value: 'rating', label: 'Highest Rated' },
+  { value: 'release_desc', label: 'Recently Released' },
+  { value: 'release_asc', label: 'Oldest First' },
+  { value: 'name', label: 'Name (A-Z)' }
+];
+
 export default function GamesPage() {
   const [games, setGames] = useState<Game[]>([]);
   const [loading, setLoading] = useState(true);
@@ -46,7 +64,9 @@ export default function GamesPage() {
     platforms: [],
     genres: [],
     releaseYear: null,
-    searchQuery: ''
+    searchQuery: '',
+    releaseStatus: 'all',
+    sort: 'default' // Default sort value
   });
   const [activeFiltersCount, setActiveFiltersCount] = useState(0);
   const [genres, setGenres] = useState<{ id: number, name: string }[]>([]);
@@ -65,8 +85,9 @@ export default function GamesPage() {
     let count = 0;
     if (filters.platforms.length > 0) count++;
     if (filters.genres.length > 0) count++;
-    if (filters.releaseYear !== null) count++; // Compter l'année si elle est définie
+    if (filters.releaseYear !== null) count++;
     if (filters.searchQuery.trim() !== '') count++;
+    if (filters.releaseStatus !== 'all') count++; // Count release status if not 'all'
     setActiveFiltersCount(count);
   }, [filters]);
 
@@ -80,14 +101,28 @@ export default function GamesPage() {
     if (returningFromGameDetail) {
       try {
         const savedFilters = JSON.parse(returningFromGameDetail);
-        setFilters(savedFilters);
+        // Ensure releaseStatus is one of the allowed values
+        const validReleaseStatus = ['all', 'released', 'upcoming'].includes(savedFilters.releaseStatus) 
+          ? (savedFilters.releaseStatus as 'all' | 'released' | 'upcoming') 
+          : 'all';
+        
+        setFilters({
+          platforms: savedFilters.platforms || [],
+          genres: savedFilters.genres || [],
+          releaseYear: savedFilters.releaseYear || null,
+          searchQuery: savedFilters.searchQuery || '',
+          releaseStatus: validReleaseStatus,
+          sort: savedFilters.sort || 'default'
+        });
       } catch (error) {
         console.error('Error parsing saved filters:', error);
         setFilters({
           platforms: [],
           genres: [],
           releaseYear: null,
-          searchQuery: ''
+          searchQuery: '',
+          releaseStatus: 'all',
+          sort: 'default'
         });
       }
     } else {
@@ -96,7 +131,9 @@ export default function GamesPage() {
         platforms: [],
         genres: [],
         releaseYear: null,
-        searchQuery: ''
+        searchQuery: '',
+        releaseStatus: 'all',
+        sort: 'default'
       });
     }
     
@@ -149,6 +186,16 @@ export default function GamesPage() {
       
       if (filters.releaseYear !== null) {
         url += `&releaseYear=${filters.releaseYear}`;
+      }
+      
+      // Add release status parameter
+      if (filters.releaseStatus !== 'all') {
+        url += `&releaseStatus=${filters.releaseStatus}`;
+      }
+
+      // Add sort parameter
+      if (filters.sort !== 'default') {
+        url += `&sort=${filters.sort}`;
       }
 
       // Ajouter un log pour voir quels genres sont envoyés
@@ -254,17 +301,48 @@ export default function GamesPage() {
     fetchGames();
   };
 
+  // Handle release status change
+  const handleReleaseStatusChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    // Explicitly cast as a union type to avoid TypeScript error
+    const value = e.target.value as 'all' | 'released' | 'upcoming';
+    setFilters(prev => ({
+      ...prev,
+      releaseStatus: value
+    }));
+    setPage(1);
+    
+    // Update stored filters immediately - ensure we use the typed value
+    const updatedFilters = {...filters, releaseStatus: value};
+    sessionStorage.setItem('gameFilters', JSON.stringify(updatedFilters));
+  };
+
+  // Handle sort change
+  const handleSortChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const value = e.target.value;
+    setFilters(prev => ({
+      ...prev,
+      sort: value
+    }));
+    setPage(1);
+    
+    // Update stored filters
+    const updatedFilters = {...filters, sort: value};
+    sessionStorage.setItem('gameFilters', JSON.stringify(updatedFilters));
+  };
+
   const clearFilters = () => {
-    const clearedFilters = {
+    // Explicit type definition for clearedFilters
+    const clearedFilters: FilterOptions = {
       platforms: [],
       genres: [],
       releaseYear: null,
-      searchQuery: ''
+      searchQuery: '',
+      releaseStatus: 'all',
+      sort: 'default' // Reset sort as well
     };
     setFilters(clearedFilters);
     setPage(1);
     
-    // Update stored filters immediately when they are cleared
     sessionStorage.setItem('gameFilters', JSON.stringify(clearedFilters));
   };
 
@@ -385,6 +463,38 @@ export default function GamesPage() {
                   {YEARS.map(year => (
                     <option key={year} value={year}>
                       {year}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              
+              {/* New Release Status Filter */}
+              <div className={styles.filterSection}>
+                <h4>Release Status</h4>
+                <select
+                  value={filters.releaseStatus}
+                  onChange={handleReleaseStatusChange}
+                  className={styles.simpleSelect}
+                >
+                  {RELEASE_STATUS.map(status => (
+                    <option key={status.value} value={status.value}>
+                      {status.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* New Sort Filter */}
+              <div className={styles.filterSection}>
+                <h4>Sort By</h4>
+                <select
+                  value={filters.sort}
+                  onChange={handleSortChange}
+                  className={styles.simpleSelect}
+                >
+                  {SORT_OPTIONS.map(option => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
                     </option>
                   ))}
                 </select>
