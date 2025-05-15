@@ -143,6 +143,9 @@ const AuthButtons: React.FC = () => {
             )}
           </div>
         </Link>
+        <div className={styles.usernameDisplay}>
+          {userProfile.username || 'User'}
+        </div>
       </div>
     );
   }

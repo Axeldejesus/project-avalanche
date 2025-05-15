@@ -10,6 +10,7 @@ interface UserAvatarProps {
   editable?: boolean;
   onImageUpload?: (file: File) => Promise<void>;
   size?: 'small' | 'medium' | 'large';
+  showUsername?: boolean;
 }
 
 const UserAvatar: React.FC<UserAvatarProps> = ({ 
@@ -17,7 +18,8 @@ const UserAvatar: React.FC<UserAvatarProps> = ({
   imageUrl, 
   editable = false,
   onImageUpload,
-  size = 'medium'
+  size = 'medium',
+  showUsername = false
 }) => {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -60,6 +62,12 @@ const UserAvatar: React.FC<UserAvatarProps> = ({
       >
         {!processedImageUrl && firstLetter}
       </div>
+      
+      {showUsername && (
+        <div className={styles.usernameDisplay}>
+          {username}
+        </div>
+      )}
       
       {editable && (
         <div className={styles.uploadText} onClick={handleUploadClick}>

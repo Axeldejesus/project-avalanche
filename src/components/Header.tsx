@@ -1,7 +1,6 @@
 import Image from 'next/image';
 import styles from '../styles/Home.module.css';
 import Navigation from './Navigation';
-import SearchBar from './SearchBar';
 import AuthButtonsWrapper from './AuthButtonsWrapper';
 
 const Header: React.FC = () => {
@@ -12,10 +11,6 @@ const Header: React.FC = () => {
       </div>
       
       <Navigation />
-      
-      <div className={styles.search}>
-        <SearchBar />
-      </div>
       
       <AuthButtonsWrapper />
     </header>

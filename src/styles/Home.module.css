@@ -105,7 +105,8 @@
 
 .userMenu {
   display: flex;
-  gap: 10px;
+  flex-direction: column;
+  align-items: center;
   margin-left: 0.5rem;
 }
 
@@ -197,6 +198,19 @@
 .authLoading {
   width: 80px; /* Match approximate width of the buttons to prevent layout shift */
   height: 40px;
+}
+
+.usernameDisplay {
+  font-size: 0.9rem;
+  color: #f3f4f6;
+  margin-top: 0.5rem;
+  text-align: center;
+  font-weight: 500;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100px;
+  white-space: nowrap;
 }
 
 .mainLayout {
