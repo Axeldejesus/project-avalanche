@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -82,6 +82,17 @@ const HomePage: React.FC<HomePageProps> = ({
 }) => {
   const [isCalendarModalOpen, setIsCalendarModalOpen] = useState(false);
   const router = useRouter();
+  
+  // Effet pour vérifier si on doit rouvrir la modal du calendrier
+  useEffect(() => {
+    const cameFromCalendar = sessionStorage.getItem('cameFromCalendar');
+    if (cameFromCalendar === 'true') {
+      // Rouvrir la modal si l'utilisateur vient de la modal du calendrier
+      setIsCalendarModalOpen(true);
+      // Nettoyer le flag après utilisation
+      sessionStorage.removeItem('cameFromCalendar');
+    }
+  }, []);
   
   const openCalendarModal = () => {
     setIsCalendarModalOpen(true);

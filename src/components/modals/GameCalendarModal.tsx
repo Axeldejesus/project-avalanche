@@ -97,6 +97,8 @@ const GameCalendarModal: React.FC<GameCalendarModalProps> = ({ isOpen, onClose }
   };
   
   const handleGameClick = (gameId: number) => {
+    // Ajouter un flag indiquant que l'utilisateur vient de la modal du calendrier
+    sessionStorage.setItem('cameFromCalendar', 'true');
     router.push(`/games/${gameId}`);
     onClose();
   };

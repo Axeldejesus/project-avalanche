@@ -13,10 +13,13 @@ const BackButton: React.FC = () => {
     // Vérifier les flags de navigation
     const cameFromGames = sessionStorage.getItem('cameFromGames');
     const cameFromHome = sessionStorage.getItem('cameFromHome');
+    const cameFromCalendar = sessionStorage.getItem('cameFromCalendar');
     
     if (cameFromGames === 'true') {
       setDestination('/games');
-    } else if (cameFromHome === 'true') {
+    } else if (cameFromHome === 'true' || cameFromCalendar === 'true') {
+      // Si l'utilisateur vient de la page d'accueil ou de la modal du calendrier,
+      // rediriger vers la page d'accueil
       setDestination('/');
     } else {
       setDestination('/');
@@ -24,6 +27,8 @@ const BackButton: React.FC = () => {
   }, []);
   
   const handleBack = () => {
+    // Ne pas supprimer le flag 'cameFromCalendar' ici pour permettre
+    // à la page d'accueil de détecter que l'utilisateur revient de la modal du calendrier
     router.push(destination);
   };
   
