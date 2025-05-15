@@ -111,6 +111,42 @@ const HomePage: React.FC<HomePageProps> = ({
     router.push(`/games/${gameId}`);
   };
 
+  // Fonction pour naviguer vers la page des jeux avec un filtre de plateforme
+  const navigateToGamesWithPlatform = (platformId: number, event: React.MouseEvent) => {
+    event.preventDefault();
+    sessionStorage.setItem('gameFilters', JSON.stringify({
+      platforms: [platformId],
+      genres: [],
+      releaseYear: null,
+      searchQuery: '',
+      releaseStatus: 'all',
+      sort: 'default'
+    }));
+    router.push('/games');
+  };
+  
+  // Fonction pour naviguer vers la page des jeux avec le filtre "Released Games"
+  const navigateToNewReleases = (event: React.MouseEvent) => {
+    event.preventDefault();
+    sessionStorage.setItem('gameFilters', JSON.stringify({
+      platforms: [],
+      genres: [],
+      releaseYear: null,
+      searchQuery: '',
+      releaseStatus: 'released',
+      sort: 'release_desc' // Tri par date de sortie décroissante
+    }));
+    router.push('/games');
+  };
+  
+  // Fonction pour naviguer vers la page des jeux sans filtre
+  const navigateToGames = (event: React.MouseEvent) => {
+    event.preventDefault();
+    // Nettoyer les filtres précédents
+    sessionStorage.removeItem('gameFilters');
+    router.push('/games');
+  };
+
   return (
     <div className={styles.container}>
       <Header />
@@ -140,7 +176,7 @@ const HomePage: React.FC<HomePageProps> = ({
             <section className={styles.gameSection}>
               <div className={styles.sectionHeader}>
                 <h2>Recommended For You</h2>
-                <a href="#" className={styles.viewAll}>View All <span>→</span></a>
+                <a href="#" className={styles.viewAll} onClick={navigateToGames}>View All <span>→</span></a>
               </div>
               {recommendedGames.length > 0 ? (
                 <div className={styles.gameGrid}>
@@ -188,7 +224,7 @@ const HomePage: React.FC<HomePageProps> = ({
                 )}
                 
                 {newReleaseGames.length > 0 && (
-                  <a href="#" className={styles.viewAllLink}>View all new releases →</a>
+                  <a href="#" className={styles.viewAllLink} onClick={navigateToNewReleases}>View all new releases →</a>
                 )}
               </div>
               
@@ -249,7 +285,12 @@ const HomePage: React.FC<HomePageProps> = ({
                         return platformId === 167 || platformId === 169 || platformId === 6 || platformId === 130;
                       })
                       .map((platform: Platform) => (
-                        <div key={platform.id} className={styles.platformCompactCard}>
+                        <div 
+                          key={platform.id} 
+                          className={styles.platformCompactCard}
+                          onClick={(e) => navigateToGamesWithPlatform(platform.id, e)}
+                          style={{ cursor: 'pointer' }}
+                        >
                           <PlatformImage
                             platformId={platform.id}
                             platformName={platform.name}
@@ -266,7 +307,7 @@ const HomePage: React.FC<HomePageProps> = ({
                   <ErrorMessage message="Aucune plateforme trouvée" />
                 )}
                 
-                <a href="#" className={styles.viewAllLink}>View full platforms →</a>
+                <a href="#" className={styles.viewAllLink} onClick={navigateToGames}>View full platforms →</a>
               </div>
             </div>
           </div>
