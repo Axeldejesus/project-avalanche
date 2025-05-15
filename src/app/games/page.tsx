@@ -45,16 +45,20 @@ export default function GamesPage() {
   const [filters, setFilters] = useState<FilterOptions>({
     platforms: [],
     genres: [],
-    releaseYear: null, // Utiliser null pour indiquer "Toutes les années"
+    releaseYear: null,
     searchQuery: ''
   });
   const [activeFiltersCount, setActiveFiltersCount] = useState(0);
   const [genres, setGenres] = useState<{ id: number, name: string }[]>([]);
+  const [filtersInitialized, setFiltersInitialized] = useState(false);
   const router = useRouter();
 
+  // Fetch games when filters or page changes, but only after filters are initialized
   useEffect(() => {
-    fetchGames();
-  }, [page, filters]);
+    if (filtersInitialized) {
+      fetchGames();
+    }
+  }, [page, filters, filtersInitialized]);
 
   useEffect(() => {
     // Calculer le nombre de filtres actifs
@@ -70,8 +74,37 @@ export default function GamesPage() {
     // Set a flag to indicate the user is on the games page
     sessionStorage.setItem('cameFromGames', 'true');
     
+    // Check if we're returning from a game detail page
+    const returningFromGameDetail = sessionStorage.getItem('gameFilters');
+    
+    if (returningFromGameDetail) {
+      try {
+        const savedFilters = JSON.parse(returningFromGameDetail);
+        setFilters(savedFilters);
+      } catch (error) {
+        console.error('Error parsing saved filters:', error);
+        setFilters({
+          platforms: [],
+          genres: [],
+          releaseYear: null,
+          searchQuery: ''
+        });
+      }
+    } else {
+      // Reset filters only when coming from somewhere other than a game detail page
+      setFilters({
+        platforms: [],
+        genres: [],
+        releaseYear: null,
+        searchQuery: ''
+      });
+    }
+    
+    // Mark filters as initialized so the fetchGames useEffect can run
+    setFiltersInitialized(true);
+    
     return () => {
-      // We'll leave this value in sessionStorage in case user navigates to a game detail page
+      // We'll leave cameFromGames value in sessionStorage
     };
   }, []);
 
@@ -155,6 +188,9 @@ export default function GamesPage() {
   };
 
   const handleGameClick = (gameId: number) => {
+    // Save current filters to session storage before navigating
+    sessionStorage.setItem('gameFilters', JSON.stringify(filters));
+    
     // Set the flag explicitly before navigation
     sessionStorage.setItem('cameFromGames', 'true');
     router.push(`/games/${gameId}`);
@@ -165,30 +201,43 @@ export default function GamesPage() {
   };
 
   const handlePlatformChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const selectedOptions = Array.from(e.target.selectedOptions, option => Number(option.value));
+    const selectedValue = e.target.value === '' ? [] : [Number(e.target.value)];
     setFilters(prev => ({
       ...prev,
-      platforms: selectedOptions
+      platforms: selectedValue
     }));
     setPage(1);
+    
+    // Update stored filters immediately when they change
+    const updatedFilters = {...filters, platforms: selectedValue};
+    sessionStorage.setItem('gameFilters', JSON.stringify(updatedFilters));
   };
 
   const handleGenreChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const selectedOptions = Array.from(e.target.selectedOptions, option => Number(option.value));
+    const selectedValue = e.target.value === '' ? [] : [Number(e.target.value)];
     setFilters(prev => ({
       ...prev,
-      genres: selectedOptions
+      genres: selectedValue
     }));
     setPage(1);
+    
+    // Update stored filters immediately when they change
+    const updatedFilters = {...filters, genres: selectedValue};
+    sessionStorage.setItem('gameFilters', JSON.stringify(updatedFilters));
   };
 
   const handleReleaseYearChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const value = e.target.value;
+    const newReleaseYear = value === '' ? null : Number(value);
     setFilters(prev => ({
       ...prev,
-      releaseYear: value === '' ? null : Number(value)
+      releaseYear: newReleaseYear
     }));
     setPage(1);
+    
+    // Update stored filters immediately when they change
+    const updatedFilters = {...filters, releaseYear: newReleaseYear};
+    sessionStorage.setItem('gameFilters', JSON.stringify(updatedFilters));
   };
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -206,13 +255,17 @@ export default function GamesPage() {
   };
 
   const clearFilters = () => {
-    setFilters({
+    const clearedFilters = {
       platforms: [],
       genres: [],
       releaseYear: null,
       searchQuery: ''
-    });
+    };
+    setFilters(clearedFilters);
     setPage(1);
+    
+    // Update stored filters immediately when they are cleared
+    sessionStorage.setItem('gameFilters', JSON.stringify(clearedFilters));
   };
 
   return (
@@ -287,60 +340,38 @@ export default function GamesPage() {
             <div className={styles.filterContent}>
               <div className={styles.filterSection}>
                 <h4>Platforms</h4>
-                <div className={styles.checkboxGroup}>
+                <select
+                  value={filters.platforms.length > 0 ? filters.platforms[0].toString() : ''}
+                  onChange={handlePlatformChange}
+                  className={styles.simpleSelect}
+                >
+                  <option value="">All Platforms</option>
                   {PLATFORMS.map(platform => (
-                    <label key={platform.id} className={styles.checkboxLabel}>
-                      <input
-                        type="checkbox"
-                        checked={filters.platforms.includes(platform.id)}
-                        onChange={() => {
-                          const newPlatforms = filters.platforms.includes(platform.id)
-                            ? filters.platforms.filter(id => id !== platform.id)
-                            : [...filters.platforms, platform.id];
-                          
-                          setFilters(prev => ({
-                            ...prev,
-                            platforms: newPlatforms
-                          }));
-                          setPage(1);
-                        }}
-                        className={styles.checkbox}
-                      />
+                    <option key={platform.id} value={platform.id}>
                       {platform.name}
-                    </label>
+                    </option>
                   ))}
-                </div>
+                </select>
               </div>
               
               <div className={styles.filterSection}>
                 <h4>Genres</h4>
-                <div className={styles.checkboxGroup}>
-                  {genres.length > 0 ? (
-                    genres.map(genre => (
-                      <label key={genre.id} className={styles.checkboxLabel}>
-                        <input
-                          type="checkbox"
-                          checked={filters.genres.includes(genre.id)}
-                          onChange={() => {
-                            const newGenres = filters.genres.includes(genre.id)
-                              ? filters.genres.filter(id => id !== genre.id)
-                              : [...filters.genres, genre.id];
-                            
-                            setFilters(prev => ({
-                              ...prev,
-                              genres: newGenres
-                            }));
-                            setPage(1);
-                          }}
-                          className={styles.checkbox}
-                        />
+                {genres.length > 0 ? (
+                  <select
+                    value={filters.genres.length > 0 ? filters.genres[0].toString() : ''}
+                    onChange={handleGenreChange}
+                    className={styles.simpleSelect}
+                  >
+                    <option value="">All Genres</option>
+                    {genres.map(genre => (
+                      <option key={genre.id} value={genre.id}>
                         {genre.name}
-                      </label>
-                    ))
-                  ) : (
-                    <div>Chargement des genres...</div>
-                  )}
-                </div>
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <div>Chargement des genres...</div>
+                )}
               </div>
               
               <div className={styles.filterSection}>
@@ -362,13 +393,6 @@ export default function GamesPage() {
               <div className={styles.filterActions}>
                 <button className={styles.clearFiltersButton} onClick={clearFilters}>
                   Clear All Filters
-                </button>
-                <button className={styles.applyFiltersButton} onClick={() => {
-                  setPage(1);
-                  fetchGames();
-                  toggleFilter();
-                }}>
-                  Apply Filters
                 </button>
               </div>
             </div>
