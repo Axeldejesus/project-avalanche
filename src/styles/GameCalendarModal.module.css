@@ -10,6 +10,265 @@
   max-width: 1200px !important;
 }
 
+/* Nouveaux styles pour l'en-tête de la modal */
+.calendarHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-top: 10px;
+  position: relative;
+}
+
+/* Modification de la position de la barre de recherche pour qu'elle soit centrée */
+.searchContainer {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 280px;
+  margin-top: 5px;
+}
+
+.searchInput {
+  width: 100%;
+  padding: 10px 15px 10px 40px;
+  border-radius: 20px;
+  border: 1px solid #3a3a3a;
+  background: rgba(255, 255, 255, 0.08);
+  color: white;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.searchInput:focus {
+  outline: none;
+  border-color: #6c5ce7;
+  box-shadow: 0 0 0 2px rgba(108, 92, 231, 0.2);
+}
+
+.searchIcon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #b3b3b3;
+  pointer-events: none;
+}
+
+/* Ajustement des autres éléments pour accommoder la barre de recherche centrée */
+.yearNavigation {
+  z-index: 1;
+}
+
+.viewToggle {
+  z-index: 1;
+}
+
+.yearNavigation {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.yearSelector {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 18px;
+  font-weight: 500;
+}
+
+.yearButton {
+  background: rgba(108, 92, 231, 0.2);
+  border: none;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: white;
+}
+
+.yearButton:hover {
+  background: rgba(108, 92, 231, 0.4);
+  transform: scale(1.05);
+}
+
+.yearButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.searchContainer {
+  position: relative;
+  width: 250px;
+}
+
+.searchInput {
+  width: 100%;
+  padding: 8px 15px 8px 40px;
+  border-radius: 20px;
+  border: 1px solid #3a3a3a;
+  background: rgba(255, 255, 255, 0.08);
+  color: white;
+  font-size: 14px;
+}
+
+.searchIcon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #b3b3b3;
+  pointer-events: none;
+}
+
+/* Onglets de trimestre */
+.quarterTabs {
+  display: flex;
+  margin-bottom: 20px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 10px;
+  padding: 5px;
+}
+
+.quarterTab {
+  flex: 1;
+  padding: 10px 15px;
+  text-align: center;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.3s;
+  font-weight: 500;
+}
+
+.quarterTabActive {
+  background: rgba(108, 92, 231, 0.3);
+  color: white;
+}
+
+/* Option de vue */
+.viewToggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  padding: 5px;
+}
+
+.viewButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.viewButtonActive {
+  background: rgba(108, 92, 231, 0.3);
+}
+
+/* Style pour la vue liste */
+.listView {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.listMonth {
+  background-color: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 15px;
+}
+
+.listMonthHeader {
+  padding: 12px 15px;
+  background-color: rgba(108, 92, 231, 0.2);
+  border-bottom: 1px solid rgba(108, 92, 231, 0.3);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.listMonthHeader h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 500;
+  color: #ffffff;
+}
+
+.listMonthGames {
+  padding: 0;
+}
+
+.listGame {
+  display: flex;
+  align-items: center;
+  padding: 12px 15px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.listGame:last-child {
+  border-bottom: none;
+}
+
+.listGame:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.listGameDate {
+  min-width: 100px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.listGameImage {
+  width: 36px;
+  height: 45px;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-right: 15px;
+}
+
+.listGameInfo {
+  flex: 1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.listGameTitle {
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.listGamePlatforms {
+  display: flex;
+  gap: 8px;
+}
+
+.emptyQuarterMessage {
+  text-align: center;
+  padding: 30px;
+  color: #8a8a8a;
+  font-size: 14px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  margin: 20px 0;
+}
+
 .platformFilters {
   margin-bottom: 20px;
   padding: 15px;

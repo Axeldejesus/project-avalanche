@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import styles from '../styles/Sidebar.module.css';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { BadgeCheck, FolderPlus, ChevronRight, Calendar } from 'lucide-react';
+import { BadgeCheck, FolderPlus, ChevronRight, Calendar, Clock } from 'lucide-react';
 import GameCalendarModal from './modals/GameCalendarModal';
 
 interface Category {

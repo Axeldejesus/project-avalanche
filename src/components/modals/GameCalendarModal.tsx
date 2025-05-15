@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Modal from './Modal';
 import styles from '../../styles/GameCalendarModal.module.css';
 import { useRouter } from 'next/navigation';
-import { FaCalendarAlt, FaSpinner } from 'react-icons/fa';
+import { FaCalendarAlt, FaSpinner, FaSearch, FaChevronLeft, FaChevronRight, FaList, FaTh } from 'react-icons/fa';
 import PlatformImage from '../PlatformImage';
 
 interface Game {
@@ -38,14 +38,24 @@ const GameCalendarModal: React.FC<GameCalendarModalProps> = ({ isOpen, onClose }
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedPlatforms, setSelectedPlatforms] = useState<number[]>([PLATFORMS.PS5]);
-  const [year, setYear] = useState(2025); // Default to 2025 as specified
+  const [year, setYear] = useState(2025);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [activeQuarter, setActiveQuarter] = useState(1); // 1-4 pour Q1-Q4
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const router = useRouter();
   
-  // Reset platform and year when modal opens
+  // Reset when modal opens
   useEffect(() => {
     if (isOpen) {
       setSelectedPlatforms([PLATFORMS.PS5]);
       setYear(2025);
+      setSearchTerm('');
+      setActiveQuarter(1);
+      
+      // Déterminer quel trimestre actif en fonction du mois actuel
+      const currentMonth = new Date().getMonth() + 1;
+      const currentQuarter = Math.ceil(currentMonth / 3);
+      setActiveQuarter(currentQuarter);
     }
   }, [isOpen]);
 
@@ -54,6 +64,14 @@ const GameCalendarModal: React.FC<GameCalendarModalProps> = ({ isOpen, onClose }
     'January', 'February', 'March', 'April', 'May', 'June',
     'July', 'August', 'September', 'October', 'November', 'December'
   ];
+  
+  // Trimestres et leurs mois associés
+  const quarters = {
+    1: ['January', 'February', 'March'],
+    2: ['April', 'May', 'June'],
+    3: ['July', 'August', 'September'],
+    4: ['October', 'November', 'December']
+  };
   
   useEffect(() => {
     if (isOpen) {
@@ -88,16 +106,13 @@ const GameCalendarModal: React.FC<GameCalendarModalProps> = ({ isOpen, onClose }
   };
   
   const togglePlatformFilter = (platformId: number) => {
-      // Si on clique sur le filtre déjà actif, on ne fait rien
     if (selectedPlatforms.includes(platformId)) {
       return;
     }
-    // Sinon, on remplace le filtre actuel par le nouveau (pas de cumul)
     setSelectedPlatforms([platformId]);
   };
   
   const handleGameClick = (gameId: number) => {
-    // Ajouter un flag indiquant que l'utilisateur vient de la modal du calendrier
     sessionStorage.setItem('cameFromCalendar', 'true');
     router.push(`/games/${gameId}`);
     onClose();
@@ -108,14 +123,99 @@ const GameCalendarModal: React.FC<GameCalendarModalProps> = ({ isOpen, onClose }
     return new Date(timestamp * 1000).getDate();
   };
   
+  // Format date for list view
+  const formatDate = (timestamp: number): string => {
+    const date = new Date(timestamp * 1000);
+    return date.toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
+  };
+  
+  // Navigation années
+  const changeYear = (increment: number) => {
+    setYear(prevYear => prevYear + increment);
+  };
+  
+  // Filtrer les jeux par recherche
+  const filteredGames = useMemo(() => {
+    if (!searchTerm.trim()) return calendarGames;
+    
+    const filtered: CalendarGames = {};
+    
+    Object.keys(calendarGames).forEach(month => {
+      filtered[month] = calendarGames[month].filter(game => 
+        game.name.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    });
+    
+    return filtered;
+  }, [calendarGames, searchTerm]);
+  
+  // Vérifier si un trimestre a des jeux
+  const hasGamesInQuarter = (quarter: number): boolean => {
+    return quarters[quarter as keyof typeof quarters].some(month => 
+      filteredGames[month] && filteredGames[month].length > 0
+    );
+  };
+  
   return (
     <Modal 
       isOpen={isOpen} 
       onClose={onClose} 
-      title={`Game Releases Calendar ${year}`}
+      title=""
       className={styles.calendarModal}
     >
       <div className={styles.calendarModalContent}>
+        {/* En-tête avec navigation d'année et recherche */}
+        <div className={styles.calendarHeader}>
+          <div className={styles.yearNavigation}>
+            <button 
+              className={styles.yearButton}
+              onClick={() => changeYear(-1)}
+              aria-label="Previous year"
+            >
+              <FaChevronLeft size={14} />
+            </button>
+            <div className={styles.yearSelector}>
+              <FaCalendarAlt size={16} />
+              <span>Game Releases {year}</span>
+            </div>
+            <button 
+              className={styles.yearButton}
+              onClick={() => changeYear(1)}
+              aria-label="Next year"
+            >
+              <FaChevronRight size={14} />
+            </button>
+          </div>
+          
+          <div className={styles.searchContainer}>
+            <FaSearch className={styles.searchIcon} size={14} />
+            <input
+              type="text"
+              className={styles.searchInput}
+              placeholder="Search game in calendar"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+          
+          <div className={styles.viewToggle}>
+            <div 
+              className={`${styles.viewButton} ${viewMode === 'grid' ? styles.viewButtonActive : ''}`}
+              onClick={() => setViewMode('grid')}
+              title="Grid view"
+            >
+              <FaTh size={16} />
+            </div>
+            <div 
+              className={`${styles.viewButton} ${viewMode === 'list' ? styles.viewButtonActive : ''}`}
+              onClick={() => setViewMode('list')}
+              title="List view"
+            >
+              <FaList size={16} />
+            </div>
+          </div>
+        </div>
+        
         <div className={styles.platformFilters}>
           <div className={styles.filtersTitle}>Filter by Platform:</div>
           <div className={styles.platformButtons}>
@@ -157,6 +257,19 @@ const GameCalendarModal: React.FC<GameCalendarModalProps> = ({ isOpen, onClose }
           </div>
         </div>
         
+        {/* Onglets de trimestre */}
+        <div className={styles.quarterTabs}>
+          {[1, 2, 3, 4].map(quarter => (
+            <div 
+              key={quarter}
+              className={`${styles.quarterTab} ${activeQuarter === quarter ? styles.quarterTabActive : ''}`}
+              onClick={() => setActiveQuarter(quarter)}
+            >
+              Q{quarter}
+            </div>
+          ))}
+        </div>
+        
         {loading ? (
           <div className={styles.loadingContainer}>
             <FaSpinner className={styles.loadingSpinner} />
@@ -164,16 +277,20 @@ const GameCalendarModal: React.FC<GameCalendarModalProps> = ({ isOpen, onClose }
           </div>
         ) : error ? (
           <div className={styles.errorContainer}>{error}</div>
-        ) : (
+        ) : !hasGamesInQuarter(activeQuarter) ? (
+          <div className={styles.emptyQuarterMessage}>
+            No releases found for Q{activeQuarter} {year} with the current filters.
+          </div>
+        ) : viewMode === 'grid' ? (
           <div className={styles.monthsGrid}>
-            {months.map(month => (
+            {quarters[activeQuarter as keyof typeof quarters].map(month => (
               <div key={month} className={styles.monthCard}>
                 <div className={styles.monthHeader}>
                   <h3>{month} {year}</h3>
                 </div>
                 <div className={styles.monthGames}>
-                  {calendarGames[month] && calendarGames[month].length > 0 ? (
-                    calendarGames[month].map(game => (
+                  {filteredGames[month] && filteredGames[month].length > 0 ? (
+                    filteredGames[month].map(game => (
                       <div 
                         key={game.id} 
                         className={styles.calendarGame}
@@ -203,6 +320,47 @@ const GameCalendarModal: React.FC<GameCalendarModalProps> = ({ isOpen, onClose }
                 </div>
               </div>
             ))}
+          </div>
+        ) : (
+          <div className={styles.listView}>
+            {quarters[activeQuarter as keyof typeof quarters].map(month => {
+              if (!filteredGames[month] || filteredGames[month].length === 0) return null;
+              
+              return (
+                <div key={month} className={styles.listMonth}>
+                  <div className={styles.listMonthHeader}>
+                    <h3>{month} {year}</h3>
+                    <span>{filteredGames[month].length} {filteredGames[month].length === 1 ? 'game' : 'games'}</span>
+                  </div>
+                  <div className={styles.listMonthGames}>
+                    {filteredGames[month].map(game => (
+                      <div 
+                        key={game.id} 
+                        className={styles.listGame}
+                        onClick={() => handleGameClick(game.id)}
+                      >
+                        <div className={styles.listGameDate}>
+                          {formatDate(game.release_date)}
+                        </div>
+                        <div className={styles.listGameImage}>
+                          <img src={game.cover} alt={game.name} style={{width: '100%', height: '100%', objectFit: 'cover'}} />
+                        </div>
+                        <div className={styles.listGameInfo}>
+                          <div className={styles.listGameTitle}>{game.name}</div>
+                          <div className={styles.listGamePlatforms}>
+                            {game.platforms.map(platformId => (
+                              <span key={platformId} className={styles.platformIcon}>
+                                <PlatformImage platformId={platformId} alt="" size={16} />
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         )}
       </div>
