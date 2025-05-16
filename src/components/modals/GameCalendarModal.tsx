@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import Modal from './Modal';
 import styles from '../../styles/GameCalendarModal.module.css';
 import { useRouter } from 'next/navigation';
-import { FaCalendarAlt, FaSpinner, FaSearch, FaChevronLeft, FaChevronRight, FaList, FaTh } from 'react-icons/fa';
+import { FaCalendarAlt, FaSpinner, FaSearch, FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 import PlatformImage from '../PlatformImage';
 
 interface Game {
@@ -40,10 +40,13 @@ const GameCalendarModal: React.FC<GameCalendarModalProps> = ({ isOpen, onClose }
   const [selectedPlatforms, setSelectedPlatforms] = useState<number[]>([PLATFORMS.PS5]);
   const [year, setYear] = useState(2025);
   const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
+  const [searchResults, setSearchResults] = useState<CalendarGames>({});
   const [activeQuarter, setActiveQuarter] = useState(1); // 1-4 pour Q1-Q4
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [gamesPerPage, setGamesPerPage] = useState(5); // Limite à 5 jeux par mois
+  const [selectedMonth, setSelectedMonth] = useState<string | null>(null);
+  const [gamesPerPage, setGamesPerPage] = useState(10); // Increased from 5 to 10
   const [currentPage, setCurrentPage] = useState(1);
+  const monthRefs = useRef<{[key: string]: HTMLDivElement | null}>({});
   const router = useRouter();
   
   // Reset when modal opens
@@ -53,6 +56,7 @@ const GameCalendarModal: React.FC<GameCalendarModalProps> = ({ isOpen, onClose }
       setYear(2025);
       setSearchTerm('');
       setActiveQuarter(1);
+      setSelectedMonth(null);
       
       // Déterminer quel trimestre actif en fonction du mois actuel
       const currentMonth = new Date().getMonth() + 1;
@@ -136,29 +140,66 @@ const GameCalendarModal: React.FC<GameCalendarModalProps> = ({ isOpen, onClose }
     setYear(prevYear => prevYear + increment);
   };
   
-  // Filtrer les jeux par recherche
-  const filteredGames = useMemo(() => {
-    if (!searchTerm.trim()) {
-      // Appliquer seulement la pagination sans filtrage par recherche
-      const filtered: CalendarGames = {};
-      Object.keys(calendarGames).forEach((month) => {
-        // Limiter le nombre de jeux affichés par mois
-        filtered[month] = calendarGames[month]?.slice(0, gamesPerPage) || [];
+  // Scroll to a specific month
+  const scrollToMonth = (month: string) => {
+    setSelectedMonth(month);
+    if (monthRefs.current[month]) {
+      monthRefs.current[month]?.scrollIntoView({ 
+        behavior: 'smooth',
+        block: 'start'
       });
-      return filtered;
+    }
+  };
+  
+  // Implement debounce for search input
+  useEffect(() => {
+    const debounceTimer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 300); // Wait 300ms after typing stops
+    
+    return () => {
+      clearTimeout(debounceTimer);
+    };
+  }, [searchTerm]);
+  
+  // Optimize search by using the debounced value and memoizing results
+  useEffect(() => {
+    // Don't search for very short terms
+    if (debouncedSearchTerm.length < 2) {
+      setSearchResults({});
+      return;
     }
     
-    // Filtrage par recherche + pagination
-    const filtered: CalendarGames = {};
+    // Create optimized search results
+    const results: CalendarGames = {};
+    const searchTermLower = debouncedSearchTerm.toLowerCase();
+    
     Object.keys(calendarGames).forEach((month) => {
-      const matchingGames = calendarGames[month]?.filter(
-        (game) => game.name.toLowerCase().includes(searchTerm.toLowerCase())
-      ) || [];
-      // Limiter le nombre de jeux affichés après filtrage
-      filtered[month] = matchingGames.slice(0, gamesPerPage);
+      if (!calendarGames[month]) return;
+      
+      // Use more efficient filtering and limit results per month to improve performance
+      const matchingGames = calendarGames[month]
+        .filter(game => game.name.toLowerCase().includes(searchTermLower))
+        .slice(0, 10); // Limit to 10 games per month to prevent performance issues
+      
+      if (matchingGames.length > 0) {
+        results[month] = matchingGames;
+      }
     });
-    return filtered;
-  }, [calendarGames, searchTerm, gamesPerPage]);
+    
+    setSearchResults(results);
+  }, [debouncedSearchTerm, calendarGames]);
+  
+  // Modify this to use the optimized search results
+  const filteredGames = useMemo(() => {
+    if (!debouncedSearchTerm.trim()) {
+      // No search term, show regular calendar
+      return calendarGames;
+    }
+    
+    // Return pre-computed search results instead of re-filtering on every render
+    return searchResults;
+  }, [debouncedSearchTerm, calendarGames, searchResults]);
   
   // Vérifier si un trimestre a des jeux
   const hasGamesInQuarter = (quarter: number): boolean => {
@@ -203,27 +244,13 @@ const GameCalendarModal: React.FC<GameCalendarModalProps> = ({ isOpen, onClose }
             <input
               type="text"
               className={styles.searchInput}
-              placeholder="Search game in calendar"
+              placeholder={`Search game in ${searchTerm.length < 2 ? 'calendar' : 'all of ' + year}`}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
-          </div>
-          
-          <div className={styles.viewToggle}>
-            <div 
-              className={`${styles.viewButton} ${viewMode === 'grid' ? styles.viewButtonActive : ''}`}
-              onClick={() => setViewMode('grid')}
-              title="Grid view"
-            >
-              <FaTh size={16} />
-            </div>
-            <div 
-              className={`${styles.viewButton} ${viewMode === 'list' ? styles.viewButtonActive : ''}`}
-              onClick={() => setViewMode('list')}
-              title="List view"
-            >
-              <FaList size={16} />
-            </div>
+            {searchTerm.length > 0 && debouncedSearchTerm !== searchTerm && (
+              <div className={styles.searchingIndicator}>Searching...</div>
+            )}
           </div>
         </div>
         
@@ -281,6 +308,19 @@ const GameCalendarModal: React.FC<GameCalendarModalProps> = ({ isOpen, onClose }
           ))}
         </div>
         
+        {/* Navigation par mois */}
+        <div className={styles.monthNavigation}>
+          {quarters[activeQuarter as keyof typeof quarters].map(month => (
+            <div 
+              key={month}
+              className={`${styles.monthNavItem} ${selectedMonth === month ? styles.monthNavActive : ''}`}
+              onClick={() => scrollToMonth(month)}
+            >
+              {month}
+            </div>
+          ))}
+        </div>
+        
         {loading ? (
           <div className={styles.loadingContainer}>
             <FaSpinner className={styles.loadingSpinner} />
@@ -288,73 +328,33 @@ const GameCalendarModal: React.FC<GameCalendarModalProps> = ({ isOpen, onClose }
           </div>
         ) : error ? (
           <div className={styles.errorContainer}>{error}</div>
-        ) : !hasGamesInQuarter(activeQuarter) ? (
+        ) : debouncedSearchTerm.length > 0 && Object.values(searchResults).flat().length === 0 ? (
+          <div className={styles.emptyQuarterMessage}>
+            No games found matching "{debouncedSearchTerm}"
+          </div>
+        ) : !hasGamesInQuarter(activeQuarter) && !debouncedSearchTerm.trim() ? (
           <div className={styles.emptyQuarterMessage}>
             No releases found for Q{activeQuarter} {year} with the current filters.
           </div>
-        ) : viewMode === 'grid' ? (
-          <div className={styles.monthsGrid}>
-            {quarters[activeQuarter as keyof typeof quarters].map(month => (
-              <div key={month} className={styles.monthCard}>
-                <div className={styles.monthHeader}>
-                  <h3>{month} {year}</h3>
-                </div>
-                <div className={styles.monthGames}>
-                  {filteredGames[month] && filteredGames[month].length > 0 ? (
-                    filteredGames[month].map(game => (
-                      <div 
-                        key={game.id} 
-                        className={styles.calendarGame}
-                        onClick={() => handleGameClick(game.id)}
-                      >
-                        <div className={styles.gameDateBadge}>
-                          {getDayFromTimestamp(game.release_date)}
-                        </div>
-                        <div className={styles.gameImageContainer}>
-                          <img src={game.cover} alt={game.name} className={styles.gameImage} />
-                        </div>
-                        <div className={styles.gameInfo}>
-                          <div className={styles.gameName}>{game.name}</div>
-                          <div className={styles.gamePlatforms}>
-                            {game.platforms.map(platformId => (
-                              <span key={platformId} className={styles.platformIcon}>
-                                <PlatformImage platformId={platformId} alt="" size={14} />
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    <div className={styles.noGamesMessage}>No scheduled releases</div>
-                  )}
-                </div>
-                {calendarGames[month] && calendarGames[month].length > gamesPerPage && (
-                  <div key={`pagination-${month}`} className={styles.paginationControls}>
-                    <span>Page {currentPage}</span>
-                    <div className={styles.pageNumbers}>
-                      {[1, 2, 3].map(pageNum => (
-                        <button 
-                          key={pageNum}
-                          className={`${styles.pageNumber} ${currentPage === pageNum ? styles.activePage : ''}`}
-                          onClick={() => setCurrentPage(pageNum)}
-                        >
-                          {pageNum}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
         ) : (
           <div className={styles.listView}>
-            {quarters[activeQuarter as keyof typeof quarters].map(month => {
-              if (!filteredGames[month] || filteredGames[month].length === 0) return null;
+            {months.map(month => {
+              // Only show months from the active quarter unless we're searching
+              if (!debouncedSearchTerm && !quarters[activeQuarter as keyof typeof quarters].includes(month)) {
+                return null;
+              }
+              
+              // Skip empty months
+              if (!filteredGames[month] || filteredGames[month].length === 0) {
+                return null;
+              }
               
               return (
-                <div key={month} className={styles.listMonth}>
+                <div 
+                  key={month} 
+                  className={styles.listMonth}
+                  ref={el => { monthRefs.current[month] = el; }}
+                >
                   <div className={styles.listMonthHeader}>
                     <h3>{month} {year}</h3>
                     <span>{filteredGames[month].length} {filteredGames[month].length === 1 ? 'game' : 'games'}</span>

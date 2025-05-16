@@ -18,6 +18,7 @@
   margin-bottom: 20px;
   padding-top: 10px;
   position: relative;
+  height: 60px; /* Set a fixed height to contain the search bar */
 }
 
 /* Modification de la position de la barre de recherche pour qu'elle soit centrée */
@@ -27,6 +28,25 @@
   transform: translateX(-50%);
   width: 280px;
   margin-top: 5px;
+}
+
+/* Add a searching indicator */
+.searchingIndicator {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #6c5ce7;
+  font-size: 12px;
+  font-style: italic;
+  animation: pulse 1.5s infinite;
+  pointer-events: none;
+}
+
+@keyframes pulse {
+  0% { opacity: 0.6; }
+  50% { opacity: 1; }
+  100% { opacity: 0.6; }
 }
 
 .searchInput {
@@ -58,10 +78,7 @@
 /* Ajustement des autres éléments pour accommoder la barre de recherche centrée */
 .yearNavigation {
   z-index: 1;
-}
-
-.viewToggle {
-  z-index: 1;
+  margin-right: auto; /* Push to the left */
 }
 
 .yearNavigation {
@@ -103,34 +120,11 @@
   transform: none;
 }
 
-.searchContainer {
-  position: relative;
-  width: 250px;
-}
-
-.searchInput {
-  width: 100%;
-  padding: 8px 15px 8px 40px;
-  border-radius: 20px;
-  border: 1px solid #3a3a3a;
-  background: rgba(255, 255, 255, 0.08);
-  color: white;
-  font-size: 14px;
-}
-
-.searchIcon {
-  position: absolute;
-  left: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: #b3b3b3;
-  pointer-events: none;
-}
-
 /* Onglets de trimestre */
 .quarterTabs {
   display: flex;
   margin-bottom: 20px;
+  margin-top: 20px; /* Add space between header and tabs */
   background: rgba(0, 0, 0, 0.2);
   border-radius: 10px;
   padding: 5px;
@@ -151,30 +145,32 @@
   color: white;
 }
 
-/* Option de vue */
-.viewToggle {
+/* Navigation par mois */
+.monthNavigation {
   display: flex;
-  align-items: center;
   gap: 8px;
-  margin-left: auto;
-  background: rgba(255, 255, 255, 0.08);
-  border-radius: 6px;
-  padding: 5px;
-}
-
-.viewButton {
-  display: flex;
-  align-items: center;
+  margin-bottom: 20px;
   justify-content: center;
-  width: 30px;
-  height: 30px;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: all 0.2s;
+  flex-wrap: wrap;
 }
 
-.viewButtonActive {
-  background: rgba(108, 92, 231, 0.3);
+.monthNavItem {
+  background-color: rgba(255, 255, 255, 0.05);
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.monthNavItem:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  transform: translateY(-2px);
+}
+
+.monthNavActive {
+  background-color: rgba(108, 92, 231, 0.4);
+  color: white;
 }
 
 /* Style pour la vue liste */
@@ -324,114 +320,14 @@
   background-color: rgba(108, 92, 231, 0.3);
 }
 
-.monthsGrid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 20px;
-}
-
-.monthCard {
-  background-color: rgba(255, 255, 255, 0.05);
+.emptyQuarterMessage {
+  text-align: center;
+  padding: 30px;
+  color: #8a8a8a;
+  font-size: 14px;
+  background: rgba(255, 255, 255, 0.05);
   border-radius: 10px;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  min-height: 220px;
-}
-
-.monthHeader {
-  padding: 10px 15px;
-  background-color: rgba(108, 92, 231, 0.2);
-  border-bottom: 1px solid rgba(108, 92, 231, 0.3);
-}
-
-.monthHeader h3 {
-  margin: 0;
-  font-size: 16px;
-  font-weight: 500;
-  color: #ffffff;
-}
-
-.monthGames {
-  padding: 10px;
-  flex-grow: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  overflow-y: auto;
-  max-height: 220px;
-}
-
-.calendarGame {
-  display: flex;
-  align-items: center;
-  padding: 8px;
-  background-color: rgba(255, 255, 255, 0.07);
-  border-radius: 6px;
-  cursor: pointer;
-  transition: transform 0.2s ease, background-color 0.2s ease;
-}
-
-.calendarGame:hover {
-  transform: translateY(-2px);
-  background-color: rgba(255, 255, 255, 0.1);
-}
-
-.gameDateBadge {
-  min-width: 26px;
-  height: 26px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: #6c5ce7;
-  border-radius: 4px;
-  color: white;
-  font-weight: 500;
-  font-size: 12px;
-  margin-right: 8px;
-}
-
-.gameImageContainer {
-  width: 40px;
-  height: 50px;
-  border-radius: 4px;
-  overflow: hidden;
-  margin-right: 10px;
-  flex-shrink: 0;
-}
-
-.gameImage {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.gameInfo {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  overflow: hidden;
-}
-
-.gameName {
-  font-size: 13px;
-  font-weight: 500;
-  margin-bottom: 4px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.gamePlatforms {
-  display: flex;
-  gap: 5px;
-}
-
-.platformIcon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  opacity: 0.8;
+  margin: 20px 0;
 }
 
 .noGamesMessage {
@@ -508,14 +404,24 @@
 
 /* Media queries for responsive design */
 @media (max-width: 768px) {
-  .monthsGrid {
-    grid-template-columns: repeat(2, 1fr);
+  .monthNavigation {
+    flex-wrap: wrap;
+  }
+  
+  .monthNavItem {
+    font-size: 13px;
+    padding: 5px 10px;
   }
 }
 
 @media (max-width: 480px) {
-  .monthsGrid {
-    grid-template-columns: 1fr;
+  .monthNavigation {
+    gap: 5px;
+  }
+  
+  .monthNavItem {
+    font-size: 12px;
+    padding: 4px 8px;
   }
   
   .platformButtons {
