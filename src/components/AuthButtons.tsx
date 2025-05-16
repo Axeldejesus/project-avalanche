@@ -133,7 +133,7 @@ const AuthButtons: React.FC = () => {
   // If user is logged in, show avatar
   if (currentUser && userProfile) {
     return (
-      <div className={styles.userMenu}>
+      <div className={`${styles.userMenu} ${styles.userMenuLoggedIn}`}>
         <Link href="/profile">
           <div className={`${styles.userButton} ${isProfilePage ? styles.userButtonActive : ''}`}>
             {userProfile.profileImageUrl ? (
@@ -164,12 +164,14 @@ const AuthButtons: React.FC = () => {
   return (
     <>
       <div className={styles.userMenu}>
-        <button className={styles.loginBtn} onClick={openLoginModal}>
-          Login
-        </button>
-        <button className={styles.registerBtn} onClick={openRegisterModal}>
-          Register
-        </button>
+        <div className={styles.authButtonsContainer}>
+          <button className={styles.loginBtn} onClick={openLoginModal}>
+            Login
+          </button>
+          <button className={styles.registerBtn} onClick={openRegisterModal}>
+            Register
+          </button>
+        </div>
       </div>
       
       <LoginModal 
