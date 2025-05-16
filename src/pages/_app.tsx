@@ -1,6 +1,6 @@
-import './globals.css';
+import '../styles/globals.css';
 import { Space_Grotesk, Oxanium } from 'next/font/google';
-import type { Metadata } from 'next';
+import type { AppProps } from 'next/app';
 
 // Définition des polices avec next/font
 const spaceGrotesk = Space_Grotesk({
@@ -17,19 +17,10 @@ const oxanium = Oxanium({
   weight: ['400', '500', '600', '700'],
 });
 
-export const metadata: Metadata = {
-  title: 'Project Avalanche',
-  description: 'Découvrez votre prochaine aventure de jeu',
-};
-
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function App({ Component, pageProps }: AppProps) {
   return (
-    <html lang="fr" className={`${spaceGrotesk.variable} ${oxanium.variable}`}>
-      <body>{children}</body>
-    </html>
+    <main className={`${spaceGrotesk.variable} ${oxanium.variable}`}>
+      <Component {...pageProps} />
+    </main>
   );
 }
