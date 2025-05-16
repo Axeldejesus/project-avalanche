@@ -468,6 +468,44 @@
   100% { transform: rotate(360deg); }
 }
 
+/* Styles pour la pagination */
+.paginationControls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 15px;
+  width: 100%;
+}
+
+.pageNumbers {
+  display: flex;
+  gap: 5px;
+  margin-left: 10px;
+}
+
+.pageNumber {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1px solid var(--border-color);
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.pageNumber:hover {
+  background: var(--highlight-light);
+}
+
+.activePage {
+  background: var(--accent-color);
+  color: white;
+  border-color: var(--accent-color);
+}
+
 /* Media queries for responsive design */
 @media (max-width: 768px) {
   .monthsGrid {

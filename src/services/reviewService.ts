@@ -1,5 +1,5 @@
 import { db, auth } from './authenticate';
-import { collection, addDoc, updateDoc, deleteDoc, doc, getDocs, getDoc, query, where, orderBy, limit, startAfter, DocumentSnapshot } from 'firebase/firestore';
+import { collection, updateDoc, deleteDoc, doc, getDocs, getDoc, query, where, orderBy, limit, startAfter, DocumentSnapshot, setDoc, collectionGroup } from 'firebase/firestore';
 
 export interface Review {
   id?: string;
@@ -15,21 +15,27 @@ export interface Review {
   updatedAt: string;
 }
 
-// Ajouter un nouvel avis
+// Ajouter un nouvel avis - stocké dans une sous-collection de l'utilisateur
 export const addReview = async (reviewData: Omit<Review, 'id' | 'createdAt' | 'updatedAt'>): Promise<{ success: boolean; error?: string; reviewId?: string }> => {
   try {
     if (!auth || !auth.currentUser) {
       return { success: false, error: 'User not authenticated' };
     }
 
+    // Utiliser gameId comme document ID dans la sous-collection reviews de l'utilisateur
+    const reviewId = String(reviewData.gameId);
     const now = new Date().toISOString();
-    const reviewRef = await addDoc(collection(db!, 'reviews'), {
+    
+    // Chemin: review/{userId}/reviews/{gameId}
+    const reviewRef = doc(db!, `review/${reviewData.userId}/reviews`, reviewId);
+    
+    await setDoc(reviewRef, {
       ...reviewData,
       createdAt: now,
       updatedAt: now
     });
 
-    return { success: true, reviewId: reviewRef.id };
+    return { success: true, reviewId: reviewId };
   } catch (error: any) {
     console.error('Error adding review:', error);
     return { success: false, error: error.message };
@@ -43,16 +49,12 @@ export const updateReview = async (reviewId: string, data: { rating?: number; co
       return { success: false, error: 'User not authenticated' };
     }
 
-    const reviewRef = doc(db!, 'reviews', reviewId);
+    // Le gameId est utilisé comme reviewId
+    const reviewRef = doc(db!, `review/${auth.currentUser.uid}/reviews`, reviewId);
     const reviewSnap = await getDoc(reviewRef);
 
     if (!reviewSnap.exists()) {
       return { success: false, error: 'Review not found' };
-    }
-
-    const reviewData = reviewSnap.data();
-    if (reviewData.userId !== auth.currentUser.uid) {
-      return { success: false, error: 'Not authorized to update this review' };
     }
 
     await updateDoc(reviewRef, {
@@ -74,16 +76,11 @@ export const deleteReview = async (reviewId: string): Promise<{ success: boolean
       return { success: false, error: 'User not authenticated' };
     }
 
-    const reviewRef = doc(db!, 'reviews', reviewId);
+    const reviewRef = doc(db!, `review/${auth.currentUser.uid}/reviews`, reviewId);
     const reviewSnap = await getDoc(reviewRef);
 
     if (!reviewSnap.exists()) {
       return { success: false, error: 'Review not found' };
-    }
-
-    const reviewData = reviewSnap.data();
-    if (reviewData.userId !== auth.currentUser.uid) {
-      return { success: false, error: 'Not authorized to delete this review' };
     }
 
     await deleteDoc(reviewRef);
@@ -101,8 +98,9 @@ export const getReviewsByGame = async (gameId: number, pageSize: number = 10, la
       return { reviews: [], hasMore: false, error: 'Database not initialized' };
     }
 
+    // Utiliser collectionGroup pour requêter à travers toutes les sous-collections "reviews"
     let reviewsQuery = query(
-      collection(db, 'reviews'),
+      collectionGroup(db, 'reviews'),
       where('gameId', '==', gameId),
       orderBy('createdAt', 'desc')
     );
@@ -119,12 +117,20 @@ export const getReviewsByGame = async (gameId: number, pageSize: number = 10, la
 
     reviewsSnapshot.forEach((doc) => {
       newLastDoc = doc;
-      reviews.push({ id: doc.id, ...doc.data() } as Review);
+      // L'ID est maintenant le chemin complet du document
+      const paths = doc.ref.path.split('/');
+      const userId = paths[1]; // review/{userId}/reviews/{gameId}
+      reviews.push({ 
+        id: doc.id, 
+        ...doc.data(),
+        // Assurez-vous que userId est correctement enregistré
+        userId: userId 
+      } as Review);
     });
 
     const hasMore = reviews.length === pageSize;
-
     return { reviews, lastDoc: newLastDoc, hasMore };
+    
   } catch (error: any) {
     console.error('Error getting reviews by game:', error);
     
@@ -149,9 +155,9 @@ export const getReviewsByUser = async (userId: string, pageSize: number = 5, las
       return { reviews: [], hasMore: false, error: 'Database not initialized' };
     }
 
+    // Accéder directement à la sous-collection de reviews de l'utilisateur
     let reviewsQuery = query(
-      collection(db, 'reviews'),
-      where('userId', '==', userId),
+      collection(db, `review/${userId}/reviews`),
       orderBy('createdAt', 'desc')
     );
 
@@ -167,12 +173,16 @@ export const getReviewsByUser = async (userId: string, pageSize: number = 5, las
 
     reviewsSnapshot.forEach((doc) => {
       newLastDoc = doc;
-      reviews.push({ id: doc.id, ...doc.data() } as Review);
+      reviews.push({ 
+        id: doc.id, 
+        ...doc.data(),
+        userId: userId // Assurez-vous que le userId est correct
+      } as Review);
     });
 
     const hasMore = reviews.length === pageSize;
-
     return { reviews, lastDoc: newLastDoc, hasMore };
+    
   } catch (error: any) {
     console.error('Error getting reviews by user:', error);
     
@@ -197,20 +207,20 @@ export const getUserGameReview = async (userId: string, gameId: number): Promise
       return null;
     }
 
-    const reviewsQuery = query(
-      collection(db, 'reviews'),
-      where('userId', '==', userId),
-      where('gameId', '==', gameId)
-    );
+    // Accès direct au document: review/{userId}/reviews/{gameId}
+    const reviewRef = doc(db, `review/${userId}/reviews`, String(gameId));
+    const reviewDoc = await getDoc(reviewRef);
 
-    const reviewsSnapshot = await getDocs(reviewsQuery);
-
-    if (reviewsSnapshot.empty) {
+    if (!reviewDoc.exists()) {
       return null;
     }
 
-    const reviewDoc = reviewsSnapshot.docs[0];
-    return { id: reviewDoc.id, ...reviewDoc.data() } as Review;
+    return { 
+      id: reviewDoc.id, 
+      ...reviewDoc.data(),
+      userId: userId // S'assurer que userId est correct
+    } as Review;
+    
   } catch (error: any) {
     console.error('Error checking if user reviewed game:', error);
     return null;

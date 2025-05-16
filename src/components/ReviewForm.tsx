@@ -55,13 +55,9 @@ const ReviewForm: React.FC<ReviewFormProps> = ({ gameId, gameName, gameCover, on
       return;
     }
 
-    if (rating === 0) {
-      setError('Please select a rating');
-      return;
-    }
-
-    if (comment.trim() === '') {
-      setError('Please enter a comment');
+    // New validation: require at least one of rating or comment
+    if (rating === 0 && comment.trim() === '') {
+      setError('Please provide either a rating or a comment');
       return;
     }
 
@@ -78,9 +74,10 @@ const ReviewForm: React.FC<ReviewFormProps> = ({ gameId, gameName, gameCover, on
 
       let result;
       
+      // If we already have an existing review, we're editing it
       if (existingReview && isEditing) {
-        // Update existing review
-        result = await updateReview(existingReview.id!, {
+        // Le reviewId est maintenant le gameId sous forme de string
+        result = await updateReview(String(gameId), {
           rating,
           comment
         });
@@ -96,6 +93,20 @@ const ReviewForm: React.FC<ReviewFormProps> = ({ gameId, gameName, gameCover, on
           setIsEditing(false);
         }
       } else {
+        // Before adding, double check if user already has a review for this game
+        const existingUserReview = await getUserGameReview(user.uid, gameId);
+        
+        if (existingUserReview) {
+          // User already has a review, switch to edit mode
+          setExistingReview(existingUserReview);
+          setRating(existingUserReview.rating);
+          setComment(existingUserReview.comment);
+          setIsEditing(true);
+          setError('You already reviewed this game. You can edit your existing review.');
+          setIsSubmitting(false);
+          return;
+        }
+        
         // Add new review
         result = await addReview({
           userId: user.uid,
@@ -110,7 +121,7 @@ const ReviewForm: React.FC<ReviewFormProps> = ({ gameId, gameName, gameCover, on
         
         if (result.success && result.reviewId) {
           setExistingReview({
-            id: result.reviewId,
+            id: result.reviewId, // Sera le gameId en string
             userId: user.uid,
             username: userProfile.username || user.email!.split('@')[0],
             userProfileImage: userProfile.profileImageUrl,
@@ -139,7 +150,8 @@ const ReviewForm: React.FC<ReviewFormProps> = ({ gameId, gameName, gameCover, on
   };
 
   const handleDeleteReview = async () => {
-    if (!existingReview || !existingReview.id) return;
+    // Le reviewId est maintenant le gameId sous forme de string
+    if (!existingReview) return;
     
     if (!confirm('Are you sure you want to delete your review?')) return;
     
@@ -148,7 +160,8 @@ const ReviewForm: React.FC<ReviewFormProps> = ({ gameId, gameName, gameCover, on
     setSuccess(null);
 
     try {
-      const result = await deleteReview(existingReview.id);
+      // Utiliser le gameId comme ID de la review
+      const result = await deleteReview(String(gameId));
       
       if (result.success) {
         setExistingReview(null);

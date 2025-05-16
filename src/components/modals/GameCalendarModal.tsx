@@ -42,6 +42,8 @@ const GameCalendarModal: React.FC<GameCalendarModalProps> = ({ isOpen, onClose }
   const [searchTerm, setSearchTerm] = useState('');
   const [activeQuarter, setActiveQuarter] = useState(1); // 1-4 pour Q1-Q4
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [gamesPerPage, setGamesPerPage] = useState(5); // Limite à 5 jeux par mois
+  const [currentPage, setCurrentPage] = useState(1);
   const router = useRouter();
   
   // Reset when modal opens
@@ -136,18 +138,27 @@ const GameCalendarModal: React.FC<GameCalendarModalProps> = ({ isOpen, onClose }
   
   // Filtrer les jeux par recherche
   const filteredGames = useMemo(() => {
-    if (!searchTerm.trim()) return calendarGames;
+    if (!searchTerm.trim()) {
+      // Appliquer seulement la pagination sans filtrage par recherche
+      const filtered: CalendarGames = {};
+      Object.keys(calendarGames).forEach((month) => {
+        // Limiter le nombre de jeux affichés par mois
+        filtered[month] = calendarGames[month]?.slice(0, gamesPerPage) || [];
+      });
+      return filtered;
+    }
     
+    // Filtrage par recherche + pagination
     const filtered: CalendarGames = {};
-    
-    Object.keys(calendarGames).forEach(month => {
-      filtered[month] = calendarGames[month].filter(game => 
-        game.name.toLowerCase().includes(searchTerm.toLowerCase())
-      );
+    Object.keys(calendarGames).forEach((month) => {
+      const matchingGames = calendarGames[month]?.filter(
+        (game) => game.name.toLowerCase().includes(searchTerm.toLowerCase())
+      ) || [];
+      // Limiter le nombre de jeux affichés après filtrage
+      filtered[month] = matchingGames.slice(0, gamesPerPage);
     });
-    
     return filtered;
-  }, [calendarGames, searchTerm]);
+  }, [calendarGames, searchTerm, gamesPerPage]);
   
   // Vérifier si un trimestre a des jeux
   const hasGamesInQuarter = (quarter: number): boolean => {
@@ -318,6 +329,22 @@ const GameCalendarModal: React.FC<GameCalendarModalProps> = ({ isOpen, onClose }
                     <div className={styles.noGamesMessage}>No scheduled releases</div>
                   )}
                 </div>
+                {calendarGames[month] && calendarGames[month].length > gamesPerPage && (
+                  <div key={`pagination-${month}`} className={styles.paginationControls}>
+                    <span>Page {currentPage}</span>
+                    <div className={styles.pageNumbers}>
+                      {[1, 2, 3].map(pageNum => (
+                        <button 
+                          key={pageNum}
+                          className={`${styles.pageNumber} ${currentPage === pageNum ? styles.activePage : ''}`}
+                          onClick={() => setCurrentPage(pageNum)}
+                        >
+                          {pageNum}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             ))}
           </div>
