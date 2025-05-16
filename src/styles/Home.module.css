@@ -18,50 +18,81 @@
 .header {
   display: flex;
   align-items: center;
-  padding: 1rem 2rem;
-  background-color: #1a1a1a;
+  padding: 0.75rem 2rem;
+  background-color: rgba(18, 18, 24, 0.85);
+  backdrop-filter: blur(10px);
   position: sticky;
   top: 0;
   z-index: 100;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
 }
 
 .logo {
+  font-family: var(--font-oxanium), sans-serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  background: linear-gradient(90deg, #7c3aed, #6c5ce7);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-decoration: none;
+  position: relative;
   margin-right: 2rem;
+}
+
+.logo::after {
+  content: '';
+  position: absolute;
+  bottom: -3px;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg, #7c3aed, transparent);
+  border-radius: 2px;
 }
 
 .nav {
   display: flex;
-  gap: 1.5rem;
+  gap: 1.2rem;
   margin-right: auto;
 }
 
 .nav a {
-  color: #b3b3b3;
+  color: rgba(255, 255, 255, 0.75);
   text-decoration: none;
   font-weight: 500;
+  font-size: 0.9rem;
   cursor: pointer;
-  transition: color 0.2s;
-}
-
-.nav a:hover, .nav a.active {
-  color: #ffffff;
-}
-
-/* Ensure active state renders correctly for nav items */
-.nav a.active {
+  transition: all 0.2s ease;
+  padding: 0.3rem 0.2rem;
   position: relative;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.nav a:hover {
   color: #ffffff;
 }
 
-.nav a.active:after {
+.nav a.active {
+  color: #ffffff;
+}
+
+.nav a::after {
   content: '';
   position: absolute;
-  bottom: -6px;
+  bottom: 0;
   left: 0;
-  height: 3px;
-  width: 100%;
+  width: 0;
+  height: 2px;
   background-color: #6c5ce7;
-  border-radius: 3px;
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+.nav a:hover::after, .nav a.active::after {
+  width: 100%;
 }
 
 .navItem {
@@ -72,7 +103,9 @@
 }
 
 .navIcon {
-  margin-right: 8px;
+  margin-right: 6px;
+  font-size: 0.9rem;
+  opacity: 0.9;
 }
 
 .search {

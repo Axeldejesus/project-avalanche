@@ -12,7 +12,7 @@ const Navigation: React.FC = () => {
   
   const isActive = (path: string) => {
     if (path === '/' && pathname === '/') return true;
-    if (path !== '/' && pathname.startsWith(path)) return true;
+    if (path !== '/' && pathname?.startsWith(path)) return true;
     return false;
   };
 
