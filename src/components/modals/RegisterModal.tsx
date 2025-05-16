@@ -42,57 +42,57 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, onSwitch
     
     // Validation
     if (!username || !email || !password || !confirmPassword) {
-      setError('Tous les champs sont requis');
+      setError('All fields are required');
       return;
     }
     
     if (username.length < 3) {
-      setError('Le nom d\'utilisateur doit contenir au moins 3 caractères');
+      setError('Username must be at least 3 characters');
       return;
     }
     
     if (password.length < 6) {
-      setError('Le mot de passe doit contenir au moins 6 caractères');
+      setError('Password must be at least 6 characters');
       return;
     }
     
     if (password !== confirmPassword) {
-      setError('Les mots de passe ne correspondent pas');
+      setError('Passwords do not match');
       return;
     }
     
-    // Réinitialiser l'erreur
+    // Reset error
     setError('');
     setLoading(true);
     
     try {
-      // Appel à notre service d'inscription
+      // Call our registration service
       const result = await registerUser(email, password, username);
       
       if (result.success) {
-        console.log('Inscription réussie:', result.user);
+        console.log('Registration successful:', result.user);
         setSuccess(true);
         
-        // Fermer la modale après un court délai
+        // Close modal after a short delay
         setTimeout(() => {
           onClose();
-          // Optionnel: redirection ou mise à jour de l'interface utilisateur
+          // Optional: redirect or update user interface
         }, 1000);
       } else {
-        // Gérer les erreurs spécifiques
+        // Handle specific errors
         if (result.error === 'auth/email-already-in-use') {
-          setError('Cet email est déjà utilisé. Essayez de vous connecter.');
+          setError('This email is already in use. Try logging in.');
         } else if (result.error === 'auth/invalid-email') {
-          setError('Adresse email invalide.');
+          setError('Invalid email address.');
         } else if (result.error === 'auth/weak-password') {
-          setError('Le mot de passe est trop faible.');
+          setError('Password is too weak.');
         } else {
-          setError('Une erreur est survenue lors de l\'inscription. Veuillez réessayer.');
+          setError('An error occurred during registration. Please try again.');
         }
       }
     } catch (err) {
-      console.error('Erreur non gérée:', err);
-      setError('Une erreur inattendue s\'est produite.');
+      console.error('Unhandled error:', err);
+      setError('An unexpected error occurred.');
     } finally {
       setLoading(false);
     }
@@ -104,16 +104,16 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, onSwitch
   };
   
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="S'inscrire">
+    <Modal isOpen={isOpen} onClose={onClose} title="Register" className={styles.authModal}>
       <form className={styles.form} onSubmit={handleSubmit}>
         <div className={styles.formGroup}>
-          <label className={styles.formLabel}>Nom d'utilisateur</label>
+          <label className={styles.formLabel}>Username</label>
           <input
             type="text"
             className={styles.formInput}
             value={username}
             onChange={(e) => setUsername(e.target.value)}
-            placeholder="Votre pseudo"
+            placeholder="Your username"
             disabled={loading}
           />
         </div>
@@ -125,13 +125,13 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, onSwitch
             className={styles.formInput}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="votreemail@exemple.com"
+            placeholder="youremail@example.com"
             disabled={loading}
           />
         </div>
         
         <div className={styles.formGroup}>
-          <label className={styles.formLabel}>Mot de passe</label>
+          <label className={styles.formLabel}>Password</label>
           <input
             type={showPassword ? "text" : "password"}
             className={styles.formInput}
@@ -146,12 +146,12 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, onSwitch
             onClick={() => setShowPassword(!showPassword)}
             disabled={loading}
           >
-            {showPassword ? <FaEye /> : <FaEyeSlash />} Voir le mot de passe
+            {showPassword ? <FaEye /> : <FaEyeSlash />} Show password
           </button>
         </div>
         
         <div className={styles.formGroup}>
-          <label className={styles.formLabel}>Confirmer le mot de passe</label>
+          <label className={styles.formLabel}>Confirm password</label>
           <input
             type={showConfirmPassword ? "text" : "password"}
             className={styles.formInput}
@@ -166,43 +166,43 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, onSwitch
             onClick={() => setShowConfirmPassword(!showConfirmPassword)}
             disabled={loading}
           >
-            {showConfirmPassword ? <FaEyeSlash /> : <FaEye />} voir le mot de passe
+            {showConfirmPassword ? <FaEyeSlash /> : <FaEye />} Show password
           </button>
         </div>
         
         {error && <div className={styles.errorMessage}>{error}</div>}
-        {success && <div className={styles.successMessage}>Inscription réussie! Redirection...</div>}
+        {success && <div className={styles.successMessage}>Registration successful! Redirecting...</div>}
         
         <button type="submit" className={styles.submit} disabled={loading}>
           {loading ? (
             <>
               <FaSpinner className={styles.spinner} /> 
-              Inscription en cours...
+              Registering...
             </>
           ) : (
-            "S'inscrire"
+            "Register"
           )}
         </button>
         
-        <div className={styles.divider}>ou</div>
+        <div className={styles.divider}>or</div>
         
         <div className={styles.socialLogin}>
           <button type="button" className={styles.socialButton} disabled={loading}>
-            <FaGoogle /> Continuer avec Google
+            <FaGoogle /> Continue with Google
           </button>
           <button type="button" className={styles.socialButton} disabled={loading}>
-            <FaDiscord /> Continuer avec Discord
+            <FaDiscord /> Continue with Discord
           </button>
           <button type="button" className={styles.socialButton} disabled={loading}>
-            <FaTwitter /> Continuer avec Twitter
+            <FaTwitter /> Continue with Twitter
           </button>
         </div>
       </form>
       
       <div className={styles.switchText}>
-        Déjà un compte ?
+        Already have an account?{' '}
         <span className={styles.switchLink} onClick={switchToLogin}>
-          Se connecter
+          Login
         </span>
       </div>
     </Modal>

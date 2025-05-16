@@ -36,7 +36,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSwitchToRegi
     
     // Validation
     if (!email || !password) {
-      setError('Tous les champs sont requis');
+      setError('All fields are required');
       return;
     }
     
@@ -47,27 +47,27 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSwitchToRegi
       const result = await loginUser(email, password);
       
       if (result.success) {
-        console.log('Connexion réussie:', result.user);
+        console.log('Login successful:', result.user);
         setSuccess(true);
         
-        // Fermer la modale après un court délai
+        // Close modal after a short delay
         setTimeout(() => {
           onClose();
-          // Optionnel: redirection ou mise à jour de l'interface
+          // Optional: redirect or update interface
         }, 1000);
       } else {
-        // Gérer les erreurs spécifiques
+        // Handle specific errors
         if (result.error === 'auth/user-not-found' || result.error === 'auth/wrong-password') {
-          setError('Email ou mot de passe incorrect.');
+          setError('Incorrect email or password.');
         } else if (result.error === 'auth/too-many-requests') {
-          setError('Trop de tentatives de connexion. Veuillez réessayer plus tard.');
+          setError('Too many login attempts. Please try again later.');
         } else {
-          setError('Une erreur est survenue lors de la connexion. Veuillez réessayer.');
+          setError('An error occurred during login. Please try again.');
         }
       }
     } catch (err) {
-      console.error('Erreur non gérée:', err);
-      setError('Une erreur inattendue s\'est produite.');
+      console.error('Unhandled error:', err);
+      setError('An unexpected error occurred.');
     } finally {
       setLoading(false);
     }
@@ -79,7 +79,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSwitchToRegi
   };
   
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Se connecter">
+    <Modal isOpen={isOpen} onClose={onClose} title="Login" className={styles.authModal}>
       <form className={styles.form} onSubmit={handleSubmit}>
         <div className={styles.formGroup}>
           <label className={styles.formLabel}>Email</label>
@@ -88,13 +88,13 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSwitchToRegi
             className={styles.formInput}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="votreemail@exemple.com"
+            placeholder="youremail@example.com"
             disabled={loading}
           />
         </div>
         
         <div className={styles.formGroup}>
-          <label className={styles.formLabel}>Mot de passe</label>
+          <label className={styles.formLabel}>Password</label>
           <input
             type={showPassword ? "text" : "password"}
             className={styles.formInput}
@@ -109,43 +109,43 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSwitchToRegi
             onClick={() => setShowPassword(!showPassword)}
             disabled={loading}
           >
-            {showPassword ? <FaEye /> : <FaEyeSlash />} Voir le mot de passe
+            {showPassword ? <FaEye /> : <FaEyeSlash />} Show password
           </button>
         </div>
         
         {error && <div className={styles.errorMessage}>{error}</div>}
-        {success && <div className={styles.successMessage}>Connexion réussie! Redirection...</div>}
+        {success && <div className={styles.successMessage}>Login successful! Redirecting...</div>}
         
         <button type="submit" className={styles.submit} disabled={loading}>
           {loading ? (
             <>
               <FaSpinner className={styles.spinner} /> 
-              Connexion en cours...
+              Logging in...
             </>
           ) : (
-            "Se connecter"
+            "Login"
           )}
         </button>
         
-        <div className={styles.divider}>ou</div>
+        <div className={styles.divider}>or</div>
         
         <div className={styles.socialLogin}>
           <button type="button" className={styles.socialButton} disabled={loading}>
-            <FaGoogle /> Continuer avec Google
+            <FaGoogle /> Continue with Google
           </button>
           <button type="button" className={styles.socialButton} disabled={loading}>
-            <FaDiscord /> Continuer avec Discord
+            <FaDiscord /> Continue with Discord
           </button>
           <button type="button" className={styles.socialButton} disabled={loading}>
-            <FaTwitter /> Continuer avec Twitter
+            <FaTwitter /> Continue with Twitter
           </button>
         </div>
       </form>
       
       <div className={styles.switchText}>
-        Pas encore de compte ?
+        Don't have an account?{' '}
         <span className={styles.switchLink} onClick={switchToRegister}>
-          S'inscrire
+          Register
         </span>
       </div>
     </Modal>
