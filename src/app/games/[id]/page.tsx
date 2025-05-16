@@ -1,9 +1,9 @@
 'use client';
 
-import React from 'react';
+import React, { useRef } from 'react';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { FiCalendar, FiUsers, FiArrowLeft } from 'react-icons/fi';
+import { FiCalendar, FiUsers, FiArrowLeft, FiMessageSquare, FiBookmark } from 'react-icons/fi';
 import { motion } from 'framer-motion';
 import styles from './gameDetail.module.css';
 import { Button } from '@/components/ui/button';
@@ -11,9 +11,19 @@ import GameVideosWrapper from '@/components/GameVideosWrapper';
 import ScreenshotGallery from '@/components/ScreenshotGallery';
 import BackButton from '@/components/BackButton';
 import SearchBar from '@/components/SearchBar';
-import ReviewForm from '@/components/ReviewForm'; // Import du nouveau composant
-import ReviewsList from '@/components/ReviewsList'; // Import du nouveau composant
-import { useAuth } from '@/context/AuthContext'; // Import du contexte d'authentification
+import { useAuth } from '@/context/AuthContext';
+import dynamic from 'next/dynamic';
+
+// Dynamically load review components to improve initial page performance
+const DynamicReviewForm = dynamic(() => import('@/components/ReviewForm'), {
+  loading: () => <div className={styles.reviewLoading}>Loading review form...</div>,
+  ssr: false
+});
+
+const DynamicReviewsList = dynamic(() => import('@/components/ReviewsList'), {
+  loading: () => <div className={styles.reviewLoading}>Loading reviews...</div>,
+  ssr: false
+});
 
 interface Developer {
   name: string;
@@ -84,9 +94,17 @@ export default function GameDetailPage({ params }: { params: Promise<{ id: strin
   const [gameDetail, setGameDetail] = useState<GameDetail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [refreshReviews, setRefreshReviews] = useState<number>(0); // Pour rafraîchir la liste des avis
-  const { user } = useAuth(); // Utilisez le hook useAuth pour obtenir l'utilisateur actuel
+  const [refreshReviews, setRefreshReviews] = useState<number>(0);
+  const { user } = useAuth();
   
+  // Add ref for scrolling to reviews section
+  const reviewsRef = useRef<HTMLDivElement>(null);
+  
+  // Scroll to reviews section function
+  const scrollToReviews = () => {
+    reviewsRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
   useEffect(() => {
     const fetchGameDetail = async () => {
       try {
@@ -109,7 +127,7 @@ export default function GameDetailPage({ params }: { params: Promise<{ id: strin
     fetchGameDetail();
   }, [id]);
   
-  // Fonction pour rafraîchir la liste des avis quand un nouvel avis est soumis
+  // Handle review submission
   const handleReviewSubmitted = () => {
     setRefreshReviews(prev => prev + 1);
   };
@@ -235,7 +253,14 @@ export default function GameDetailPage({ params }: { params: Promise<{ id: strin
               
               <div className={styles.gameActions}>
                 <Button className={styles.primaryButton}>
-                  Add to Collection
+                  <FiBookmark /> Add to Collection
+                </Button>
+                {/* Add a "Write a Review" button */}
+                <Button 
+                  className={styles.reviewButton} 
+                  onClick={scrollToReviews}
+                >
+                  <FiMessageSquare /> Write a Review
                 </Button>
               </div>
             </motion.div>
@@ -275,23 +300,7 @@ export default function GameDetailPage({ params }: { params: Promise<{ id: strin
               <GameVideosWrapper gameId={parseInt(id)} />
             </motion.section>
             
-            {/* Nouvelle section d'avis */}
-            <motion.section
-              variants={itemVariants}
-              className={styles.reviewsSection}
-            >
-              <ReviewForm 
-                gameId={parseInt(id)}
-                gameName={gameDetail.name}
-                gameCover={gameDetail.cover}
-                onReviewSubmitted={handleReviewSubmitted}
-              />
-              <ReviewsList 
-                gameId={parseInt(id)}
-                refreshTrigger={refreshReviews}
-              />
-            </motion.section>
-            
+            {/* Screenshots Section - Keep this before reviews */}
             {gameDetail.screenshots.length > 0 && (
               <motion.section 
                 className={styles.screenshotsSection}
@@ -304,6 +313,27 @@ export default function GameDetailPage({ params }: { params: Promise<{ id: strin
                 />
               </motion.section>
             )}
+            
+            {/* Reviews Section - Now comes after screenshots with a reference */}
+            <motion.section
+              ref={reviewsRef}
+              variants={itemVariants}
+              className={styles.reviewsSection}
+            >
+              <h2 className={styles.reviewsTitle}>Game Reviews</h2>
+              <div className={styles.reviewsContainer}>
+                <DynamicReviewForm 
+                  gameId={parseInt(id)}
+                  gameName={gameDetail.name}
+                  gameCover={gameDetail.cover}
+                  onReviewSubmitted={handleReviewSubmitted}
+                />
+                <DynamicReviewsList 
+                  gameId={parseInt(id)}
+                  refreshTrigger={refreshReviews}
+                />
+              </div>
+            </motion.section>
           </motion.div>
           
           <motion.aside 

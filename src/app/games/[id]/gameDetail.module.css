@@ -143,18 +143,22 @@
 }
 
 .primaryButton {
-  background: linear-gradient(135deg, #6c5ce7 0%, #8e44ad 100%);
+  background: linear-gradient(135deg, #6c5ce7 0%, #5b50cc 100%);
   border: none;
   color: white;
   font-weight: 600;
   transition: all 0.3s ease;
   box-shadow: 0 4px 12px rgba(108, 92, 231, 0.3);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer; /* Added cursor pointer */
 }
 
 .primaryButton:hover {
   transform: translateY(-2px);
   box-shadow: 0 6px 16px rgba(108, 92, 231, 0.4);
-  background: linear-gradient(135deg, #5d4ecd 0%, #7d3c9a 100%);
+  background: linear-gradient(135deg, #5d4ecd 0%, #4c40b3 100%);
 }
 
 .secondaryButton {
@@ -170,6 +174,24 @@
 .secondaryButton:hover {
   background: rgba(255, 255, 255, 0.1);
   border-color: rgba(255, 255, 255, 0.3);
+}
+
+.reviewButton {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(108, 92, 231, 0.4);
+  color: white;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer; /* Added cursor pointer */
+}
+
+.reviewButton:hover {
+  transform: translateY(-2px);
+  background: rgba(108, 92, 231, 0.15);
+  border-color: rgba(108, 92, 231, 0.6);
 }
 
 /* Main Content */
@@ -233,6 +255,52 @@
 
 .screenshotsSection {
   margin-top: 1rem;
+}
+
+/* Review Section */
+.reviewsSection {
+  margin-top: 2rem;
+  padding-top: 2rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  will-change: transform; /* Added for better scrolling performance */
+  contain: content; /* Improve rendering performance */
+}
+
+.reviewsTitle {
+  font-size: 1.8rem;
+  margin-bottom: 1.5rem;
+  color: #ffffff;
+  font-weight: 700;
+  position: relative;
+  padding-bottom: 0.6rem;
+}
+
+.reviewsTitle:after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 60px;
+  height: 3px;
+  background: linear-gradient(90deg, #3498db, transparent);
+  border-radius: 3px;
+}
+
+.reviewsContainer {
+  background: rgba(20, 20, 30, 0.3);
+  border-radius: 16px;
+  /* Removed backdrop-filter for better performance */
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  transform: translateZ(0); /* Force GPU acceleration */
+}
+
+.reviewLoading {
+  padding: 1.5rem;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.95rem;
 }
 
 /* Sidebar */
@@ -465,6 +533,26 @@
   
   .gameContent {
     padding: 2rem 1rem;
+  }
+  
+  .reviewsContainer {
+    padding: 1rem;
+  }
+  
+  .reviewsTitle {
+    font-size: 1.5rem;
+  }
+  
+  .gameActions {
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+  
+  .primaryButton, .reviewButton {
+    flex: 1;
+    min-width: 120px;
+    padding: 0.7rem 1rem;
+    font-size: 0.9rem;
   }
 }
 
