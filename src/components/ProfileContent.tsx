@@ -106,8 +106,8 @@ const ProfileContent: React.FC = () => {
   };
 
   const handleAccountDeleted = () => {
+    // The redirection is now handled in the DeleteAccountModal component
     closeDeleteModal();
-    router.push('/');
   };
 
   const handleImageUpload = async (file: File) => {

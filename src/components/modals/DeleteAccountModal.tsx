@@ -46,7 +46,54 @@ const DeleteAccountModal: React.FC<DeleteAccountModalProps> = ({
       const result = await deleteUserAccount(password);
       
       if (result.success) {
-        onAccountDeleted();
+        // Close the modal first
+        onClose();
+        
+        // Create and show a loading screen, similar to the logout function
+        const loadingScreen = document.createElement('div');
+        loadingScreen.style.position = 'fixed';
+        loadingScreen.style.top = '0';
+        loadingScreen.style.left = '0';
+        loadingScreen.style.width = '100%';
+        loadingScreen.style.height = '100%';
+        loadingScreen.style.backgroundColor = '#121212';
+        loadingScreen.style.display = 'flex';
+        loadingScreen.style.flexDirection = 'column';
+        loadingScreen.style.alignItems = 'center';
+        loadingScreen.style.justifyContent = 'center';
+        loadingScreen.style.zIndex = '9999';
+        loadingScreen.style.color = 'white';
+        loadingScreen.style.fontSize = '20px';
+        loadingScreen.style.fontFamily = 'var(--font-space-grotesk), sans-serif';
+        
+        // Add a spinner
+        const spinner = document.createElement('div');
+        spinner.style.border = '5px solid rgba(255, 255, 255, 0.1)';
+        spinner.style.borderTop = '5px solid #ef4444'; // Red color for delete, different from logout
+        spinner.style.borderRadius = '50%';
+        spinner.style.width = '50px';
+        spinner.style.height = '50px';
+        spinner.style.animation = 'spin 1s linear infinite';
+        spinner.style.marginBottom = '20px';
+        
+        // Add animation style
+        const style = document.createElement('style');
+        style.textContent = '@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }';
+        document.head.appendChild(style);
+        
+        // Add message
+        const message = document.createElement('p');
+        message.textContent = 'Deleting account, please wait...';
+        
+        // Assemble and add to page
+        loadingScreen.appendChild(spinner);
+        loadingScreen.appendChild(message);
+        document.body.appendChild(loadingScreen);
+        
+        // Redirect after a short delay, using the same approach as logout
+        setTimeout(() => {
+          window.location.href = '/';
+        }, 300);
       } else {
         setError(result.error || 'An error occurred');
       }
