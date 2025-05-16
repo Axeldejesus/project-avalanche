@@ -9,8 +9,8 @@ import { onAuthStateChange } from '../services/authenticate';
 import DeleteAccountModal from './modals/DeleteAccountModal';
 import UserAvatar from './UserAvatar';
 import { uploadProfileImage } from '../services/imageService';
-import { FiEdit2, FiCheck, FiX } from 'react-icons/fi';
-import UserReviews from './UserReviews'; // Import du nouveau composant
+import { FiEdit2, FiCheck, FiX, FiUser, FiMail, FiCalendar, FiLogOut, FiTrash2 } from 'react-icons/fi';
+import UserReviews from './UserReviews';
 
 const ProfileContent: React.FC = () => {
   const [userProfile, setUserProfile] = useState<any>(null);
@@ -30,7 +30,7 @@ const ProfileContent: React.FC = () => {
         // Get user profile from Firestore
         setLoading(true);
         const profileResult = await getUserProfile(user.uid);
-        if (profileResult.success && profileResult.data) {  // Added check for data
+        if (profileResult.success && profileResult.data) {
           setUserProfile(profileResult.data);
           setNewUsername(profileResult.data.username || '');
         }
@@ -190,7 +190,12 @@ const ProfileContent: React.FC = () => {
   };
 
   if (loading) {
-    return <div className={styles.loading}>Loading profile...</div>;
+    return (
+      <div className={styles.loading}>
+        <div className={styles.loadingSpinner}></div>
+        Loading profile...
+      </div>
+    );
   }
 
   if (!userProfile) {
@@ -214,6 +219,7 @@ const ProfileContent: React.FC = () => {
             {uploadError && <div className={styles.errorMessage}>{uploadError}</div>}
             {uploadSuccess && <div className={styles.successMessage}>{uploadSuccess}</div>}
           </div>
+          
           <div className={styles.profileInfo}>
             {isEditingUsername ? (
               <div className={styles.usernameEditContainer}>
@@ -226,10 +232,10 @@ const ProfileContent: React.FC = () => {
                   autoFocus
                 />
                 <div className={styles.usernameEditButtons}>
-                  <button onClick={saveUsername} className={styles.usernameEditButton}>
+                  <button onClick={saveUsername} className={styles.usernameEditButton} aria-label="Save username">
                     <FiCheck />
                   </button>
-                  <button onClick={cancelEditingUsername} className={styles.usernameEditButton}>
+                  <button onClick={cancelEditingUsername} className={styles.usernameEditButton} aria-label="Cancel editing">
                     <FiX />
                   </button>
                 </div>
@@ -237,35 +243,51 @@ const ProfileContent: React.FC = () => {
               </div>
             ) : (
               <div className={styles.usernameContainer}>
-                <h2 className={styles.profileUsername}>{userProfile.username}</h2>
+                <h2 className={styles.profileUsername}>
+                  <span className={styles.usernameIcon}><FiUser /></span>
+                  {userProfile.username}
+                </h2>
                 <button onClick={startEditingUsername} className={styles.editButton} aria-label="Edit username">
                   <FiEdit2 />
                 </button>
                 {usernameSuccess && <div className={styles.usernameSuccessMessage}>{usernameSuccess}</div>}
               </div>
             )}
-            <p className={styles.profileEmail}>{userProfile.email}</p>
-            <p className={styles.profileJoinDate}>Member since: {new Date(userProfile.createdAt).toLocaleDateString()}</p>
+            
+            <div className={styles.profileEmail}>
+              <FiMail />
+              <span>{userProfile.email}</span>
+            </div>
+            
+            <div className={styles.profileJoinDate}>
+              <FiCalendar />
+              <span>Member since: {new Date(userProfile.createdAt).toLocaleDateString()}</span>
+            </div>
+            
+            
           </div>
         </div>
+        
+        <div className={styles.profileDivider}></div>
         
         <div className={styles.profileActions}>
           <button 
             className={styles.logoutButton}
             onClick={handleLogout}
           >
-            Logout
+            <FiLogOut />
+            <span>Logout</span>
           </button>
           <button 
             className={styles.deleteAccountButton}
             onClick={openDeleteModal}
           >
-            Delete Account
+            <FiTrash2 />
+            <span>Delete Account</span>
           </button>
         </div>
       </div>
 
-      {/* Ajouter la section des avis de l'utilisateur */}
       {userProfile && (
         <UserReviews userId={auth?.currentUser?.uid || ''} />
       )}

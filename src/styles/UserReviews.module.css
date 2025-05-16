@@ -1,52 +1,90 @@
 .userReviewsContainer {
-  background-color: rgba(30, 30, 40, 0.4);
+  background: linear-gradient(135deg, rgba(30, 30, 40, 0.6) 0%, rgba(20, 20, 30, 0.7) 100%);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
-  padding: 1.5rem;
-  margin-top: 2rem;
+  border-radius: 16px;
+  padding: 2rem;
+  margin-top: 2.5rem;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(10px);
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.userReviewsContainer:hover {
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+}
+
+.userReviewsContainer::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #3498db, #2980b9);
+  z-index: 1;
 }
 
 .userReviewsTitle {
-  font-size: 1.3rem;
-  margin-bottom: 1.2rem;
+  font-size: 1.5rem;
+  margin-bottom: 1.5rem;
   color: #ffffff;
-  font-weight: 600;
+  font-weight: 700;
   position: relative;
-  padding-bottom: 0.5rem;
+  padding-bottom: 0.8rem;
+  font-family: var(--font-oxanium), sans-serif;
+  letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
 }
 
-.userReviewsTitle:after {
+.userReviewsTitle::before {
+  content: '📝';
+  margin-right: 0.8rem;
+  font-size: 1.3rem;
+}
+
+.userReviewsTitle::after {
   content: '';
   position: absolute;
   bottom: 0;
   left: 0;
-  width: 40px;
-  height: 2px;
-  background: rgba(108, 92, 231, 0.7);
-  border-radius: 1px;
+  width: 60px;
+  height: 3px;
+  background: linear-gradient(90deg, #3498db, #2980b9);
+  border-radius: 2px;
 }
 
 .userReviewsError {
-  background-color: rgba(235, 77, 75, 0.2);
+  background: linear-gradient(135deg, rgba(235, 77, 75, 0.1) 0%, rgba(235, 77, 75, 0.2) 100%);
   border: 1px solid rgba(235, 77, 75, 0.3);
   color: #ff6b6b;
-  padding: 0.8rem;
-  border-radius: 8px;
-  margin-bottom: 1rem;
-  font-size: 0.9rem;
+  padding: 1rem 1.5rem;
+  border-radius: 10px;
+  margin-bottom: 1.5rem;
+  font-size: 0.95rem;
+  box-shadow: 0 4px 15px rgba(235, 77, 75, 0.15);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
 .noReviews {
-  color: rgba(255, 255, 255, 0.6);
+  color: rgba(255, 255, 255, 0.7);
   text-align: center;
-  padding: 2rem 0;
-  font-size: 0.95rem;
+  padding: 3rem 0;
+  font-size: 1rem;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 12px;
+  border: 1px dashed rgba(255, 255, 255, 0.1);
+  margin: 1rem 0;
 }
 
 .userReviewsList {
   display: flex;
   flex-direction: column;
-  gap: 1.2rem;
+  gap: 1.5rem;
   position: relative;
   min-height: 200px;
   transition: opacity 0.3s ease;
@@ -55,7 +93,7 @@
 .fadedContent {
   opacity: 0.5;
   position: relative;
-  pointer-events: none; /* Prevent interaction during loading */
+  pointer-events: none;
 }
 
 .overlayLoading {
@@ -68,17 +106,17 @@
   align-items: center;
   justify-content: center;
   background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(2px);
-  border-radius: 8px;
+  backdrop-filter: blur(4px);
+  border-radius: 12px;
   z-index: 10;
 }
 
 .loadingSpinner {
-  width: 30px;
-  height: 30px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   border: 3px solid rgba(255, 255, 255, 0.1);
-  border-top: 3px solid #6c5ce7;
+  border-top: 3px solid #3498db;
   animation: spin 1s linear infinite;
 }
 
@@ -88,30 +126,58 @@
 }
 
 .userReviewItem {
-  background-color: rgba(20, 20, 30, 0.5);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  border-radius: 10px;
-  padding: 1rem;
-  transition: transform 0.2s, border-color 0.2s;
+  background: linear-gradient(135deg, rgba(20, 20, 30, 0.7) 0%, rgba(25, 25, 35, 0.8) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 12px;
+  padding: 1.5rem;
+  transition: all 0.3s ease;
   cursor: pointer;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  position: relative;
+  overflow: hidden;
 }
 
 .userReviewItem:hover {
-  transform: translateY(-2px);
-  border-color: rgba(255, 255, 255, 0.1);
+  transform: translateY(-5px);
+  border-color: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+}
+
+.userReviewItem::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background: linear-gradient(90deg, #3498db, transparent);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.userReviewItem:hover::after {
+  opacity: 1;
 }
 
 .userReviewGameInfo {
   display: flex;
-  gap: 1rem;
-  margin-bottom: 1rem;
+  gap: 1.5rem;
+  margin-bottom: 1.2rem;
 }
 
 .gameCover {
-  width: 80px;
-  height: 120px;
-  border-radius: 8px;
+  width: 100px;
+  height: 140px;
+  border-radius: 10px;
   object-fit: cover;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s ease;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.userReviewItem:hover .gameCover {
+  transform: scale(1.05);
+  box-shadow: 0 12px 25px rgba(0, 0, 0, 0.4);
 }
 
 .gameDetails {
@@ -122,62 +188,95 @@
 }
 
 .gameName {
-  font-size: 1.1rem;
-  font-weight: 600;
+  font-size: 1.3rem;
+  font-weight: 700;
   color: white;
-  margin: 0 0 0.5rem;
+  margin: 0 0 0.8rem;
+  font-family: var(--font-oxanium), sans-serif;
+  letter-spacing: 0.5px;
+  line-height: 1.3;
+  background: linear-gradient(to right, #ffffff, #e0e0e0);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 .ratingDate {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.7rem;
 }
 
 .reviewRating {
   display: flex;
-  gap: 0.2rem;
+  gap: 0.3rem;
 }
 
 .star, .starFilled {
-  width: 18px;
-  height: 18px;
+  width: 22px;
+  height: 22px;
   stroke: #FFD700;
-  cursor: pointer; /* Ajouter un curseur pointer pour indiquer que c'est cliquable */
+  color: #FFD700;
+  transition: all 0.3s ease;
+}
+
+.starFilled {
+  filter: drop-shadow(0 0 3px rgba(255, 215, 0, 0.4));
 }
 
 .starInteractive {
-  transition: transform 0.2s, filter 0.2s;
+  transition: transform 0.3s, filter 0.3s;
 }
 
 .starInteractive:hover {
-  transform: scale(1.2);
-  filter: brightness(1.3);
+  transform: scale(1.3) rotate(5deg);
+  filter: brightness(1.4);
 }
 
 .reviewDate {
-  color: rgba(255, 255, 255, 0.5);
-  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.9rem;
+  font-style: italic;
+  display: flex;
+  align-items: center;
+}
+
+.reviewDate::before {
+  content: '📅';
+  margin-right: 0.5rem;
+  font-size: 0.9rem;
+  opacity: 0.7;
 }
 
 .reviewComment {
-  color: rgba(255, 255, 255, 0.8);
-  line-height: 1.5;
-  font-size: 0.95rem;
-  /* Limiter le texte à 3 lignes avec ellipsis */
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
+  color: rgba(255, 255, 255, 0.9);
+  line-height: 1.7;
+  font-size: 1rem;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 8px;
+  border-left: 3px solid rgba(52, 152, 219, 0.5);
+  margin-top: 0.5rem;
+  position: relative;
   overflow: hidden;
-  text-overflow: ellipsis;
+}
+
+.reviewComment::before {
+  content: '"';
+  position: absolute;
+  top: 0;
+  left: 0.5rem;
+  font-size: 2rem;
+  color: rgba(52, 152, 219, 0.2);
+  font-family: serif;
+  line-height: 1;
 }
 
 .userReviewsPagination {
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-top: 1.5rem;
-  padding-top: 1rem;
+  margin-top: 2rem;
+  padding-top: 1.5rem;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
   gap: 15px;
 }
@@ -185,29 +284,26 @@
 .paginationButton {
   display: flex;
   align-items: center;
-  gap: 0.4rem;
-  background-color: rgba(108, 92, 231, 0.2);
-  border: 1px solid rgba(108, 92, 231, 0.3);
+  gap: 0.5rem;
+  background: linear-gradient(135deg, rgba(52, 152, 219, 0.2) 0%, rgba(52, 152, 219, 0.3) 100%);
+  border: 1px solid rgba(52, 152, 219, 0.4);
   color: rgba(255, 255, 255, 0.9);
-  padding: 0.5rem 1rem;
-  border-radius: 6px;
-  font-size: 0.85rem;
-  font-weight: 500;
-  transition: all 0.2s;
+  padding: 0.6rem 1.2rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
 }
 
 .paginationButton:hover:not(:disabled) {
-  background-color: rgba(108, 92, 231, 0.3);
+  background: linear-gradient(135deg, rgba(52, 152, 219, 0.3) 0%, rgba(52, 152, 219, 0.4) 100%);
+  transform: translateY(-3px);
+  box-shadow: 0 5px 15px rgba(52, 152, 219, 0.2);
 }
 
 .paginationButton:disabled {
   opacity: 0.4;
   cursor: not-allowed;
-}
-
-.paginationInfo {
-  color: rgba(255, 255, 255, 0.7);
-  font-size: 0.9rem;
 }
 
 .paginationNumbers {
@@ -217,48 +313,29 @@
 }
 
 .paginationNumber {
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.1);
   color: white;
   font-size: 0.9rem;
   border: none;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
 }
 
 .paginationNumber:hover:not(.activePage) {
-  background-color: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px);
 }
 
 .activePage {
-  background-color: #6c5ce7;
+  background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
   color: white;
-  border-color: rgba(108, 92, 231, 0.8);
-}
-
-.navButton {
-  background-color: rgba(108, 92, 231, 0.2);
-  color: white;
-  border: 1px solid rgba(108, 92, 231, 0.3);
-  border-radius: 5px;
-  padding: 5px 10px;
-  font-size: 0.9rem;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-.navButton:hover:not(:disabled) {
-  background-color: rgba(108, 92, 231, 0.3);
-}
-
-.navButton:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+  box-shadow: 0 5px 15px rgba(52, 152, 219, 0.3);
 }
 
 .paginationEllipsis {
@@ -269,9 +346,51 @@
   font-weight: bold;
 }
 
-.loadingMoreReviews {
-  color: rgba(255, 255, 255, 0.6);
-  text-align: center;
-  padding: 1rem 0;
-  font-size: 0.9rem;
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .userReviewsContainer {
+    padding: 1.5rem;
+  }
+  
+  .userReviewItem {
+    padding: 1.2rem;
+  }
+  
+  .userReviewGameInfo {
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+  }
+  
+  .gameCover {
+    width: 120px;
+    height: 160px;
+  }
+  
+  .gameDetails {
+    text-align: center;
+    align-items: center;
+  }
+  
+  .gameName {
+    font-size: 1.2rem;
+  }
+  
+  .reviewRating {
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .userReviewsContainer {
+    padding: 1rem;
+  }
+  
+  .paginationNumbers {
+    display: none;
+  }
+  
+  .userReviewsTitle {
+    font-size: 1.3rem;
+  }
 }

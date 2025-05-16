@@ -150,37 +150,78 @@
 .authButtonsContainer {
   display: flex;
   flex-direction: row;
-  gap: 10px;
+  gap: 15px;
   align-items: center;
 }
 
 .loginBtn, .registerBtn {
-  padding: 8px 16px;
-  border-radius: 6px;
+  padding: 10px 20px;
+  border-radius: 10px;
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s;
-  border: none;
+  transition: all 0.3s ease;
+  letter-spacing: 0.3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 100px;
+  position: relative;
+  overflow: hidden;
 }
 
 .loginBtn {
-  background-color: transparent;
+  background-color: rgba(255, 255, 255, 0.08);
   color: #ffffff;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 .loginBtn:hover {
-  background-color: rgba(255, 255, 255, 0.1);
+  background-color: rgba(255, 255, 255, 0.12);
+  transform: translateY(-2px);
+  border-color: rgba(255, 255, 255, 0.25);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+.loginBtn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .registerBtn {
-  background-color: #6c5ce7;
+  background: linear-gradient(135deg, #7c3aed, #6c5ce7);
   color: #ffffff;
+  border: none;
+  box-shadow: 0 6px 15px rgba(108, 92, 231, 0.3);
+  position: relative;
+}
+
+.registerBtn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0));
+  transform: skewX(-30deg);
+  transition: all 0.6s ease;
 }
 
 .registerBtn:hover {
-  background-color: #5d4cd7;
+  background: linear-gradient(135deg, #6d28d9, #5b21b6);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(108, 92, 231, 0.4);
+}
+
+.registerBtn:hover::before {
+  left: 100%;
+}
+
+.registerBtn:active {
+  transform: translateY(0);
+  box-shadow: 0 4px 8px rgba(108, 92, 231, 0.3);
 }
 
 .userButton {
