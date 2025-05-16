@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { FiStar, FiEdit, FiTrash2 } from 'react-icons/fi';
+import { FiStar, FiEdit, FiTrash2, FiCheck, FiX } from 'react-icons/fi';
 import { addReview, updateReview, deleteReview, getUserGameReview, Review } from '../services/reviewService';
 import { useAuth } from '../context/AuthContext';
 import styles from '../styles/ReviewForm.module.css';
@@ -49,13 +49,12 @@ const ReviewForm: React.FC<ReviewFormProps> = ({ gameId, gameName, gameCover, on
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!user || !userProfile) {
       setError('You must be logged in to submit a review');
       return;
     }
 
-    // New validation: require at least one of rating or comment
     if (rating === 0 && comment.trim() === '') {
       setError('Please provide either a rating or a comment');
       return;
@@ -69,19 +68,18 @@ const ReviewForm: React.FC<ReviewFormProps> = ({ gameId, gameName, gameCover, on
       if (existingReview && !isEditing) {
         setIsEditing(true);
         setIsSubmitting(false);
+        setSuccess("You can now edit your review.");
         return;
       }
 
       let result;
-      
-      // If we already have an existing review, we're editing it
+
       if (existingReview && isEditing) {
-        // Le reviewId est maintenant le gameId sous forme de string
         result = await updateReview(String(gameId), {
           rating,
           comment
         });
-        
+
         if (result.success) {
           setExistingReview({
             ...existingReview,
@@ -91,13 +89,14 @@ const ReviewForm: React.FC<ReviewFormProps> = ({ gameId, gameName, gameCover, on
           });
           setSuccess('Your review has been updated!');
           setIsEditing(false);
+          onReviewSubmitted();
+        } else {
+          setError(result.error || 'Failed to update review. Please try again.');
         }
       } else {
-        // Before adding, double check if user already has a review for this game
         const existingUserReview = await getUserGameReview(user.uid, gameId);
-        
+
         if (existingUserReview) {
-          // User already has a review, switch to edit mode
           setExistingReview(existingUserReview);
           setRating(existingUserReview.rating);
           setComment(existingUserReview.comment);
@@ -106,8 +105,7 @@ const ReviewForm: React.FC<ReviewFormProps> = ({ gameId, gameName, gameCover, on
           setIsSubmitting(false);
           return;
         }
-        
-        // Add new review
+
         result = await addReview({
           userId: user.uid,
           username: userProfile.username || user.email!.split('@')[0],
@@ -118,10 +116,10 @@ const ReviewForm: React.FC<ReviewFormProps> = ({ gameId, gameName, gameCover, on
           rating,
           comment
         });
-        
+
         if (result.success && result.reviewId) {
           setExistingReview({
-            id: result.reviewId, // Sera le gameId en string
+            id: result.reviewId,
             userId: user.uid,
             username: userProfile.username || user.email!.split('@')[0],
             userProfileImage: userProfile.profileImageUrl,
@@ -134,15 +132,13 @@ const ReviewForm: React.FC<ReviewFormProps> = ({ gameId, gameName, gameCover, on
             updatedAt: new Date().toISOString()
           });
           setSuccess('Your review has been submitted!');
+          onReviewSubmitted();
+        } else {
+          setError(result.error || 'Failed to submit review');
         }
       }
-
-      if (!result.success) {
-        setError(result.error || 'Failed to submit review');
-      } else {
-        onReviewSubmitted();
-      }
     } catch (error: any) {
+      console.error('Error in review submission:', error);
       setError(error.message || 'An error occurred while submitting your review');
     } finally {
       setIsSubmitting(false);
@@ -150,19 +146,17 @@ const ReviewForm: React.FC<ReviewFormProps> = ({ gameId, gameName, gameCover, on
   };
 
   const handleDeleteReview = async () => {
-    // Le reviewId est maintenant le gameId sous forme de string
     if (!existingReview) return;
-    
+
     if (!confirm('Are you sure you want to delete your review?')) return;
-    
+
     setIsSubmitting(true);
     setError(null);
     setSuccess(null);
 
     try {
-      // Utiliser le gameId comme ID de la review
       const result = await deleteReview(String(gameId));
-      
+
       if (result.success) {
         setExistingReview(null);
         setRating(0);
@@ -189,6 +183,7 @@ const ReviewForm: React.FC<ReviewFormProps> = ({ gameId, gameName, gameCover, on
       setComment('');
     }
     setIsEditing(false);
+    setSuccess(null); // Clear the success message when canceling
   };
 
   if (!user) {
@@ -204,10 +199,10 @@ const ReviewForm: React.FC<ReviewFormProps> = ({ gameId, gameName, gameCover, on
       <h3 className={styles.reviewFormTitle}>
         {existingReview && !isEditing ? 'Your Review' : (existingReview ? 'Edit Your Review' : 'Write a Review')}
       </h3>
-      
+
       {error && <div className={styles.reviewFormError}>{error}</div>}
       {success && <div className={styles.reviewFormSuccess}>{success}</div>}
-      
+
       <form onSubmit={handleSubmit} className={styles.reviewForm}>
         <div className={styles.ratingContainer}>
           <label>Rating:</label>
@@ -215,7 +210,7 @@ const ReviewForm: React.FC<ReviewFormProps> = ({ gameId, gameName, gameCover, on
             {[1, 2, 3, 4, 5].map((star) => (
               <div
                 key={star}
-                className={styles.starWrapper}
+                className={`${styles.starWrapper} ${(isEditing || !existingReview) ? styles.starWrapperActive : ''}`}
                 onClick={() => !isSubmitting && (isEditing || !existingReview) && handleRatingClick(star)}
                 onMouseEnter={() => !isSubmitting && (isEditing || !existingReview) && handleRatingHover(star)}
                 onMouseLeave={() => !isSubmitting && (isEditing || !existingReview) && handleRatingHover(0)}
@@ -225,7 +220,7 @@ const ReviewForm: React.FC<ReviewFormProps> = ({ gameId, gameName, gameCover, on
                     (hoveredRating ? star <= hoveredRating : star <= rating)
                       ? styles.starActive
                       : ''
-                  } ${!(isEditing || !existingReview) ? styles.starDisabled : ''}`}
+                  } ${(isEditing || !existingReview) ? styles.starInteractive : styles.starDisabled}`}
                   fill={
                     (hoveredRating ? star <= hoveredRating : star <= rating)
                       ? '#FFD700'
@@ -239,26 +234,32 @@ const ReviewForm: React.FC<ReviewFormProps> = ({ gameId, gameName, gameCover, on
             </span>
           </div>
         </div>
-        
+
         <div className={styles.commentContainer}>
-          <label htmlFor="review-comment">Comment:</label>
+          <label htmlFor="review-comment">
+            Comment: {isEditing && <span className={styles.editableIndicator}>(Editable)</span>}
+          </label>
           <textarea
             id="review-comment"
             value={comment}
             onChange={(e) => setComment(e.target.value)}
             disabled={isSubmitting || (!isEditing && existingReview !== null)}
             placeholder="Share your thoughts about this game..."
-            className={styles.commentTextarea}
+            className={`${styles.commentTextarea} ${(!isEditing && existingReview !== null) ? styles.disabledTextarea : ''} ${isEditing ? styles.editableTextarea : ''}`}
             rows={4}
           />
         </div>
-        
+
         <div className={styles.reviewFormActions}>
           {existingReview && !isEditing ? (
             <>
               <button
                 type="button"
-                onClick={() => setIsEditing(true)}
+                onClick={(e) => {
+                  e.preventDefault();
+                  setIsEditing(true);
+                  setSuccess("You can now edit your review.");
+                }}
                 className={styles.editButton}
                 disabled={isSubmitting}
               >
@@ -280,16 +281,23 @@ const ReviewForm: React.FC<ReviewFormProps> = ({ gameId, gameName, gameCover, on
                 className={styles.submitButton}
                 disabled={isSubmitting}
               >
-                {isSubmitting ? 'Submitting...' : (existingReview ? 'Update' : 'Submit')}
+                {isSubmitting ? 'Submitting...' : (
+                  <>
+                    <FiCheck /> {existingReview ? 'Update' : 'Submit'}
+                  </>
+                )}
               </button>
               {isEditing && (
                 <button
                   type="button"
-                  onClick={handleCancel}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleCancel();
+                  }}
                   className={styles.cancelButton}
                   disabled={isSubmitting}
                 >
-                  Cancel
+                  <FiX /> Cancel
                 </button>
               )}
             </>
