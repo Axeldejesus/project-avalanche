@@ -43,13 +43,57 @@ const ProfileContent: React.FC = () => {
     return () => unsubscribe();
   }, [router]);
 
-  const handleLogout = async () => {
-    const result = await logoutUser();
-    if (result.success) {
-      router.push('/');
-    } else {
-      console.error('Logout error:', result.error);
-    }
+  const handleLogout = () => {
+    // Créer un écran de chargement
+    const loadingScreen = document.createElement('div');
+    loadingScreen.style.position = 'fixed';
+    loadingScreen.style.top = '0';
+    loadingScreen.style.left = '0';
+    loadingScreen.style.width = '100%';
+    loadingScreen.style.height = '100%';
+    loadingScreen.style.backgroundColor = '#121212';
+    loadingScreen.style.display = 'flex';
+    loadingScreen.style.flexDirection = 'column';
+    loadingScreen.style.alignItems = 'center';
+    loadingScreen.style.justifyContent = 'center';
+    loadingScreen.style.zIndex = '9999';
+    loadingScreen.style.color = 'white';
+    loadingScreen.style.fontSize = '20px';
+    loadingScreen.style.fontFamily = 'var(--font-space-grotesk), sans-serif';
+    
+    // Ajouter un spinner (cercle de chargement)
+    const spinner = document.createElement('div');
+    spinner.style.border = '5px solid rgba(255, 255, 255, 0.1)';
+    spinner.style.borderTop = '5px solid #7c3aed';
+    spinner.style.borderRadius = '50%';
+    spinner.style.width = '50px';
+    spinner.style.height = '50px';
+    spinner.style.animation = 'spin 1s linear infinite';
+    spinner.style.marginBottom = '20px';
+    
+    // Ajouter une règle d'animation pour le spinner
+    const style = document.createElement('style');
+    style.textContent = '@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }';
+    document.head.appendChild(style);
+    
+    // Ajouter le message
+    const message = document.createElement('p');
+    message.textContent = 'Logging out, please wait...';
+    
+    // Assembler et ajouter à la page
+    loadingScreen.appendChild(spinner);
+    loadingScreen.appendChild(message);
+    document.body.appendChild(loadingScreen);
+    
+    // Lancer la déconnexion en arrière-plan
+    logoutUser().catch(error => {
+      console.error('Logout error:', error);
+    });
+    
+    // Rediriger après un court délai pour s'assurer que l'écran de chargement s'affiche
+    setTimeout(() => {
+      window.location.href = '/';
+    }, 300);
   };
 
   const openDeleteModal = () => {
