@@ -1,0 +1,37 @@
+.indexHelper {
+  background-color: #2c2c2c;
+  border: 1px solid #3a3a3a;
+  border-radius: 8px;
+  padding: 16px;
+  margin: 20px 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.indexHelper h4 {
+  margin-top: 0;
+  font-size: 16px;
+  color: #f59f00;
+}
+
+.createIndexButton {
+  display: inline-block;
+  background-color: #f59f00;
+  color: #000;
+  font-weight: 500;
+  padding: 8px 16px;
+  border-radius: 4px;
+  text-decoration: none;
+  margin: 10px 0;
+  transition: background-color 0.2s;
+}
+
+.createIndexButton:hover {
+  background-color: #ffb224;
+  text-decoration: none;
+}
+
+.indexNote {
+  font-size: 14px;
+  color: #a0a0a0;
+  margin-top: 10px;
+}

@@ -1,0 +1,203 @@
+.reviewFormContainer {
+  background-color: rgba(30, 30, 40, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.reviewFormTitle {
+  font-size: 1.3rem;
+  margin-bottom: 1.2rem;
+  color: #ffffff;
+  font-weight: 600;
+  position: relative;
+  padding-bottom: 0.5rem;
+}
+
+.reviewFormTitle:after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 40px;
+  height: 2px;
+  background: rgba(108, 92, 231, 0.7);
+  border-radius: 1px;
+}
+
+.reviewFormLoginPrompt {
+  background-color: rgba(30, 30, 40, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 1.5rem;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.reviewForm {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.ratingContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.ratingContainer label {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.starRating {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.starWrapper {
+  cursor: pointer;
+  padding: 5px;
+}
+
+.star {
+  width: 24px;
+  height: 24px;
+  stroke: #FFD700;
+  transition: all 0.2s ease;
+}
+
+.starActive {
+  transform: scale(1.2);
+}
+
+.starDisabled {
+  cursor: default;
+}
+
+.ratingText {
+  margin-left: 0.5rem;
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.commentContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.commentContainer label {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.commentTextarea {
+  width: 100%;
+  padding: 1rem;
+  background-color: rgba(20, 20, 30, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  color: #ffffff;
+  font-size: 0.95rem;
+  resize: vertical;
+  transition: border-color 0.2s;
+}
+
+.commentTextarea:focus {
+  outline: none;
+  border-color: rgba(108, 92, 231, 0.7);
+}
+
+.commentTextarea:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.reviewFormActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
+.submitButton, .editButton, .deleteButton, .cancelButton {
+  padding: 0.7rem 1.2rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.submitButton {
+  background: linear-gradient(135deg, #6c5ce7 0%, #8e44ad 100%);
+  border: none;
+  color: white;
+}
+
+.submitButton:hover:not(:disabled) {
+  background: linear-gradient(135deg, #5d4ecd 0%, #7d3c9a 100%);
+  transform: translateY(-2px);
+}
+
+.editButton {
+  background-color: rgba(72, 52, 212, 0.2);
+  border: 1px solid rgba(72, 52, 212, 0.4);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.editButton:hover:not(:disabled) {
+  background-color: rgba(72, 52, 212, 0.3);
+}
+
+.deleteButton {
+  background-color: rgba(235, 77, 75, 0.2);
+  border: 1px solid rgba(235, 77, 75, 0.4);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.deleteButton:hover:not(:disabled) {
+  background-color: rgba(235, 77, 75, 0.3);
+}
+
+.cancelButton {
+  background-color: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.cancelButton:hover:not(:disabled) {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.submitButton:disabled, .editButton:disabled, .deleteButton:disabled, .cancelButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.reviewFormError {
+  background-color: rgba(235, 77, 75, 0.2);
+  border: 1px solid rgba(235, 77, 75, 0.3);
+  color: #ff6b6b;
+  padding: 0.8rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+}
+
+.reviewFormSuccess {
+  background-color: rgba(46, 213, 115, 0.2);
+  border: 1px solid rgba(46, 213, 115, 0.3);
+  color: #2ed573;
+  padding: 0.8rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+}

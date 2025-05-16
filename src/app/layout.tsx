@@ -1,5 +1,6 @@
 import './globals.css';
 import { Space_Grotesk, Oxanium } from 'next/font/google';
+import { AuthProvider } from '../context/AuthContext'; // Import du provider d'authentification
 import type { Metadata } from 'next';
 
 // Définition des polices avec next/font
@@ -18,8 +19,8 @@ const oxanium = Oxanium({
 });
 
 export const metadata: Metadata = {
-  title: 'Project Avalanche',
-  description: 'Découvrez votre prochaine aventure de jeu',
+  title: 'Avalanche - Discover Your Next Gaming Adventure',
+  description: 'Find, track, and discover the best video games with Avalanche, your ultimate gaming platform',
 };
 
 export default function RootLayout({
@@ -28,8 +29,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="fr" className={`${spaceGrotesk.variable} ${oxanium.variable}`}>
-      <body>{children}</body>
+    <html lang="en" className={`${spaceGrotesk.variable} ${oxanium.variable}`}>
+      <body>
+        <AuthProvider>
+          {children}
+        </AuthProvider>
+      </body>
     </html>
   );
 }

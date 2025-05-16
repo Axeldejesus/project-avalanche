@@ -10,7 +10,10 @@ import { Button } from '@/components/ui/button';
 import GameVideosWrapper from '@/components/GameVideosWrapper';
 import ScreenshotGallery from '@/components/ScreenshotGallery';
 import BackButton from '@/components/BackButton';
-import SearchBar from '@/components/SearchBar'; // Import the SearchBar component
+import SearchBar from '@/components/SearchBar';
+import ReviewForm from '@/components/ReviewForm'; // Import du nouveau composant
+import ReviewsList from '@/components/ReviewsList'; // Import du nouveau composant
+import { useAuth } from '@/context/AuthContext'; // Import du contexte d'authentification
 
 interface Developer {
   name: string;
@@ -81,6 +84,8 @@ export default function GameDetailPage({ params }: { params: Promise<{ id: strin
   const [gameDetail, setGameDetail] = useState<GameDetail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [refreshReviews, setRefreshReviews] = useState<number>(0); // Pour rafraîchir la liste des avis
+  const { user } = useAuth(); // Utilisez le hook useAuth pour obtenir l'utilisateur actuel
   
   useEffect(() => {
     const fetchGameDetail = async () => {
@@ -104,6 +109,11 @@ export default function GameDetailPage({ params }: { params: Promise<{ id: strin
     fetchGameDetail();
   }, [id]);
   
+  // Fonction pour rafraîchir la liste des avis quand un nouvel avis est soumis
+  const handleReviewSubmitted = () => {
+    setRefreshReviews(prev => prev + 1);
+  };
+
   if (isLoading) {
     return (
       <div className={styles.loaderContainer}>
@@ -263,6 +273,23 @@ export default function GameDetailPage({ params }: { params: Promise<{ id: strin
               className={styles.videoSection}
             >
               <GameVideosWrapper gameId={parseInt(id)} />
+            </motion.section>
+            
+            {/* Nouvelle section d'avis */}
+            <motion.section
+              variants={itemVariants}
+              className={styles.reviewsSection}
+            >
+              <ReviewForm 
+                gameId={parseInt(id)}
+                gameName={gameDetail.name}
+                gameCover={gameDetail.cover}
+                onReviewSubmitted={handleReviewSubmitted}
+              />
+              <ReviewsList 
+                gameId={parseInt(id)}
+                refreshTrigger={refreshReviews}
+              />
             </motion.section>
             
             {gameDetail.screenshots.length > 0 && (

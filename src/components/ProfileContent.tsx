@@ -10,6 +10,7 @@ import DeleteAccountModal from './modals/DeleteAccountModal';
 import UserAvatar from './UserAvatar';
 import { uploadProfileImage } from '../services/imageService';
 import { FiEdit2, FiCheck, FiX } from 'react-icons/fi';
+import UserReviews from './UserReviews'; // Import du nouveau composant
 
 const ProfileContent: React.FC = () => {
   const [userProfile, setUserProfile] = useState<any>(null);
@@ -263,6 +264,11 @@ const ProfileContent: React.FC = () => {
           </button>
         </div>
       </div>
+
+      {/* Ajouter la section des avis de l'utilisateur */}
+      {userProfile && (
+        <UserReviews userId={auth?.currentUser?.uid || ''} />
+      )}
 
       <DeleteAccountModal 
         isOpen={isDeleteModalOpen} 
