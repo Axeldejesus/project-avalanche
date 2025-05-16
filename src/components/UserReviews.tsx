@@ -214,6 +214,12 @@ const UserReviews: React.FC<UserReviewsProps> = ({ userId }) => {
   };
 
   const navigateToGame = (gameId: number) => {
+    // Effacer les flags existants pour éviter les conflits
+    sessionStorage.removeItem('cameFromGames');
+    sessionStorage.removeItem('cameFromHome');
+    sessionStorage.removeItem('cameFromCalendar');
+    // Définir le nouveau flag
+    sessionStorage.setItem('cameFromProfile', 'true');
     router.push(`/games/${gameId}`);
   };
 
