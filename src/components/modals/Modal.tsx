@@ -2,17 +2,17 @@
 
 import React, { useEffect, useRef } from 'react';
 import styles from '../../styles/Modal.module.css';
-import { IoClose } from 'react-icons/io5';
+import { FiX } from 'react-icons/fi';
 
 interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
   title: string;
   children: React.ReactNode;
-  className?: string; // Add this optional className prop
+  className?: string; // Add className prop if not already present
 }
 
-const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, className }) => {
+const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, className = '' }) => {
   const modalRef = useRef<HTMLDivElement>(null);
   
   // Ferme la modale en appuyant sur Escape
@@ -50,14 +50,16 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, classNa
       className={`${styles.overlay} ${isOpen ? styles.active : ''}`} 
       onClick={handleOverlayClick}
     >
-      <div className={`${styles.modal} ${className || ''}`} ref={modalRef}>
+      <div className={`${styles.modal} ${className}`} ref={modalRef}>
         <div className={styles.header}>
           <h2 className={styles.title}>{title}</h2>
           <button className={styles.closeButton} onClick={onClose}>
-            <IoClose />
+            <FiX />
           </button>
         </div>
-        {children}
+        <div className={styles.content}>
+          {children}
+        </div>
       </div>
     </div>
   );

@@ -39,6 +39,14 @@
   overflow-y: auto;
 }
 
+/* Delete account modal specific styles */
+.deleteAccountModal {
+  width: 90%;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
 .authModal .form {
   display: flex;
   flex-direction: column;
@@ -111,6 +119,7 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
+  padding: 0 20px;
 }
 
 .formGroup {
@@ -232,7 +241,7 @@
 .errorMessage {
   color: #ff5555;
   font-size: 14px;
-  margin-top: 4px;
+  margin: 4px 20px 0;
 }
 
 .successMessage {

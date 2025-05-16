@@ -48,31 +48,36 @@ const DeleteAccountModal: React.FC<DeleteAccountModalProps> = ({
       if (result.success) {
         onAccountDeleted();
       } else {
-        setError(result.error || 'Une erreur est survenue');
+        setError(result.error || 'An error occurred');
       }
     } catch (err) {
-      console.error('Erreur non gérée:', err);
-      setError('Une erreur inattendue s\'est produite.');
+      console.error('Unhandled error:', err);
+      setError('An unexpected error occurred.');
     } finally {
       setLoading(false);
     }
   };
   
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Supprimer mon compte">
+    <Modal 
+      isOpen={isOpen} 
+      onClose={onClose} 
+      title="Delete My Account"
+      className={styles.deleteAccountModal}
+    >
       <div className={deleteStyles.warningContainer}>
         <FaExclamationTriangle className={deleteStyles.warningIcon} />
-        <h3 className={deleteStyles.warningTitle}>Cette action est irréversible</h3>
+        <h3 className={deleteStyles.warningTitle}>This action is irreversible</h3>
         <p className={deleteStyles.warningText}>
-          La suppression de votre compte entraînera la perte définitive de toutes vos données, y compris votre profil, 
-          vos préférences et votre historique.
+          Deleting your account will permanently remove all your data, including your profile, 
+          preferences, and history.
         </p>
       </div>
       
       <form className={styles.form} onSubmit={handleSubmit}>
-        <div className={styles.formGroup}>
+        <div className={`${styles.formGroup} ${deleteStyles.formGroup}`}>
           <label className={styles.formLabel}>
-            Pour confirmer, tapez "delete" ci-dessous
+            To confirm, type "delete" below
           </label>
           <input
             type="text"
@@ -84,16 +89,16 @@ const DeleteAccountModal: React.FC<DeleteAccountModalProps> = ({
           />
         </div>
         
-        <div className={styles.formGroup}>
+        <div className={`${styles.formGroup} ${deleteStyles.formGroup}`}>
           <label className={styles.formLabel}>
-            Entrez votre mot de passe pour confirmer
+            Enter your password to confirm
           </label>
           <input
             type="password"
             className={styles.formInput}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            placeholder="Votre mot de passe"
+            placeholder="Your password"
             disabled={loading}
           />
         </div>
@@ -108,10 +113,10 @@ const DeleteAccountModal: React.FC<DeleteAccountModalProps> = ({
           {loading ? (
             <>
               <FaSpinner className={styles.spinner} /> 
-              Suppression en cours...
+              Deleting...
             </>
           ) : (
-            "Supprimer définitivement mon compte"
+            "Permanently Delete My Account"
           )}
         </button>
       </form>
