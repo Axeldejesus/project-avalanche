@@ -12,6 +12,7 @@
   opacity: 0;
   visibility: hidden;
   transition: opacity 0.3s, visibility 0.3s;
+  padding: 50px; /* Ajout de padding pour éviter que la modale touche les bords */
 }
 
 .overlay.active {
@@ -29,9 +30,12 @@
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
   display: flex;
   flex-direction: column;
+  transform: translateY(50px); /* Augmenté pour un déplacement plus visible */
+  transition: transform 0.3s ease;
+  position: relative;
+  margin: auto;
 }
 
-/* Auth modal specific styles */
 .authModal {
   width: 90%;
   max-width: 450px;
