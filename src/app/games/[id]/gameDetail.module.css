@@ -194,6 +194,15 @@
   border-color: rgba(108, 92, 231, 0.6);
 }
 
+/* Add this to your existing styles */
+.inCollectionButton {
+  background-color: #1e8c5e;
+}
+
+.inCollectionButton:hover {
+  background-color: #166f4a;
+}
+
 /* Main Content */
 .gameContent {
   padding: 3rem 2rem;

@@ -1,0 +1,347 @@
+.pageContainer {
+  min-height: 100vh;
+  background-color: #121212;
+  color: #fafafa;
+}
+
+.main {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+.title {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+  color: #fff;
+}
+
+/* Stats Bar */
+.statsBar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 2rem;
+  background-color: #1a1a1a;
+  border-radius: 10px;
+  padding: 8px;
+}
+
+.statItem {
+  flex: 1;
+  min-width: 120px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+  border-radius: 8px;
+  background-color: #242424;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.statItem:hover {
+  background-color: #2a2a2a;
+}
+
+.activeStatItem {
+  background-color: #7c3aed;
+  color: white;
+}
+
+.statIcon {
+  font-size: 1.5rem;
+  margin-bottom: 6px;
+}
+
+.statName {
+  font-size: 0.8rem;
+  font-weight: 500;
+  text-align: center;
+}
+
+.statCount {
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin-top: 4px;
+}
+
+/* Search Bar */
+.searchBar {
+  display: flex;
+  align-items: center;
+  background-color: #242424;
+  border-radius: 8px;
+  padding: 0.5rem 1rem;
+  margin-bottom: 1.5rem;
+  transition: all 0.2s ease;
+}
+
+.searchBar:focus-within {
+  outline: 2px solid #7c3aed;
+}
+
+.searchIcon {
+  color: #9ca3af;
+  margin-right: 0.75rem;
+}
+
+.searchInput {
+  flex: 1;
+  background: transparent;
+  border: none;
+  padding: 0.5rem 0;
+  color: #fafafa;
+  font-size: 0.9rem;
+  outline: none;
+}
+
+.searchInput::placeholder {
+  color: #6b7280;
+}
+
+/* Game Grid */
+.collectionGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.gameCard {
+  background-color: #1e1e1e;
+  border-radius: 10px;
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  cursor: pointer;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.gameCard:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+}
+
+.gameCardImage {
+  position: relative;
+  height: 160px;
+  overflow: hidden;
+}
+
+.gameCardImage img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.gameCard:hover .gameCardImage img {
+  transform: scale(1.05);
+}
+
+.gameStatus {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background-color: rgba(124, 58, 237, 0.9);
+  color: white;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.gameCardContent {
+  padding: 1rem;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.gameCardTitle {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: #fff;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.gameCardMeta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+  font-size: 0.8rem;
+  color: #9ca3af;
+}
+
+.gameCardDate {
+  font-size: 0.7rem;
+}
+
+.gameCardRating {
+  color: #f59e0b;
+  font-weight: 600;
+}
+
+.gameCardNotes {
+  font-size: 0.8rem;
+  color: #9ca3af;
+  margin-top: auto;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  line-height: 1.4;
+}
+
+/* Loading, Error, Empty States */
+.loadingContainer,
+.loadingMoreContainer,
+.errorContainer,
+.emptyCollection {
+  text-align: center;
+  margin: 3rem 0;
+}
+
+.spinner {
+  border: 4px solid rgba(124, 58, 237, 0.1);
+  border-radius: 50%;
+  border-top: 4px solid #7c3aed;
+  width: 30px;
+  height: 30px;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 1rem;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.errorContainer {
+  color: #ef4444;
+}
+
+.emptyCollection {
+  padding: 3rem;
+  background-color: #1a1a1a;
+  border-radius: 10px;
+}
+
+.emptyCollection h3 {
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.emptyCollection p {
+  color: #9ca3af;
+  margin-bottom: 1.5rem;
+}
+
+.browseButton {
+  background-color: #7c3aed;
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.browseButton:hover {
+  background-color: #6d28d9;
+}
+
+.loadMoreContainer {
+  text-align: center;
+  margin: 1rem 0 2rem;
+}
+
+.loadMoreButton {
+  background-color: transparent;
+  border: 2px solid #7c3aed;
+  color: #7c3aed;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.loadMoreButton:hover {
+  background-color: rgba(124, 58, 237, 0.1);
+}
+
+.loadMoreButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Not logged in state */
+.notLoggedIn {
+  max-width: 600px;
+  margin: 6rem auto;
+  text-align: center;
+  padding: 2rem;
+  background-color: #1a1a1a;
+  border-radius: 10px;
+}
+
+.notLoggedIn h2 {
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.notLoggedIn p {
+  color: #9ca3af;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .statsBar {
+    padding: 4px;
+  }
+  
+  .statItem {
+    padding: 8px;
+    min-width: 80px;
+  }
+  
+  .statName {
+    font-size: 0.7rem;
+  }
+  
+  .statCount {
+    font-size: 1rem;
+  }
+  
+  .collectionGrid {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .collectionGrid {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  }
+  
+  .gameCardContent {
+    padding: 0.75rem;
+  }
+  
+  .gameCardTitle {
+    font-size: 0.9rem;
+  }
+}

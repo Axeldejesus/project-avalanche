@@ -1,0 +1,193 @@
+/* Game Information */
+.gameInfo {
+  display: flex;
+  margin-bottom: 20px;
+  background: rgba(30, 30, 30, 0.4);
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.gameCover {
+  width: 70px;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 6px;
+}
+
+.gameDetails {
+  margin-left: 12px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.gameName {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0 0 4px 0;
+}
+
+.currentStatus {
+  font-size: 0.85rem;
+  color: #a0a0a0;
+}
+
+.currentStatus span {
+  color: #7c3aed;
+  font-weight: 500;
+}
+
+/* Status Options */
+.statusOptionsContainer {
+  margin-bottom: 20px;
+}
+
+.statusOptions {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin: 10px 0;
+}
+
+.statusOption {
+  display: flex;
+  align-items: center;
+  padding: 12px;
+  border-radius: 8px;
+  background-color: rgba(30, 30, 30, 0.4);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.statusOption:hover {
+  background-color: rgba(124, 58, 237, 0.1);
+}
+
+.statusOption.selected {
+  background-color: rgba(124, 58, 237, 0.15);
+  border: 1px solid rgba(124, 58, 237, 0.4);
+}
+
+.statusIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background-color: #2c2c2c;
+  margin-right: 12px;
+  color: #7c3aed;
+}
+
+.selected .statusIcon {
+  background-color: #7c3aed;
+  color: white;
+}
+
+.statusLabel {
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.selectedIndicator {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  color: #7c3aed;
+  font-size: 0.8rem;
+}
+
+.statusDescription {
+  display: flex;
+  align-items: center;
+  font-size: 0.8rem;
+  margin-top: 8px;
+  padding: 8px;
+  background-color: rgba(30, 30, 30, 0.2);
+  border-radius: 4px;
+  color: #a0a0a0;
+}
+
+.infoIcon {
+  margin-right: 8px;
+  color: #7c3aed;
+}
+
+/* Rating Selector */
+.ratingSelector {
+  display: flex;
+  align-items: center;
+}
+
+.starContainer {
+  margin-right: 4px;
+  cursor: pointer;
+}
+
+.star {
+  font-size: 1.5rem;
+  color: #444;
+  transition: color 0.2s ease;
+}
+
+.starActive {
+  color: #f59e0b;
+}
+
+.ratingText {
+  margin-left: 8px;
+  font-size: 0.85rem;
+  color: #a0a0a0;
+}
+
+/* Notes Textarea */
+.notesTextarea {
+  resize: vertical;
+  min-height: 80px;
+  font-family: inherit;
+}
+
+/* Add Button */
+.addButton {
+  background-color: #7c3aed;
+  transition: background-color 0.2s;
+}
+
+.addButton:hover:not(:disabled) {
+  background-color: #6d28d9;
+}
+
+/* Helper text for form fields */
+.fieldHelper {
+  display: block;
+  font-size: 0.8rem;
+  color: #a0a0a0;
+  margin-top: 4px;
+}
+
+/* Hours played styles */
+.hoursPlayedRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.hoursIcon {
+  color: #7c3aed;
+  font-size: 1.2rem;
+}
+
+/* Remove the container and input styles that were for the dropdown version */
+.hoursPlayedContainer {
+  display: none;
+}
+
+/* Responsive adjustments */
+@media (max-width: 500px) {
+  .statusOptions {
+    grid-template-columns: 1fr;
+  }
+}

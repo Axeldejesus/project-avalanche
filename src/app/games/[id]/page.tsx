@@ -13,6 +13,8 @@ import BackButton from '@/components/BackButton';
 import SearchBar from '@/components/SearchBar';
 import { useAuth } from '@/context/AuthContext';
 import dynamic from 'next/dynamic';
+import AddToCollectionModal from '@/components/modals/AddToCollectionModal';
+import { getUserGameInCollection } from '@/services/collectionService';
 
 // Dynamically load review components to improve initial page performance
 const DynamicReviewForm = dynamic(() => import('@/components/ReviewForm'), {
@@ -95,6 +97,8 @@ export default function GameDetailPage({ params }: { params: Promise<{ id: strin
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [refreshReviews, setRefreshReviews] = useState<number>(0);
+  const [isCollectionModalOpen, setIsCollectionModalOpen] = useState(false);
+  const [collectionStatus, setCollectionStatus] = useState<string | null>(null);
   const { user } = useAuth();
   
   // Add ref for scrolling to reviews section
@@ -127,9 +131,44 @@ export default function GameDetailPage({ params }: { params: Promise<{ id: strin
     fetchGameDetail();
   }, [id]);
   
+  // Check if game is in user's collection
+  useEffect(() => {
+    const checkCollection = async () => {
+      if (user && gameDetail) {
+        const collectionItem = await getUserGameInCollection(user.uid, parseInt(id));
+        if (collectionItem) {
+          setCollectionStatus(collectionItem.status);
+        } else {
+          setCollectionStatus(null);
+        }
+      }
+    };
+    
+    if (!isLoading && gameDetail) {
+      checkCollection();
+    }
+  }, [user, id, gameDetail, isLoading]);
+  
   // Handle review submission
   const handleReviewSubmitted = () => {
     setRefreshReviews(prev => prev + 1);
+  };
+  
+  // Handle opening the collection modal
+  const openCollectionModal = () => {
+    setIsCollectionModalOpen(true);
+  };
+  
+  // Handle collection updates
+  const handleCollectionUpdated = async () => {
+    if (user) {
+      const collectionItem = await getUserGameInCollection(user.uid, parseInt(id));
+      if (collectionItem) {
+        setCollectionStatus(collectionItem.status);
+      } else {
+        setCollectionStatus(null);
+      }
+    }
   };
 
   if (isLoading) {
@@ -252,10 +291,12 @@ export default function GameDetailPage({ params }: { params: Promise<{ id: strin
               </div>
               
               <div className={styles.gameActions}>
-                <Button className={styles.primaryButton}>
-                  <FiBookmark /> Add to Collection
+                <Button 
+                  className={`${styles.primaryButton} ${collectionStatus ? styles.inCollectionButton : ''}`}
+                  onClick={openCollectionModal}
+                >
+                  <FiBookmark /> {collectionStatus ? 'In Collection' : 'Add to Collection'}
                 </Button>
-                {/* Add a "Write a Review" button */}
                 <Button 
                   className={styles.reviewButton} 
                   onClick={scrollToReviews}
@@ -389,6 +430,18 @@ export default function GameDetailPage({ params }: { params: Promise<{ id: strin
           </motion.aside>
         </div>
       </motion.div>
+      
+      {/* Add the collection modal */}
+      {gameDetail && (
+        <AddToCollectionModal
+          isOpen={isCollectionModalOpen}
+          onClose={() => setIsCollectionModalOpen(false)}
+          gameId={parseInt(id)}
+          gameName={gameDetail.name}
+          gameCover={gameDetail.cover}
+          onCollectionUpdated={handleCollectionUpdated}
+        />
+      )}
     </motion.div>
   );
 }
