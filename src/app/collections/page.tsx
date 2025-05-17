@@ -110,6 +110,13 @@ export default function CollectionsPage() {
 
   // Navigate to game details
   const navigateToGame = (gameId: number) => {
+    // Définir le flag pour indiquer que l'utilisateur vient de la page collection
+    sessionStorage.setItem('cameFromCollection', 'true');
+    // Supprimer les autres flags de navigation potentiellement présents
+    sessionStorage.removeItem('cameFromGames');
+    sessionStorage.removeItem('cameFromHome');
+    sessionStorage.removeItem('cameFromProfile');
+    
     router.push(`/games/${gameId}`);
   };
 
