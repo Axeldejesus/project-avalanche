@@ -88,7 +88,7 @@ export default function SearchBar() {
       // If we're on the home page, clear cameFromGames and set cameFromHome
       sessionStorage.removeItem('cameFromGames');
       sessionStorage.setItem('cameFromHome', 'true');
-    } else if (!pathname.startsWith('/games/')) {
+    } else if (!pathname || !pathname.startsWith('/games/')) {
       // For any other page that's not a game detail page, clear navigation flags
       sessionStorage.removeItem('cameFromGames');
       sessionStorage.removeItem('cameFromHome');

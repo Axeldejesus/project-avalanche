@@ -43,25 +43,7 @@ const Sidebar: React.FC = () => {
           View Calendar
         </button>
       </div>
-      
-      <div className={styles.completedBox}>
-        <h3>Completed</h3>
-        <p>Track your finished games</p>
-        <button className={styles.button}>
-          <BadgeCheck className="mr-2" size={16} />
-          View All
-        </button>
-      </div>
-      
-      <div className={styles.collectionBox}>
-        <h3>Create Collection</h3>
-        <p>Organize your game library</p>
-        <button className={`${styles.button} ${styles.buttonPrimary}`}>
-          <FolderPlus className="mr-2" size={16} />
-          Create
-        </button>
-      </div>
-      
+  
       <GameCalendarModal 
         isOpen={isCalendarModalOpen} 
         onClose={closeCalendarModal} 
