@@ -67,6 +67,37 @@ export function ensureFirestore(): Firestore {
   return db;
 }
 
+// Constante pour la durée maximale de session (7 jours en millisecondes)
+const MAX_SESSION_DURATION = 7 * 24 * 60 * 60 * 1000; // 7 jours
+
+// Enregistrer la date de dernière connexion ou renouvellement
+export const setLastLoginTimestamp = (): void => {
+  if (isClient) {
+    localStorage.setItem('lastLoginTimestamp', Date.now().toString());
+  }
+};
+
+// Rafraîchir le timestamp lors d'actions importantes
+export const refreshSessionTimestamp = (): void => {
+  if (isClient) {
+    setLastLoginTimestamp();
+  }
+};
+
+// Vérifier si la session a expiré (plus de 7 jours)
+export const hasSessionExpired = (): boolean => {
+  if (!isClient) return false;
+  
+  const lastLoginStr = localStorage.getItem('lastLoginTimestamp');
+  if (!lastLoginStr) return false; // Pas de timestamp, considérer comme non expiré
+  
+  const lastLogin = parseInt(lastLoginStr);
+  const now = Date.now();
+  const sessionDuration = now - lastLogin;
+  
+  return sessionDuration > MAX_SESSION_DURATION;
+}
+
 // Service d'inscription - Add safety checks
 export const registerUser = async (email: string, password: string, username: string) => {
   if (!isClient || !auth) {
@@ -108,6 +139,8 @@ export const loginUser = async (email: string, password: string) => {
 
   try {
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    // Enregistrer la date de connexion
+    setLastLoginTimestamp();
     return {
       success: true,
       user: userCredential.user

@@ -2,7 +2,13 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User } from 'firebase/auth';
-import { onAuthStateChange, getUserProfile } from '../services/authenticate';
+import { 
+  onAuthStateChange, 
+  getUserProfile, 
+  logoutUser, 
+  hasSessionExpired, 
+  refreshSessionTimestamp 
+} from '../services/authenticate';
 
 // Interface pour le profil utilisateur
 interface UserProfile {
@@ -45,6 +51,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         const profileResult = await getUserProfile(user.uid);
         if (profileResult.success && profileResult.data) {
           setUserProfile(profileResult.data as UserProfile);
+          // Rafraîchir le timestamp lors de la mise à jour du profil
+          refreshSessionTimestamp();
         }
       } catch (error) {
         console.error('Error refreshing user profile:', error);
@@ -52,6 +60,23 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
+  // Vérifier l'expiration de la session
+  useEffect(() => {
+    if (user && hasSessionExpired()) {
+      console.log("Session expired after 7 days. Logging out automatically.");
+      
+      // Afficher un message à l'utilisateur
+      if (typeof window !== 'undefined') {
+        alert("Your session has expired. For security reasons, you'll need to log in again.");
+      }
+      
+      // Déconnecter l'utilisateur
+      logoutUser().catch(error => {
+        console.error('Error during automatic logout:', error);
+      });
+    }
+  }, [user]);
+  
   // Effet pour écouter les changements d'état d'authentification
   useEffect(() => {
     setLoading(true);
@@ -110,6 +135,18 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       window.removeEventListener('storage', handleStorageChange);
       clearInterval(intervalId);
     };
+  }, [user]);
+
+  // Rafraîchir le timestamp à intervalles réguliers pour les utilisateurs actifs
+  useEffect(() => {
+    if (!user) return;
+    
+    // Rafraîchir toutes les 24 heures pour les utilisateurs actifs
+    const intervalId = setInterval(() => {
+      refreshSessionTimestamp();
+    }, 24 * 60 * 60 * 1000);
+    
+    return () => clearInterval(intervalId);
   }, [user]);
 
   // Valeur du contexte

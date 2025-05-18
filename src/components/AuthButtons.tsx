@@ -9,6 +9,7 @@ import RegisterModal from './modals/RegisterModal';
 import UserAvatar from './UserAvatar';
 import { onAuthStateChange, auth, getUserProfile } from '../services/authenticate';
 import { User } from 'firebase/auth';
+import { FiLogIn, FiUserPlus } from 'react-icons/fi';
 
 const AuthButtons: React.FC = () => {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
@@ -25,7 +26,7 @@ const AuthButtons: React.FC = () => {
 
   // Add pathname to detect current route
   const pathname = usePathname();
-  const isProfilePage = pathname === '/profile' || pathname.startsWith('/profile/');
+  const isProfilePage = pathname === '/profile' || (pathname && pathname.startsWith('/profile/'));
 
   // Initialize state from localStorage if available (to prevent flash)
   useEffect(() => {
@@ -166,10 +167,10 @@ const AuthButtons: React.FC = () => {
       <div className={styles.userMenu}>
         <div className={styles.authButtonsContainer}>
           <button className={styles.loginBtn} onClick={openLoginModal}>
-            Login
+            <FiLogIn className={styles.buttonIcon} /> Login
           </button>
           <button className={styles.registerBtn} onClick={openRegisterModal}>
-            Register
+            <FiUserPlus className={styles.buttonIcon} /> Register
           </button>
         </div>
       </div>

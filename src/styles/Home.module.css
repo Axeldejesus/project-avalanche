@@ -959,3 +959,8 @@
   transform: translateY(-2px);
   box-shadow: 0 6px 20px rgba(94, 114, 228, 0.6);
 }
+
+.buttonIcon {
+  margin-right: 6px;
+  font-size: 1rem;
+}
