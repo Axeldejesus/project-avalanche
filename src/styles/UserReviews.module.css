@@ -138,25 +138,16 @@
 }
 
 .userReviewItem:hover {
-  transform: translateY(-5px);
   border-color: rgba(255, 255, 255, 0.15);
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
 }
 
 .userReviewItem::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  height: 3px;
-  background: linear-gradient(90deg, #3498db, transparent);
-  opacity: 0;
-  transition: opacity 0.3s ease;
+  display: none;
 }
 
 .userReviewItem:hover::after {
-  opacity: 1;
+  opacity: 0;
 }
 
 .userReviewGameInfo {
@@ -171,12 +162,10 @@
   border-radius: 10px;
   object-fit: cover;
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
-  transition: all 0.3s ease;
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .userReviewItem:hover .gameCover {
-  transform: scale(1.05);
   box-shadow: 0 12px 25px rgba(0, 0, 0, 0.4);
 }
 
