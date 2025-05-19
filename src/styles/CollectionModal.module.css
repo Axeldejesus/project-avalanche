@@ -152,11 +152,32 @@
 /* Add Button */
 .addButton {
   background-color: #7c3aed;
-  transition: background-color 0.2s;
+  transition: all 0.2s ease;
+  flex: 2;
+  font-size: 14px;
+  border-radius: 6px;
 }
 
 .addButton:hover:not(:disabled) {
   background-color: #6d28d9;
+  transform: translateY(-2px);
+}
+
+/* Remove Button */
+.removeButton {
+  margin-top: 0;
+  font-weight: 500;
+  font-size: 14px;
+  border-radius: 6px;
+  box-shadow: 0 2px 5px rgba(231, 76, 60, 0.15);
+}
+
+.removeButton:hover {
+  background-color: rgba(231, 76, 60, 0.2);
+}
+
+.buttonIcon {
+  margin-right: 4px;
 }
 
 /* Helper text for form fields */
@@ -183,11 +204,6 @@
 /* Remove the container and input styles that were for the dropdown version */
 .hoursPlayedContainer {
   display: none;
-}
-
-/* Remove Button */
-.removeButton {
-  margin-top: 5px;
 }
 
 /* Responsive adjustments */

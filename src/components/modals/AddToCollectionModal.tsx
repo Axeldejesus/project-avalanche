@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Modal from './Modal';
 import styles from '../../styles/Modal.module.css';
 import collectionStyles from '../../styles/CollectionModal.module.css';
-import { FiCheck, FiClock, FiPlay, FiAward, FiX, FiHeart, FiInfo, FiTrash2 } from 'react-icons/fi';
+import { FiCheck, FiClock, FiPlay, FiAward, FiX, FiHeart, FiInfo, FiTrash2, FiPlus, FiRefreshCw } from 'react-icons/fi';
 import { FaSpinner } from 'react-icons/fa';
 import { addToCollection, getUserGameInCollection, CollectionItem, removeFromCollection } from '../../services/collectionService';
 import { useAuth } from '../../context/AuthContext';
@@ -272,7 +272,10 @@ const AddToCollectionModal: React.FC<AddToCollectionModalProps> = ({
                 {existingItem ? 'Updating...' : 'Adding...'}
               </>
             ) : (
-              existingItem ? 'Update in Collection' : 'Add to Collection'
+              <>
+                {existingItem ? <FiRefreshCw className={styles.buttonIcon} /> : <FiPlus className={styles.buttonIcon} />}
+                {existingItem ? 'Update in Collection' : 'Add to Collection'}
+              </>
             )}
           </button>
           
@@ -290,8 +293,8 @@ const AddToCollectionModal: React.FC<AddToCollectionModalProps> = ({
                 </>
               ) : (
                 <>
-                  <FiTrash2 /> 
-                  Remove from Collection
+                  <FiTrash2 className={styles.buttonIcon} /> 
+                  Remove
                 </>
               )}
             </button>
