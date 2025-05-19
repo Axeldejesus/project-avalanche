@@ -1,11 +1,15 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Header from '@/components/Header';
 import GameCard from '@/components/GameCard';
-import { ArrowLeft, ArrowRight, GamepadIcon, Filter, X, Search } from 'lucide-react';
+import { 
+  ArrowLeft, ArrowRight, GamepadIcon, Filter, X, Search, Grid, List, 
+  Star, Calendar, ArrowUp, RefreshCw, Check, ChevronUp, Tag, Package, Clock 
+} from 'lucide-react';
 import styles from './games.module.css';
+import debounce from 'lodash/debounce';
 
 interface Game {
   id: number;
@@ -21,10 +25,10 @@ interface FilterOptions {
   releaseYear: number | null;
   searchQuery: string;
   releaseStatus: 'all' | 'released' | 'upcoming';
-  sort: string; // New sort option
+  sort: string;
 }
 
-// Options de filtre constantes
+// Platform options
 const PLATFORMS = [
   { id: 167, name: 'PlayStation 5' },
   { id: 169, name: 'Xbox Series X' },
@@ -34,7 +38,7 @@ const PLATFORMS = [
   { id: 49, name: 'Xbox One' },
 ];
 
-// Générer les années pour les menus déroulants
+// Generate years for dropdowns
 const YEARS = Array.from({ length: new Date().getFullYear() - 1980 + 1 }, (_, i) => new Date().getFullYear() - i);
 
 // Release status options
@@ -44,7 +48,7 @@ const RELEASE_STATUS = [
   { value: 'upcoming', label: 'Upcoming Games' }
 ];
 
-// Options de tri
+// Sort options
 const SORT_OPTIONS = [
   { value: 'default', label: 'Default Sorting' },
   { value: 'rating', label: 'Highest Rated' },
@@ -53,124 +57,198 @@ const SORT_OPTIONS = [
   { value: 'name', label: 'Name (A-Z)' }
 ];
 
+// Filter chips configuration
+const FILTER_CHIPS = [
+  { label: 'All Games', value: null, icon: <Tag size={16} /> },
+  { label: 'Highest Rated', sort: 'rating', icon: <Star size={16} /> },
+  { label: 'New Releases', sort: 'release_desc', status: 'released', icon: <Package size={16} /> },
+  { label: 'Coming Soon', sort: 'release_asc', status: 'upcoming', icon: <Clock size={16} /> },
+];
+
 export default function GamesPage() {
   const [games, setGames] = useState<Game[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(100);
-  const [showFilters, setShowFilters] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [filters, setFilters] = useState<FilterOptions>({
     platforms: [],
     genres: [],
     releaseYear: null,
     searchQuery: '',
     releaseStatus: 'all',
-    sort: 'default' // Default sort value
+    sort: 'default'
+  });
+  const [tempFilters, setTempFilters] = useState<FilterOptions>({
+    platforms: [],
+    genres: [],
+    releaseYear: null,
+    searchQuery: '',
+    releaseStatus: 'all',
+    sort: 'default'
   });
   const [activeFiltersCount, setActiveFiltersCount] = useState(0);
   const [genres, setGenres] = useState<{ id: number, name: string }[]>([]);
   const [filtersInitialized, setFiltersInitialized] = useState(false);
+  const [showBackToTop, setShowBackToTop] = useState(false);
+  const [selectedChip, setSelectedChip] = useState<number | null>(0);
+  const observer = useRef<IntersectionObserver | null>(null);
+  const loadingRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
-  // Fetch games when filters or page changes, but only after filters are initialized
+  // Scroll handler for back to top button
   useEffect(() => {
-    if (filtersInitialized) {
-      fetchGames();
-    }
-  }, [page, filters, filtersInitialized]);
+    const handleScroll = () => {
+      if (window.scrollY > 500) {
+        setShowBackToTop(true);
+      } else {
+        setShowBackToTop(false);
+      }
+    };
 
-  useEffect(() => {
-    // Calculer le nombre de filtres actifs
-    let count = 0;
-    if (filters.platforms.length > 0) count++;
-    if (filters.genres.length > 0) count++;
-    if (filters.releaseYear !== null) count++;
-    if (filters.searchQuery.trim() !== '') count++;
-    if (filters.releaseStatus !== 'all') count++; // Count release status if not 'all'
-    setActiveFiltersCount(count);
-  }, [filters]);
+    window.addEventListener('scroll', handleScroll);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, []);
 
+  // Initialize filters from session storage or default values
   useEffect(() => {
-    // Set a flag to indicate the user is on the games page
     sessionStorage.setItem('cameFromGames', 'true');
     
-    // Check if we're returning from a game detail page
-    const returningFromGameDetail = sessionStorage.getItem('gameFilters');
+    const savedFilters = sessionStorage.getItem('gameFilters');
     
-    if (returningFromGameDetail) {
+    if (savedFilters) {
       try {
-        const savedFilters = JSON.parse(returningFromGameDetail);
-        // Ensure releaseStatus is one of the allowed values
-        const validReleaseStatus = ['all', 'released', 'upcoming'].includes(savedFilters.releaseStatus) 
-          ? (savedFilters.releaseStatus as 'all' | 'released' | 'upcoming') 
+        const parsedFilters = JSON.parse(savedFilters);
+        const validStatus = ['all', 'released', 'upcoming'].includes(parsedFilters.releaseStatus) 
+          ? (parsedFilters.releaseStatus as 'all' | 'released' | 'upcoming') 
           : 'all';
         
-        setFilters({
-          platforms: savedFilters.platforms || [],
-          genres: savedFilters.genres || [],
-          releaseYear: savedFilters.releaseYear || null,
-          searchQuery: savedFilters.searchQuery || '',
-          releaseStatus: validReleaseStatus,
-          sort: savedFilters.sort || 'default'
-        });
+        const initialFilters = {
+          platforms: parsedFilters.platforms || [],
+          genres: parsedFilters.genres || [],
+          releaseYear: parsedFilters.releaseYear || null,
+          searchQuery: parsedFilters.searchQuery || '',
+          releaseStatus: validStatus,
+          sort: parsedFilters.sort || 'default'
+        };
+        
+        setFilters(initialFilters);
+        setTempFilters(initialFilters);
+        
+        // Set selected chip based on the initial filters
+        const chipIndex = FILTER_CHIPS.findIndex(chip => 
+          (chip.sort === initialFilters.sort && chip.status === initialFilters.releaseStatus) ||
+          (chip.value === null && initialFilters.sort === 'default' && initialFilters.releaseStatus === 'all')
+        );
+        setSelectedChip(chipIndex !== -1 ? chipIndex : null);
       } catch (error) {
         console.error('Error parsing saved filters:', error);
-        setFilters({
-          platforms: [],
-          genres: [],
-          releaseYear: null,
-          searchQuery: '',
-          releaseStatus: 'all',
-          sort: 'default'
-        });
+        resetFilters();
       }
     } else {
-      // Reset filters only when coming from somewhere other than a game detail page
-      setFilters({
-        platforms: [],
-        genres: [],
-        releaseYear: null,
-        searchQuery: '',
-        releaseStatus: 'all',
-        sort: 'default'
-      });
+      resetFilters();
     }
     
-    // Mark filters as initialized so the fetchGames useEffect can run
     setFiltersInitialized(true);
     
+    // Load saved view mode from local storage
+    const savedViewMode = localStorage.getItem('gamesViewMode');
+    if (savedViewMode === 'list' || savedViewMode === 'grid') {
+      setViewMode(savedViewMode);
+    }
+
     return () => {
       // We'll leave cameFromGames value in sessionStorage
     };
   }, []);
 
+  // Load genres on mount
   useEffect(() => {
-    const fetchGenres = async () => {
-      try {
-        const response = await fetch('/api/genres');
-        if (response.ok) {
-          const data = await response.json();
-          // Filtrer pour obtenir seulement les genres avec des ID et des noms valides
-          const validGenres = data.filter((genre: any) => 
-            genre && typeof genre.id === 'number' && genre.name && typeof genre.name === 'string'
-          );
-          console.log('Genres chargés:', validGenres);
-          setGenres(validGenres);
-        }
-      } catch (error) {
-        console.error('Error loading genres:', error);
-      }
-    };
-    
     fetchGenres();
   }, []);
 
-  const fetchGames = async () => {
+  // Update active filters count when filters change
+  useEffect(() => {
+    let count = 0;
+    if (filters.platforms.length > 0) count++;
+    if (filters.genres.length > 0) count++;
+    if (filters.releaseYear !== null) count++;
+    if (filters.searchQuery.trim() !== '') count++;
+    if (filters.releaseStatus !== 'all') count++;
+    if (filters.sort !== 'default') count++;
+    setActiveFiltersCount(count);
+  }, [filters]);
+
+  // Reset the games list and fetch first page when filters change
+  useEffect(() => {
+    if (filtersInitialized) {
+      setGames([]);
+      setPage(1);
+      setHasMore(true);
+      fetchGames(1, true);
+    }
+  }, [filters, filtersInitialized]);
+
+  // Intersection observer for infinite scrolling
+  useEffect(() => {
+    if (loading) return;
+
+    const observerCallback = (entries: IntersectionObserverEntry[]) => {
+      if (entries[0].isIntersecting && hasMore) {
+        loadMoreGames();
+      }
+    };
+
+    const options = {
+      root: null,
+      rootMargin: '0px',
+      threshold: 0.1
+    };
+
+    observer.current = new IntersectionObserver(observerCallback, options);
+    
+    if (loadingRef.current) {
+      observer.current.observe(loadingRef.current);
+    }
+
+    return () => {
+      if (observer.current) {
+        observer.current.disconnect();
+      }
+    };
+  }, [loading, hasMore]);
+
+  // Save view mode preference
+  useEffect(() => {
+    localStorage.setItem('gamesViewMode', viewMode);
+  }, [viewMode]);
+
+  // Fetch genres
+  const fetchGenres = async () => {
+    try {
+      const response = await fetch('/api/genres');
+      if (response.ok) {
+        const data = await response.json();
+        const validGenres = data.filter((genre: any) => 
+          genre && typeof genre.id === 'number' && genre.name && typeof genre.name === 'string'
+        );
+        setGenres(validGenres);
+      }
+    } catch (error) {
+      console.error('Error loading genres:', error);
+    }
+  };
+
+  // Fetch games with current filters
+  const fetchGames = async (pageNumber: number, resetList: boolean = false) => {
     setLoading(true);
     try {
-      // Construire l'URL avec les paramètres de filtre
-      let url = `/api/games?page=${page}`;
+      // Build URL with filter parameters
+      let url = `/api/games?page=${pageNumber}`;
       
       if (filters.platforms.length > 0) {
         url += `&platforms=${filters.platforms.join(',')}`;
@@ -188,34 +266,28 @@ export default function GamesPage() {
         url += `&releaseYear=${filters.releaseYear}`;
       }
       
-      // Add release status parameter
       if (filters.releaseStatus !== 'all') {
         url += `&releaseStatus=${filters.releaseStatus}`;
       }
-
-      // Add sort parameter
+      
       if (filters.sort !== 'default') {
         url += `&sort=${filters.sort}`;
-      }
-
-      // Ajouter un log pour voir quels genres sont envoyés
-      if (filters.genres.length > 0) {
-        console.log("Filtrage par genres (IDs): ", filters.genres);
-        console.log("Noms des genres sélectionnés: ", 
-          filters.genres.map(id => genres.find(g => g.id === id)?.name).filter(Boolean).join(', '));
       }
       
       const response = await fetch(url);
       if (!response.ok) {
         throw new Error('Failed to fetch games');
       }
-      const data = await response.json();
-      setGames(data.games);
       
-      // Si l'API renvoie 0 jeux, c'est qu'on a atteint la fin
-      if (data.games.length === 0 && page > 1) {
-        setPage(page - 1);
+      const data = await response.json();
+      
+      if (resetList) {
+        setGames(data.games);
+      } else {
+        setGames(prev => [...prev, ...data.games]);
       }
+      
+      setHasMore(data.games.length > 0);
     } catch (err) {
       setError('Error loading games. Please try again later.');
       console.error(err);
@@ -224,126 +296,120 @@ export default function GamesPage() {
     }
   };
 
-  const handleNextPage = () => {
-    setPage(page + 1);
-  };
-
-  const handlePrevPage = () => {
-    if (page > 1) {
-      setPage(page - 1);
+  // Load more games for infinite scroll
+  const loadMoreGames = () => {
+    if (!loading && hasMore) {
+      const nextPage = page + 1;
+      setPage(nextPage);
+      fetchGames(nextPage);
     }
   };
 
+  // Handle game card click
   const handleGameClick = (gameId: number) => {
-    // Save current filters to session storage before navigating
     sessionStorage.setItem('gameFilters', JSON.stringify(filters));
-    
-    // Set the flag explicitly before navigation
     sessionStorage.setItem('cameFromGames', 'true');
     router.push(`/games/${gameId}`);
   };
 
+  // Toggle filter panel
   const toggleFilter = () => {
-    setShowFilters(!showFilters);
+    if (!isFilterOpen) {
+      setTempFilters({...filters});
+    }
+    setIsFilterOpen(!isFilterOpen);
   };
 
-  const handlePlatformChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const selectedValue = e.target.value === '' ? [] : [Number(e.target.value)];
-    setFilters(prev => ({
-      ...prev,
-      platforms: selectedValue
-    }));
-    setPage(1);
-    
-    // Update stored filters immediately when they change
-    const updatedFilters = {...filters, platforms: selectedValue};
-    sessionStorage.setItem('gameFilters', JSON.stringify(updatedFilters));
-  };
-
-  const handleGenreChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const selectedValue = e.target.value === '' ? [] : [Number(e.target.value)];
-    setFilters(prev => ({
-      ...prev,
-      genres: selectedValue
-    }));
-    setPage(1);
-    
-    // Update stored filters immediately when they change
-    const updatedFilters = {...filters, genres: selectedValue};
-    sessionStorage.setItem('gameFilters', JSON.stringify(updatedFilters));
-  };
-
-  const handleReleaseYearChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const value = e.target.value;
-    const newReleaseYear = value === '' ? null : Number(value);
-    setFilters(prev => ({
-      ...prev,
-      releaseYear: newReleaseYear
-    }));
-    setPage(1);
-    
-    // Update stored filters immediately when they change
-    const updatedFilters = {...filters, releaseYear: newReleaseYear};
-    sessionStorage.setItem('gameFilters', JSON.stringify(updatedFilters));
-  };
-
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFilters(prev => ({
-      ...prev,
-      searchQuery: e.target.value
-    }));
-    // Ne pas déclencher de recherche à chaque frappe pour éviter les requêtes excessives
-  };
-
-  const handleSearchSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setPage(1);
-    fetchGames();
-  };
-
-  // Handle release status change
-  const handleReleaseStatusChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    // Explicitly cast as a union type to avoid TypeScript error
-    const value = e.target.value as 'all' | 'released' | 'upcoming';
-    setFilters(prev => ({
-      ...prev,
-      releaseStatus: value
-    }));
-    setPage(1);
-    
-    // Update stored filters immediately - ensure we use the typed value
-    const updatedFilters = {...filters, releaseStatus: value};
-    sessionStorage.setItem('gameFilters', JSON.stringify(updatedFilters));
-  };
-
-  // Handle sort change
-  const handleSortChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const value = e.target.value;
-    setFilters(prev => ({
-      ...prev,
-      sort: value
-    }));
-    setPage(1);
-    
-    // Update stored filters
-    const updatedFilters = {...filters, sort: value};
-    sessionStorage.setItem('gameFilters', JSON.stringify(updatedFilters));
-  };
-
-  const clearFilters = () => {
-    // Explicit type definition for clearedFilters
-    const clearedFilters: FilterOptions = {
+  // Reset all filters
+  const resetFilters = () => {
+    const defaultFilters: FilterOptions = {
       platforms: [],
       genres: [],
       releaseYear: null,
       searchQuery: '',
       releaseStatus: 'all',
-      sort: 'default' // Reset sort as well
+      sort: 'default'
     };
-    setFilters(clearedFilters);
-    setPage(1);
     
-    sessionStorage.setItem('gameFilters', JSON.stringify(clearedFilters));
+    setTempFilters(defaultFilters);
+    
+    if (!isFilterOpen) {
+      setFilters(defaultFilters);
+      sessionStorage.setItem('gameFilters', JSON.stringify(defaultFilters));
+    }
+    
+    // Reset selected chip to "All Games"
+    setSelectedChip(0);
+  };
+
+  // Apply the temp filters
+  const applyFilters = () => {
+    setFilters(tempFilters);
+    sessionStorage.setItem('gameFilters', JSON.stringify(tempFilters));
+    setIsFilterOpen(false);
+  };
+
+  // Handle search input changes with debounce
+  const debouncedSearch = useCallback(
+    debounce((value: string) => {
+      setFilters(prev => ({
+        ...prev,
+        searchQuery: value
+      }));
+      sessionStorage.setItem('gameFilters', JSON.stringify({
+        ...filters,
+        searchQuery: value
+      }));
+    }, 500),
+    [filters]
+  );
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    debouncedSearch(value);
+  };
+
+  // Toggle view mode between grid and list
+  const toggleViewMode = (mode: 'grid' | 'list') => {
+    setViewMode(mode);
+  };
+
+  // Scroll to top function
+  const scrollToTop = () => {
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
+  };
+
+  // Handle filter chip selection
+  const handleChipSelect = (index: number) => {
+    const chip = FILTER_CHIPS[index];
+    setSelectedChip(index);
+    
+    const newFilters = {
+      ...filters,
+      sort: chip.sort || 'default',
+      releaseStatus: (chip.status || 'all') as 'all' | 'released' | 'upcoming'
+    };
+    
+    setFilters(newFilters);
+    setTempFilters(newFilters);
+    sessionStorage.setItem('gameFilters', JSON.stringify(newFilters));
+  };
+
+  // Render loading skeletons
+  const renderSkeletons = () => {
+    return Array(8).fill(0).map((_, index) => (
+      <div key={`skeleton-${index}`} className={styles.skeletonCard}>
+        <div className={styles.skeletonImage}></div>
+        <div className={styles.skeletonContent}>
+          <div className={styles.skeletonTitle}></div>
+          <div className={styles.skeletonGenre}></div>
+          <div className={styles.skeletonRating}></div>
+        </div>
+      </div>
+    ));
   };
 
   return (
@@ -353,75 +419,188 @@ export default function GamesPage() {
       <main className={styles.main}>
         <h1 className={styles.title}>Game Library</h1>
         <p className={styles.subtitle}>
-          <GamepadIcon size={16} style={{ display: 'inline', marginRight: '6px', verticalAlign: 'middle' }} />
-          Find your game
+          <GamepadIcon size={18} />
+          Discover and explore thousands of games
         </p>
         
-        <div className={styles.paginationContainer}>
-          <div className={styles.filterSearchContainer}>
-            <button 
-              onClick={toggleFilter} 
-              className={`${styles.filterButton} ${showFilters ? styles.activeFilterButton : ''} ${activeFiltersCount > 0 ? styles.hasActiveFilters : ''}`}
-              aria-label="Toggle filters"
-            >
-              <Filter size={16} />
-              <span>Filters</span>
-              {activeFiltersCount > 0 && (
-                <span className={styles.filterCount}>{activeFiltersCount}</span>
-              )}
-            </button>
-            
-            <form onSubmit={handleSearchSubmit} className={styles.searchForm}>
-              <div className={styles.searchInputWrapper}>
-                <input 
-                  type="text" 
-                  placeholder="Search by game name..."
-                  value={filters.searchQuery}
+        <div className={styles.floatingControls}>
+          <div className={styles.controlsContent}>
+            <div className={styles.filterSearchContainer}>
+              <button 
+                className={`${styles.filterButton} ${isFilterOpen ? styles.active : ''} ${activeFiltersCount > 0 ? styles.hasFilters : ''}`}
+                onClick={toggleFilter}
+                aria-label="Toggle filters"
+              >
+                <Filter size={18} />
+                <span>Filters</span>
+                {activeFiltersCount > 0 && (
+                  <span className={styles.filterCount}>{activeFiltersCount}</span>
+                )}
+              </button>
+              
+              <div className={styles.searchContainer}>
+                <input
+                  type="text"
+                  placeholder="Search games by name..."
+                  defaultValue={filters.searchQuery}
                   onChange={handleSearchChange}
                   className={styles.searchInput}
                 />
-                <button type="submit" className={styles.searchButton}>
-                  <Search size={16} />
+                <button className={styles.searchButton}>
+                  <Search size={18} />
                 </button>
               </div>
-            </form>
-          </div>
-          
-          <div className={styles.pagination}>
-            <button 
-              onClick={handlePrevPage} 
-              disabled={page === 1}
-              className={styles.paginationButton}
-            >
-              <ArrowLeft size={16} /> Prev
-            </button>
-            <span className={styles.pageIndicator}>{page}</span>
-            <button 
-              onClick={handleNextPage} 
-              disabled={games.length === 0}
-              className={styles.paginationButton}
-            >
-              Next <ArrowRight size={16} />
-            </button>
+              
+              <div className={styles.viewToggle}>
+                <button 
+                  className={`${styles.viewToggleButton} ${viewMode === 'grid' ? styles.active : ''}`}
+                  onClick={() => toggleViewMode('grid')}
+                  aria-label="Grid view"
+                >
+                  <Grid size={16} />
+                  <span>Grid</span>
+                </button>
+                <button 
+                  className={`${styles.viewToggleButton} ${viewMode === 'list' ? styles.active : ''}`}
+                  onClick={() => toggleViewMode('list')}
+                  aria-label="List view"
+                >
+                  <List size={16} />
+                  <span>List</span>
+                </button>
+              </div>
+            </div>
+            
+            <div className={styles.filterChips}>
+              {FILTER_CHIPS.map((chip, index) => (
+                <button
+                  key={index}
+                  className={`${styles.filterChip} ${selectedChip === index ? styles.active : ''}`}
+                  onClick={() => handleChipSelect(index)}
+                >
+                  {chip.icon}
+                  {chip.label}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
         
-        {showFilters && (
-          <div className={styles.filterBox}>
+        {/* Main content - games grid or list */}
+        {loading && games.length === 0 ? (
+          <div className={styles.skeletonGrid}>
+            {renderSkeletons()}
+          </div>
+        ) : error ? (
+          <div className={styles.error}>{error}</div>
+        ) : games.length === 0 ? (
+          <div className={styles.noResults}>
+            <Search className={styles.noResultsIcon} />
+            <h2 className={styles.noResultsTitle}>No games found</h2>
+            <p className={styles.noResultsMessage}>
+              Try adjusting your filters or search terms to find what you're looking for.
+            </p>
+            <button className={styles.resetFiltersButton} onClick={resetFilters}>
+              <RefreshCw size={16} />
+              Reset all filters
+            </button>
+          </div>
+        ) : (
+          <>
+            {viewMode === 'grid' ? (
+              <div className={styles.gameGrid}>
+                {games.map(game => (
+                  <div 
+                    key={game.id} 
+                    className={styles.gameGridCard}
+                    onClick={() => handleGameClick(game.id)}
+                  >
+                    <div className={styles.gameImageContainer}>
+                      <img 
+                        src={game.cover} 
+                        alt={game.name} 
+                        className={styles.gameImage}
+                        loading="lazy"
+                      />
+                    </div>
+                    <div className={styles.gameInfo}>
+                      <h3 className={styles.gameTitle}>{game.name}</h3>
+                      <div className={styles.gameGenres}>{game.genres}</div>
+                      <div className={styles.gameMeta}>
+                        {game.rating > 0 && (
+                          <div className={styles.gameRating}>
+                            <Star size={14} fill="#6c5ce7" color="#6c5ce7" />
+                            {game.rating.toFixed(1)}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className={styles.gameList}>
+                {games.map(game => (
+                  <div 
+                    key={game.id} 
+                    className={styles.gameListItem}
+                    onClick={() => handleGameClick(game.id)}
+                  >
+                    <img 
+                      src={game.cover} 
+                      alt={game.name} 
+                      className={styles.gameListImage}
+                      loading="lazy"
+                    />
+                    <div className={styles.gameListInfo}>
+                      <h3 className={styles.gameListTitle}>{game.name}</h3>
+                      <div className={styles.gameListMeta}>
+                        <div className={styles.gameGenres}>{game.genres}</div>
+                        {game.rating > 0 && (
+                          <div className={styles.gameRating}>
+                            <Star size={14} fill="#6c5ce7" color="#6c5ce7" />
+                            {game.rating.toFixed(1)}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+            
+            {/* Infinite scroll loading reference */}
+            <div ref={loadingRef} className={styles.loadMore}>
+              {loading && hasMore && (
+                <>
+                  <div className={styles.loadMoreSpinner}></div>
+                  <p>Loading more games...</p>
+                </>
+              )}
+            </div>
+          </>
+        )}
+        
+        {/* Filter panel */}
+        <div className={`${styles.filterOverlay} ${isFilterOpen ? styles.open : ''}`}>
+          <div className={styles.filterPanel}>
             <div className={styles.filterHeader}>
-              <h3>Filter Games</h3>
-              <button className={styles.closeFilterButton} onClick={toggleFilter}>
-                <X size={18} />
+              <h2>Filter Games</h2>
+              <button className={styles.closeButton} onClick={toggleFilter}>
+                <X size={20} />
               </button>
             </div>
             
             <div className={styles.filterContent}>
               <div className={styles.filterSection}>
-                <h4>Platforms</h4>
+                <h3>Platform</h3>
                 <select
-                  value={filters.platforms.length > 0 ? filters.platforms[0].toString() : ''}
-                  onChange={handlePlatformChange}
-                  className={styles.simpleSelect}
+                  value={tempFilters.platforms.length > 0 ? tempFilters.platforms[0].toString() : ''}
+                  onChange={(e) => setTempFilters(prev => ({
+                    ...prev,
+                    platforms: e.target.value === '' ? [] : [Number(e.target.value)]
+                  }))}
+                  className={styles.filterSelect}
                 >
                   <option value="">All Platforms</option>
                   {PLATFORMS.map(platform => (
@@ -433,31 +612,33 @@ export default function GamesPage() {
               </div>
               
               <div className={styles.filterSection}>
-                <h4>Genres</h4>
-                {genres.length > 0 ? (
-                  <select
-                    value={filters.genres.length > 0 ? filters.genres[0].toString() : ''}
-                    onChange={handleGenreChange}
-                    className={styles.simpleSelect}
-                  >
-                    <option value="">All Genres</option>
-                    {genres.map(genre => (
-                      <option key={genre.id} value={genre.id}>
-                        {genre.name}
-                      </option>
-                    ))}
-                  </select>
-                ) : (
-                  <div>Chargement des genres...</div>
-                )}
+                <h3>Genre</h3>
+                <select
+                  value={tempFilters.genres.length > 0 ? tempFilters.genres[0].toString() : ''}
+                  onChange={(e) => setTempFilters(prev => ({
+                    ...prev,
+                    genres: e.target.value === '' ? [] : [Number(e.target.value)]
+                  }))}
+                  className={styles.filterSelect}
+                >
+                  <option value="">All Genres</option>
+                  {genres.map(genre => (
+                    <option key={genre.id} value={genre.id}>
+                      {genre.name}
+                    </option>
+                  ))}
+                </select>
               </div>
               
               <div className={styles.filterSection}>
-                <h4>Release Year</h4>
+                <h3>Release Year</h3>
                 <select
-                  value={filters.releaseYear === null ? '' : filters.releaseYear}
-                  onChange={handleReleaseYearChange}
-                  className={styles.simpleSelect}
+                  value={tempFilters.releaseYear === null ? '' : tempFilters.releaseYear}
+                  onChange={(e) => setTempFilters(prev => ({
+                    ...prev,
+                    releaseYear: e.target.value === '' ? null : Number(e.target.value)
+                  }))}
+                  className={styles.filterSelect}
                 >
                   <option value="">All Years</option>
                   {YEARS.map(year => (
@@ -468,13 +649,15 @@ export default function GamesPage() {
                 </select>
               </div>
               
-              {/* New Release Status Filter */}
               <div className={styles.filterSection}>
-                <h4>Release Status</h4>
+                <h3>Release Status</h3>
                 <select
-                  value={filters.releaseStatus}
-                  onChange={handleReleaseStatusChange}
-                  className={styles.simpleSelect}
+                  value={tempFilters.releaseStatus}
+                  onChange={(e) => setTempFilters(prev => ({
+                    ...prev,
+                    releaseStatus: e.target.value as 'all' | 'released' | 'upcoming'
+                  }))}
+                  className={styles.filterSelect}
                 >
                   {RELEASE_STATUS.map(status => (
                     <option key={status.value} value={status.value}>
@@ -483,14 +666,16 @@ export default function GamesPage() {
                   ))}
                 </select>
               </div>
-
-              {/* New Sort Filter */}
+              
               <div className={styles.filterSection}>
-                <h4>Sort By</h4>
+                <h3>Sort By</h3>
                 <select
-                  value={filters.sort}
-                  onChange={handleSortChange}
-                  className={styles.simpleSelect}
+                  value={tempFilters.sort}
+                  onChange={(e) => setTempFilters(prev => ({
+                    ...prev,
+                    sort: e.target.value
+                  }))}
+                  className={styles.filterSelect}
                 >
                   {SORT_OPTIONS.map(option => (
                     <option key={option.value} value={option.value}>
@@ -499,32 +684,29 @@ export default function GamesPage() {
                   ))}
                 </select>
               </div>
-              
-              <div className={styles.filterActions}>
-                <button className={styles.clearFiltersButton} onClick={clearFilters}>
-                  Clear All Filters
-                </button>
-              </div>
+            </div>
+            
+            <div className={styles.filterActions}>
+              <button className={styles.resetButton} onClick={resetFilters}>
+                <RefreshCw size={16} />
+                Reset Filters
+              </button>
+              <button className={styles.applyButton} onClick={applyFilters}>
+                <Check size={16} />
+                Apply Filters
+              </button>
             </div>
           </div>
-        )}
+        </div>
         
-        {loading ? (
-          <div className={styles.loading}>Loading games...</div>
-        ) : error ? (
-          <div className={styles.error}>{error}</div>
-        ) : (
-          <div className={styles.gameGrid}>
-            {games.map(game => (
-              <div key={game.id} onClick={() => handleGameClick(game.id)}>
-                <GameCard game={game} />
-              </div>
-            ))}
-            {games.length === 0 && (
-              <div className={styles.noGames}>No games found with the current filters</div>
-            )}
-          </div>
-        )}
+        {/* Back to top button */}
+        <button 
+          className={`${styles.backToTop} ${showBackToTop ? styles.visible : ''}`}
+          onClick={scrollToTop}
+          aria-label="Back to top"
+        >
+          <ChevronUp size={24} />
+        </button>
       </main>
     </div>
   );
