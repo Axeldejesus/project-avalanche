@@ -4,8 +4,8 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Header from '@/components/Header';
 import { useAuth } from '@/context/AuthContext';
-import { getUserCollection, getUserCollectionStats, CollectionItem } from '@/services/collectionService';
-import { FiList, FiPlay, FiClock, FiAward, FiX, FiHeart, FiSearch } from 'react-icons/fi';
+import { getUserCollection, getUserCollectionStats, CollectionItem, removeFromCollection } from '@/services/collectionService';
+import { FiList, FiPlay, FiClock, FiAward, FiX, FiHeart, FiSearch, FiTrash2 } from 'react-icons/fi';
 import { DocumentSnapshot } from 'firebase/firestore';
 import styles from './collections.module.css';
 
@@ -25,6 +25,8 @@ export default function CollectionsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [lastDoc, setLastDoc] = useState<DocumentSnapshot | undefined>(undefined);
   const [hasMore, setHasMore] = useState(false);
+  const [isDeleting, setIsDeleting] = useState<number | null>(null);
+  const [deleteSuccess, setDeleteSuccess] = useState<string | null>(null);
   const { user } = useAuth();
   const router = useRouter();
 
@@ -137,6 +139,42 @@ export default function CollectionsPage() {
       )
     : games;
 
+  // Handle game deletion from collection
+  const handleDeleteGame = async (gameId: number, event: React.MouseEvent) => {
+    event.stopPropagation(); // Prevent navigation to game details
+    
+    if (!user) return;
+    
+    if (window.confirm(`Are you sure you want to remove this game from your collection?`)) {
+      setIsDeleting(gameId);
+      
+      try {
+        const result = await removeFromCollection(gameId);
+        
+        if (result.success) {
+          setDeleteSuccess(`Game removed from your collection!`);
+          
+          // Remove the game from the local state
+          setGames(games.filter(game => game.gameId !== gameId));
+          
+          // Refresh stats after deletion
+          loadStats();
+          
+          // Clear success message after a delay
+          setTimeout(() => {
+            setDeleteSuccess(null);
+          }, 3000);
+        } else {
+          setError(result.error || 'Failed to remove game from collection');
+        }
+      } catch (error: any) {
+        setError(error.message || 'An error occurred');
+      } finally {
+        setIsDeleting(null);
+      }
+    }
+  };
+
   // If user is not logged in, show sign in prompt
   if (!user) {
     return (
@@ -156,6 +194,12 @@ export default function CollectionsPage() {
       
       <main className={styles.main}>
         <h1 className={styles.title}>Your Game Collection</h1>
+        
+        {deleteSuccess && (
+          <div className={styles.successMessage}>
+            {deleteSuccess}
+          </div>
+        )}
         
         <div className={styles.statsBar}>
           <div 
@@ -271,6 +315,18 @@ export default function CollectionsPage() {
                       {game.status === 'abandoned' && <FiX />}
                       {game.status === 'wishlist' && <FiHeart />}
                     </div>
+                    <button 
+                      className={styles.deleteButton}
+                      onClick={(e) => handleDeleteGame(game.gameId, e)}
+                      disabled={isDeleting === game.gameId}
+                      aria-label="Remove from collection"
+                    >
+                      {isDeleting === game.gameId ? (
+                        <span className={styles.smallSpinner}></span>
+                      ) : (
+                        <FiTrash2 />
+                      )}
+                    </button>
                   </div>
                   <div className={styles.gameCardContent}>
                     <h3 className={styles.gameCardTitle}>{game.gameName}</h3>

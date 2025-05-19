@@ -4,9 +4,9 @@ import React, { useState, useEffect } from 'react';
 import Modal from './Modal';
 import styles from '../../styles/Modal.module.css';
 import collectionStyles from '../../styles/CollectionModal.module.css';
-import { FiCheck, FiClock, FiPlay, FiAward, FiX, FiHeart, FiInfo } from 'react-icons/fi';
+import { FiCheck, FiClock, FiPlay, FiAward, FiX, FiHeart, FiInfo, FiTrash2 } from 'react-icons/fi';
 import { FaSpinner } from 'react-icons/fa';
-import { addToCollection, getUserGameInCollection, CollectionItem } from '../../services/collectionService';
+import { addToCollection, getUserGameInCollection, CollectionItem, removeFromCollection } from '../../services/collectionService';
 import { useAuth } from '../../context/AuthContext';
 
 interface AddToCollectionModalProps {
@@ -63,6 +63,7 @@ const AddToCollectionModal: React.FC<AddToCollectionModalProps> = ({
   const [selectedStatus, setSelectedStatus] = useState<string>('playing');
   const [hoursPlayed, setHoursPlayed] = useState<number | undefined>(undefined);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [isDeleting, setIsDeleting] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [existingItem, setExistingItem] = useState<CollectionItem | null>(null);
@@ -137,6 +138,47 @@ const AddToCollectionModal: React.FC<AddToCollectionModalProps> = ({
       setError(error.message || 'An unexpected error occurred');
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleRemoveFromCollection = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    
+    if (!user) {
+      setError('You must be logged in to update your collection');
+      return;
+    }
+    
+    if (window.confirm(`Are you sure you want to remove "${gameName}" from your collection?`)) {
+      setIsDeleting(true);
+      setError(null);
+      setSuccess(null);
+      
+      try {
+        const result = await removeFromCollection(gameId);
+        
+        if (result.success) {
+          setSuccess('Game removed from your collection!');
+          setExistingItem(null);
+          
+          // Notify parent component
+          if (onCollectionUpdated) {
+            onCollectionUpdated();
+          }
+          
+          // Close modal after a short delay
+          setTimeout(() => {
+            onClose();
+          }, 1500);
+        } else {
+          setError(result.error || 'Failed to remove from collection');
+        }
+      } catch (error: any) {
+        console.error('Error removing from collection:', error);
+        setError(error.message || 'An unexpected error occurred');
+      } finally {
+        setIsDeleting(false);
+      }
     }
   };
 
@@ -218,20 +260,43 @@ const AddToCollectionModal: React.FC<AddToCollectionModalProps> = ({
         {error && <div className={styles.errorMessage}>{error}</div>}
         {success && <div className={styles.successMessage}>{success}</div>}
         
-        <button 
-          type="submit" 
-          className={`${styles.submit} ${collectionStyles.addButton}`}
-          disabled={isSubmitting}
-        >
-          {isSubmitting ? (
-            <>
-              <FaSpinner className={styles.spinner} /> 
-              {existingItem ? 'Updating...' : 'Adding...'}
-            </>
-          ) : (
-            existingItem ? 'Update in Collection' : 'Add to Collection'
+        <div className={styles.buttonGroup}>
+          <button 
+            type="submit" 
+            className={`${styles.submit} ${collectionStyles.addButton}`}
+            disabled={isSubmitting || isDeleting}
+          >
+            {isSubmitting ? (
+              <>
+                <FaSpinner className={styles.spinner} /> 
+                {existingItem ? 'Updating...' : 'Adding...'}
+              </>
+            ) : (
+              existingItem ? 'Update in Collection' : 'Add to Collection'
+            )}
+          </button>
+          
+          {existingItem && (
+            <button
+              type="button"
+              onClick={handleRemoveFromCollection}
+              className={`${styles.dangerButton} ${collectionStyles.removeButton}`}
+              disabled={isSubmitting || isDeleting}
+            >
+              {isDeleting ? (
+                <>
+                  <FaSpinner className={styles.spinner} /> 
+                  Removing...
+                </>
+              ) : (
+                <>
+                  <FiTrash2 /> 
+                  Remove from Collection
+                </>
+              )}
+            </button>
           )}
-        </button>
+        </div>
       </form>
     </Modal>
   );

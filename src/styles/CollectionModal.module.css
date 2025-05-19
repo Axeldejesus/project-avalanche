@@ -185,6 +185,11 @@
   display: none;
 }
 
+/* Remove Button */
+.removeButton {
+  margin-top: 5px;
+}
+
 /* Responsive adjustments */
 @media (max-width: 500px) {
   .statusOptions {
