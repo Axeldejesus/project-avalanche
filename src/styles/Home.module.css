@@ -1,6 +1,6 @@
 .container {
   min-height: 100vh;
-  background-color: #121212;
+  background: linear-gradient(to bottom, #12141d, #1a1b2e);
   color: #ffffff;
   font-family: system-ui, -apple-system, sans-serif;
   width: 100vw;
