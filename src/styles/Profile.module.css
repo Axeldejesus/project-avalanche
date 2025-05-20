@@ -440,6 +440,86 @@
   border: 1px dashed rgba(255, 255, 255, 0.1);
 }
 
+/* Styles pour la section des paramètres de plateforme */
+.settingsSection {
+  background: rgba(30, 30, 45, 0.4);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.sectionTitle {
+  font-size: 1.5rem;
+  margin-bottom: 1.2rem;
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.settingsContent {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.settingsGroup {
+  margin-bottom: 1.5rem;
+}
+
+.settingsLabel {
+  font-size: 1.1rem;
+  color: #ffffff;
+  margin-bottom: 0.5rem;
+  display: block;
+}
+
+.settingsDescription {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.7);
+  margin-bottom: 1rem;
+}
+
+.platformOptions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+  margin-top: 1rem;
+}
+
+.platformOption {
+  background: rgba(40, 40, 60, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 0.7rem 1rem;
+  color: white;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.platformOption:hover {
+  background: rgba(60, 60, 80, 0.6);
+  transform: translateY(-2px);
+}
+
+.selectedPlatform {
+  background: rgba(124, 58, 237, 0.3);
+  border-color: rgba(124, 58, 237, 0.6);
+}
+
+.successMessage {
+  color: #10b981;
+  margin-top: 1rem;
+  padding: 0.5rem;
+  background: rgba(16, 185, 129, 0.1);
+  border-radius: 4px;
+}
+
+.updatingMessage {
+  color: #6c5ce7;
+  margin-top: 1rem;
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .profileHeader {

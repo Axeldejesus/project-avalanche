@@ -103,7 +103,7 @@ const AddToCollectionModal: React.FC<AddToCollectionModalProps> = ({
     }
   }, [isOpen, user, gameId]);
 
-  // Load user's custom lists and check which ones contain the game
+  // Load user's custom lists and check which ones contain this game
   const loadCustomLists = async () => {
     if (!user) return;
     
@@ -154,7 +154,7 @@ const AddToCollectionModal: React.FC<AddToCollectionModalProps> = ({
         gameId,
         gameName,
         gameCover,
-        status: selectedStatus,
+        status: selectedStatus
       });
       
       if (result.success) {

@@ -1,7 +1,7 @@
 'use client';
 
 import styles from '../styles/Home.module.css';
-import { FiHome } from 'react-icons/fi';
+import { FiHome, FiBarChart2 } from 'react-icons/fi';
 import { RiGamepadFill } from 'react-icons/ri';
 import { BsCollectionPlay } from 'react-icons/bs';
 import { usePathname } from 'next/navigation';
@@ -26,6 +26,9 @@ const Navigation: React.FC = () => {
       </Link>
       <Link href="/collections" className={`${styles.navItem} ${isActive('/collections') ? styles.active : ''}`}>
         <BsCollectionPlay className={styles.navIcon} /> <span>Collections</span>
+      </Link>
+      <Link href="/stats" className={`${styles.navItem} ${isActive('/stats') ? styles.active : ''}`}>
+        <FiBarChart2 className={styles.navIcon} /> <span>Stats</span>
       </Link>
     </nav>
   );

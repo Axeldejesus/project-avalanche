@@ -14,7 +14,7 @@ interface Platform {
 }
 
 export async function GET(): Promise<NextResponse<Platform[]>> {
-  try {
+  try {    
     // Ciblons spécifiquement les plateformes les plus populaires par ID
     const platforms = await igdbRequest<IPlatform>('platforms', `
       fields name;
@@ -32,11 +32,33 @@ export async function GET(): Promise<NextResponse<Platform[]>> {
       
       return NextResponse.json(formattedPlatforms);
     } else {
-      console.error('No platforms data received from IGDB');
-      return NextResponse.json([]);
+      // Utiliser des données de secours si IGDB échoue
+      const fallbackPlatforms: Platform[] = [
+        { id: 167, name: 'PlayStation 5', icon: '/playstation.png' },
+        { id: 48, name: 'PlayStation 4', icon: '/playstation.png' },
+        { id: 46, name: 'PlayStation 3', icon: '/playstation.png' },
+        { id: 169, name: 'Xbox Series X|S', icon: '/xbox.png' },
+        { id: 49, name: 'Xbox One', icon: '/xbox.png' },
+        { id: 130, name: 'Nintendo Switch', icon: '/switch.png' },
+        { id: 6, name: 'PC (Microsoft Windows)', icon: '/pc.png' }
+      ];
+      
+      return NextResponse.json(fallbackPlatforms);
     }
   } catch (error) {
     console.error('Error fetching platforms:', error);
-    return NextResponse.json([]);
+    
+    // Utiliser des données de secours en cas d'erreur
+    const fallbackPlatforms: Platform[] = [
+      { id: 167, name: 'PlayStation 5', icon: '/playstation.png' },
+      { id: 48, name: 'PlayStation 4', icon: '/playstation.png' },
+      { id: 46, name: 'PlayStation 3', icon: '/playstation.png' },
+      { id: 169, name: 'Xbox Series X|S', icon: '/xbox.png' },
+      { id: 49, name: 'Xbox One', icon: '/xbox.png' },
+      { id: 130, name: 'Nintendo Switch', icon: '/switch.png' },
+      { id: 6, name: 'PC (Microsoft Windows)', icon: '/pc.png' }
+    ];
+    
+    return NextResponse.json(fallbackPlatforms);
   }
 }
