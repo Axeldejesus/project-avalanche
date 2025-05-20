@@ -238,7 +238,7 @@ const GameList = ({
               </h3>
               <div className={viewMode === 'grid' ? styles.gameCardMeta : styles.gameListMeta}>
                 <span className={styles.gameCardDate}>
-                  {formatDate(getAddedDate(game))}
+                  Added {formatDate(getAddedDate(game))}
                 </span>
                 {'rating' in game && game.rating && (
                   <span className={styles.gameCardRating}>

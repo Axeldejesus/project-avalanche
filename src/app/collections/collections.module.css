@@ -311,6 +311,10 @@
 
 .gameCardDate {
   opacity: 0.8;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  color: #a5b4fc;
 }
 
 .gameCardRating {

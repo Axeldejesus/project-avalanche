@@ -365,3 +365,83 @@
     width: 100%;
   }
 }
+
+.collectionModal {
+  width: 90%;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+  background: rgba(20, 20, 30, 0.95);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  scrollbar-width: thin;
+  scrollbar-color: rgba(124, 58, 237, 0.5) rgba(25, 25, 35, 0.2);
+}
+
+.collectionModal::-webkit-scrollbar {
+  width: 6px;
+}
+
+.collectionModal::-webkit-scrollbar-track {
+  background: rgba(25, 25, 35, 0.2);
+  border-radius: 10px;
+}
+
+.collectionModal::-webkit-scrollbar-thumb {
+  background-color: rgba(124, 58, 237, 0.5);
+  border-radius: 10px;
+}
+
+.collectionModal .header {
+  background: rgba(15, 15, 25, 0.8);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(124, 58, 237, 0.2);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.collectionModal .title {
+  font-family: var(--font-oxanium), sans-serif;
+  font-weight: 600;
+  background: linear-gradient(135deg, #fff, #d8c5ff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.collectionModal .form {
+  padding: 1.5rem;
+}
+
+.collectionModal .buttonGroup {
+  display: flex;
+  gap: 12px;
+  margin-top: 1.5rem;
+}
+
+.collectionModal .formLabel {
+  color: #b3b3ff;
+  margin-bottom: 10px;
+  font-weight: 500;
+  display: block;
+}
+
+.collectionModal .successMessage {
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  color: #10b981;
+  font-weight: 500;
+  animation: fadeInUp 0.5s ease forwards;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
