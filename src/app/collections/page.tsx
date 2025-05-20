@@ -266,12 +266,14 @@ export default function CollectionsPage() {
   const [listGames, setListGames] = useState<ListGame[]>([]);
   const [customLists, setCustomLists] = useState<Array<List & { gameCount: number }>>([]);
   const [loading, setLoading] = useState(true);
+  const [authChecked, setAuthChecked] = useState(false); // Ajout d'un nouvel état pour suivre la vérification d'auth
+  const [authLoading, setAuthLoading] = useState(true); // Ajout d'un nouvel état spécifique au chargement de l'auth
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [isCreatingList, setIsCreatingList] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  const [deletingId, setDeletingId] = useState<number | null>(null); // Add this state variable
+  const [deletingId, setDeletingId] = useState<number | null>(null);
   
   // Collection stats
   const [stats, setStats] = useState({
@@ -294,7 +296,21 @@ export default function CollectionsPage() {
   
   // Load collection and lists data
   useEffect(() => {
+    // Considérer l'authentification comme en cours de chargement par défaut
+    setAuthLoading(true);
+    
+    // Définir un délai avant de considérer que l'utilisateur n'est pas authentifié
+    const authTimeout = setTimeout(() => {
+      setAuthChecked(true);
+      setAuthLoading(false);
+    }, 1500); // Attendre 1.5 secondes
+    
     if (user) {
+      // Si l'utilisateur est connecté, effacer le délai et charger les données
+      clearTimeout(authTimeout);
+      setAuthChecked(true);
+      setAuthLoading(false);
+      
       loadCollectionStats();
       loadCustomLists();
       loadCollectionGames(true);
@@ -304,9 +320,9 @@ export default function CollectionsPage() {
       if (savedViewMode === 'list' || savedViewMode === 'grid') {
         setViewMode(savedViewMode as 'grid' | 'list');
       }
-    } else {
-      setLoading(false);
     }
+    
+    return () => clearTimeout(authTimeout);
   }, [user]);
   
   // Load collection games when active status changes
@@ -597,8 +613,21 @@ export default function CollectionsPage() {
     }, 3000);
   };
   
-  // If user is not logged in, show sign in prompt
-  if (!user) {
+  // Afficher un spinner de chargement pendant la vérification d'authentification
+  if (authLoading) {
+    return (
+      <div className={styles.pageContainer}>
+        <Header />
+        <div className={styles.loadingContainer}>
+          <div className={styles.spinner}></div>
+          <p>Loading...</p>
+        </div>
+      </div>
+    );
+  }
+  
+  // Si l'utilisateur n'est pas connecté ET que l'authentification a été vérifiée, afficher le message
+  if (authChecked && !user) {
     return (
       <div className={styles.pageContainer}>
         <Header />
