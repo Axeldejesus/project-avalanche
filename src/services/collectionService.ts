@@ -424,3 +424,5 @@ export const getUserCollectionForStats = async (
     return { items: [], error: error.message };
   }
 };
+export { CollectionItem };
+
