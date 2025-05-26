@@ -27,7 +27,11 @@
       "@/*": [
         "./src/*"
       ]
-    }
+    },
+    "types": [
+      "jest",
+      "node"
+    ]
   },
   "include": [
     "**/*.js",
@@ -35,7 +39,8 @@
     "**/*.ts",
     "**/*.tsx",
     "next-env.d.ts",
-    ".next/types/**/*.ts"
+    ".next/types/**/*.ts",
+    "src/**/__tests__/**/*"
   ],
   "exclude": [
     "node_modules"

@@ -14,7 +14,7 @@ const UploadImageInputSchema = z.object({
   )
 });
 
-const ImageUrlSchema = z.string().optional();
+const ImageUrlSchema = z.string().optional().nullable();
 
 /**
  * Uploads a profile image for the specified user
@@ -100,7 +100,7 @@ export async function uploadProfileImage(userId: string, file: File): Promise<{
  * @param imageUrl Relative path to the image or full URL
  * @returns Absolute URL to the profile image
  */
-export function getProfileImageUrl(imageUrl?: string): string {
+export function getProfileImageUrl(imageUrl?: string | null): string {
   try {
     // Validate input
     const validatedImageUrl = ImageUrlSchema.parse(imageUrl);
