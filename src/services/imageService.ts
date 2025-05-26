@@ -1,6 +1,20 @@
-import { db, auth, ensureFirestore } from './authenticate';
+import { ensureFirestore } from './authenticate';
 import { doc, updateDoc } from 'firebase/firestore';
-import { getUserProfile } from './authenticate';
+import { z } from 'zod';
+
+// Input validation schemas
+const UploadImageInputSchema = z.object({
+  userId: z.string().min(1, "User ID is required"),
+  file: z.instanceof(File).refine(
+    (file) => file.size <= 2 * 1024 * 1024,
+    "Image size must be less than 2MB"
+  ).refine(
+    (file) => file.type.startsWith('image/'),
+    "File must be an image"
+  )
+});
+
+const ImageUrlSchema = z.string().optional();
 
 /**
  * Uploads a profile image for the specified user
@@ -14,15 +28,8 @@ export async function uploadProfileImage(userId: string, file: File): Promise<{
   error?: string 
 }> {
   try {
-    // Check file size (max 2MB)
-    if (file.size > 2 * 1024 * 1024) {
-      return { success: false, error: 'Image size must be less than 2MB' };
-    }
-
-    // Check file type
-    if (!file.type.startsWith('image/')) {
-      return { success: false, error: 'File must be an image' };
-    }
+    // Validate input with Zod
+    const validatedInput = UploadImageInputSchema.parse({ userId, file });
 
     // Generate a unique filename using the userId and timestamp
     const timestamp = new Date().getTime();
@@ -75,6 +82,15 @@ export async function uploadProfileImage(userId: string, file: File): Promise<{
     return { success: true, imageUrl: filePath };
   } catch (error: any) {
     console.error('Error uploading profile image:', error);
+    
+    // Handle Zod validation errors
+    if (error.name === 'ZodError') {
+      return { 
+        success: false, 
+        error: error.issues.map((issue: any) => issue.message).join(', ')
+      };
+    }
+    
     return { success: false, error: error.message || 'An unexpected error occurred' };
   }
 }
@@ -85,15 +101,23 @@ export async function uploadProfileImage(userId: string, file: File): Promise<{
  * @returns Absolute URL to the profile image
  */
 export function getProfileImageUrl(imageUrl?: string): string {
-  if (!imageUrl) {
+  try {
+    // Validate input
+    const validatedImageUrl = ImageUrlSchema.parse(imageUrl);
+    
+    if (!validatedImageUrl) {
+      return '/placeholder-avatar.png';
+    }
+    
+    // If it's already an absolute URL, return it as is
+    if (validatedImageUrl.startsWith('http')) {
+      return validatedImageUrl;
+    }
+    
+    // Otherwise, make it a full path based on our public folder
+    return validatedImageUrl;
+  } catch (error) {
+    console.error('Error validating image URL:', error);
     return '/placeholder-avatar.png';
   }
-  
-  // If it's already an absolute URL, return it as is
-  if (imageUrl.startsWith('http')) {
-    return imageUrl;
-  }
-  
-  // Otherwise, make it a full path based on our public folder
-  return imageUrl;
 }

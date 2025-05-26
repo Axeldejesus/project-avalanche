@@ -13,16 +13,18 @@ import {
 } from "firebase/auth";
 import { 
   getFirestore, 
-  collection, 
   doc, 
   setDoc, 
   getDoc,
   Firestore,
-  query,
-  where,
-  getDocs,
   deleteDoc
 } from "firebase/firestore";
+import { 
+  RegisterInputSchema, 
+  LoginInputSchema, 
+  UserProfileSchema,
+  type UserProfile
+} from '../schemas';
 
 // Check if we're running on the client (browser) or server
 const isClient = typeof window !== 'undefined';
@@ -98,7 +100,7 @@ export const hasSessionExpired = (): boolean => {
   return sessionDuration > MAX_SESSION_DURATION;
 }
 
-// Service d'inscription - Add safety checks
+// Service d'inscription - Add Zod validation
 export const registerUser = async (email: string, password: string, username: string) => {
   if (!isClient || !auth) {
     console.error('Firebase auth is not initialized');
@@ -106,16 +108,22 @@ export const registerUser = async (email: string, password: string, username: st
   }
 
   try {
+    // Validate input with Zod
+    const validatedInput = RegisterInputSchema.parse({ email, password, username });
+    
     // 1. Créer l'utilisateur dans Firebase Authentication
-    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    const userCredential = await createUserWithEmailAndPassword(auth, validatedInput.email, validatedInput.password);
     const user = userCredential.user;
     
     // 2. Créer un document utilisateur dans Firestore
-    await createUserProfile(user.uid, {
-      username,
-      email,
+    const profileData: Omit<UserProfile, 'updatedAt'> = {
+      userId: user.uid,
+      username: validatedInput.username,
+      email: validatedInput.email,
       createdAt: new Date().toISOString()
-    });
+    };
+    
+    await createUserProfile(user.uid, profileData);
     
     return {
       success: true,
@@ -123,6 +131,15 @@ export const registerUser = async (email: string, password: string, username: st
     };
   } catch (error: any) {
     console.error("Erreur lors de l'inscription:", error);
+    
+    // Handle Zod validation errors
+    if (error.name === 'ZodError') {
+      return {
+        success: false,
+        error: error.issues.map((issue: any) => issue.message).join(', ')
+      };
+    }
+    
     return {
       success: false,
       error: error.code || error.message
@@ -130,7 +147,7 @@ export const registerUser = async (email: string, password: string, username: st
   }
 };
 
-// Service de connexion - Add safety checks
+// Service de connexion - Add Zod validation
 export const loginUser = async (email: string, password: string) => {
   if (!isClient || !auth) {
     console.error('Firebase auth is not initialized');
@@ -138,7 +155,10 @@ export const loginUser = async (email: string, password: string) => {
   }
 
   try {
-    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    // Validate input with Zod
+    const validatedInput = LoginInputSchema.parse({ email, password });
+    
+    const userCredential = await signInWithEmailAndPassword(auth, validatedInput.email, validatedInput.password);
     // Enregistrer la date de connexion
     setLastLoginTimestamp();
     return {
@@ -147,6 +167,15 @@ export const loginUser = async (email: string, password: string) => {
     };
   } catch (error: any) {
     console.error("Erreur lors de la connexion:", error);
+    
+    // Handle Zod validation errors
+    if (error.name === 'ZodError') {
+      return {
+        success: false,
+        error: error.issues.map((issue: any) => issue.message).join(', ')
+      };
+    }
+    
     return {
       success: false,
       error: error.code || error.message
@@ -172,8 +201,8 @@ export const logoutUser = async () => {
   }
 };
 
-// Créer un profil utilisateur dans Firestore - Add safety checks
-export const createUserProfile = async (userId: string, data: any) => {
+// Créer un profil utilisateur dans Firestore - Add Zod validation
+export const createUserProfile = async (userId: string, data: Omit<UserProfile, 'updatedAt'>) => {
   if (!isClient || !db) {
     console.error('Firebase db is not initialized');
     return { success: false, error: 'Firebase not initialized' };
@@ -183,13 +212,35 @@ export const createUserProfile = async (userId: string, data: any) => {
     console.log(`Attempting to create user profile for userId: ${userId}`);
     console.log('With data:', data);
     
+    // Create a clean profile object with only the required fields
+    const profileData = {
+      userId: data.userId || userId,
+      username: data.username,
+      email: data.email,
+      createdAt: data.createdAt,
+      ...(data.profilePicture !== undefined && { profilePicture: data.profilePicture }),
+      ...(data.profileImageUrl !== undefined && { profileImageUrl: data.profileImageUrl })
+    };
+    
+    // Validate profile data with Zod
+    const validatedData = UserProfileSchema.omit({ updatedAt: true }).parse(profileData);
+    
     const userRef = doc(db, "utilisateur", userId);
-    await setDoc(userRef, data);
+    await setDoc(userRef, validatedData);
     
     console.log(`User profile created successfully for userId: ${userId}`);
     return { success: true };
   } catch (error: any) {
     console.error("Erreur lors de la création du profil:", error);
+    
+    // Handle Zod validation errors
+    if (error.name === 'ZodError') {
+      return {
+        success: false,
+        error: error.issues.map((issue: any) => issue.message).join(', ')
+      };
+    }
+    
     return {
       success: false,
       error: error.message
@@ -252,19 +303,31 @@ export const getUserProfile = async (userId: string) => {
   }
 };
 
-// Mettre à jour un profil utilisateur dans Firestore
-export const updateUserProfile = async (userId: string, data: any) => {
+// Mettre à jour un profil utilisateur dans Firestore - Add Zod validation
+export const updateUserProfile = async (userId: string, data: Partial<UserProfile>) => {
   if (!isClient || !db) {
     console.error('Firebase db is not initialized');
     return { success: false, error: 'Firebase not initialized' };
   }
 
   try {
+    // Validate partial profile data with Zod
+    const validatedData = UserProfileSchema.partial().parse(data);
+    
     const userRef = doc(db, "utilisateur", userId);
-    await setDoc(userRef, data, { merge: true });
+    await setDoc(userRef, { ...validatedData, updatedAt: new Date().toISOString() }, { merge: true });
     return { success: true };
   } catch (error: any) {
     console.error("Erreur lors de la mise à jour du profil:", error);
+    
+    // Handle Zod validation errors
+    if (error.name === 'ZodError') {
+      return {
+        success: false,
+        error: error.issues.map((issue: any) => issue.message).join(', ')
+      };
+    }
+    
     return {
       success: false,
       error: error.message

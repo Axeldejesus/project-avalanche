@@ -1,41 +1,29 @@
 import { db, auth } from './authenticate';
-import { collection, updateDoc, deleteDoc, doc, getDocs, getDoc, query, where, orderBy, limit, startAfter, DocumentSnapshot, setDoc, addDoc } from 'firebase/firestore';
-
-export interface CollectionItem {
-  id?: string;
-  userId: string;
-  gameId: number;
-  gameName: string;
-  gameCover: string;
-  platform?: string; // Plateforme principale (préférée ou première disponible)
-  platforms?: string[]; // Toutes les plateformes du jeu
-  genre?: string; // Genre principal
-  genres?: string[]; // Tous les genres du jeu
-  status: string; // "completed", "playing", "toPlay", "abandoned", "wishlist"
-  rating?: number; // Optional user rating
-  notes?: string; // Optional user notes
-  hoursPlayed?: number; // Optional tracking of hours played
-  addedAt: string;
-  updatedAt: string;
-}
-
-export interface CollectionStats {
-  total: number;
-  completed: number;
-  playing: number;
-  toPlay: number;
-  abandoned: number;
-  wishlist: number;
-}
+import { collection, updateDoc, deleteDoc, doc, getDocs, getDoc, query, where, orderBy, limit, startAfter, DocumentSnapshot, setDoc,} from 'firebase/firestore';
+import { 
+  CollectionItemSchema, 
+  CollectionStatsSchema, 
+  AddToCollectionInputSchema, 
+  UpdateCollectionInputSchema,
+  type CollectionItem,
+  type CollectionStats,
+  type AddToCollectionInput,
+  type UpdateCollectionInput
+} from '../schemas';
 
 // Add a game to the user's collection
 export const addToCollection = async (
-  collectionData: Omit<CollectionItem, 'id' | 'addedAt' | 'updatedAt'>
+  collectionData: AddToCollectionInput & { userId: string }
 ): Promise<{ success: boolean; error?: string; collectionId?: string }> => {
   try {
     if (!auth || !auth.currentUser) {
       return { success: false, error: 'User not authenticated' };
     }
+
+    // Validate input with Zod
+    const validatedData = AddToCollectionInputSchema.extend({
+      userId: CollectionItemSchema.shape.userId
+    }).parse(collectionData);
 
     const userId = auth.currentUser.uid;
     const now = new Date().toISOString();
@@ -54,7 +42,7 @@ export const addToCollection = async (
     }
     
     // Check if game already exists in collection first
-    const existingItem = await getUserGameInCollection(userId, collectionData.gameId);
+    const existingItem = await getUserGameInCollection(userId, validatedData.gameId);
     
     if (existingItem) {
       // Game exists, update its status instead
@@ -62,21 +50,21 @@ export const addToCollection = async (
       
       // Create update object only with defined fields to avoid Firestore errors
       const updateData: any = {
-        status: collectionData.status,
+        status: validatedData.status,
         updatedAt: now
       };
       
       // Only include these fields if they are defined
-      if (collectionData.notes !== undefined) {
-        updateData.notes = collectionData.notes;
+      if (validatedData.notes !== undefined) {
+        updateData.notes = validatedData.notes;
       }
       
-      if (collectionData.rating !== undefined) {
-        updateData.rating = collectionData.rating;
+      if (validatedData.rating !== undefined) {
+        updateData.rating = validatedData.rating;
       }
       
-      if (collectionData.hoursPlayed !== undefined) {
-        updateData.hoursPlayed = collectionData.hoursPlayed;
+      if (validatedData.hoursPlayed !== undefined) {
+        updateData.hoursPlayed = validatedData.hoursPlayed;
       }
       
       // Ajouter les informations de plateforme et de genre automatiquement si disponibles
@@ -98,16 +86,16 @@ export const addToCollection = async (
     
     // Game doesn't exist, create new entry
     // Use gameId as document ID for easier lookup
-    const gameDocId = collectionData.gameId.toString();
+    const gameDocId = validatedData.gameId.toString();
     const collectionRef = doc(db!, `collections/${userId}/games`, gameDocId);
     
     // Create a clean object without undefined values
-    const newGameData: any = {
+    const newGameData: Omit<CollectionItem, 'id'> = {
       userId,
-      gameId: collectionData.gameId,
-      gameName: collectionData.gameName,
-      gameCover: collectionData.gameCover,
-      status: collectionData.status,
+      gameId: validatedData.gameId,
+      gameName: validatedData.gameName,
+      gameCover: validatedData.gameCover,
+      status: validatedData.status,
       addedAt: now,
       updatedAt: now
     };
@@ -125,16 +113,16 @@ export const addToCollection = async (
     }
     
     // Only add optional fields if they're defined
-    if (collectionData.notes !== undefined) {
-      newGameData.notes = collectionData.notes;
+    if (validatedData.notes !== undefined) {
+      (newGameData as any).notes = validatedData.notes;
     }
     
-    if (collectionData.rating !== undefined) {
-      newGameData.rating = collectionData.rating;
+    if (validatedData.rating !== undefined) {
+      (newGameData as any).rating = validatedData.rating;
     }
     
-    if (collectionData.hoursPlayed !== undefined) {
-      newGameData.hoursPlayed = collectionData.hoursPlayed;
+    if (validatedData.hoursPlayed !== undefined) {
+      (newGameData as any).hoursPlayed = validatedData.hoursPlayed;
     }
     
     await setDoc(collectionRef, newGameData);
@@ -142,6 +130,15 @@ export const addToCollection = async (
     return { success: true, collectionId: gameDocId };
   } catch (error: any) {
     console.error('Error adding to collection:', error);
+    
+    // Handle Zod validation errors
+    if (error.name === 'ZodError') {
+      return { 
+        success: false, 
+        error: error.issues.map((issue: any) => issue.message).join(', ')
+      };
+    }
+    
     return { success: false, error: error.message };
   }
 };
@@ -149,15 +146,19 @@ export const addToCollection = async (
 // Update a game in the collection
 export const updateCollection = async (
   gameId: number,
-  data: { status?: string; notes?: string; rating?: number; hoursPlayed?: number }
+  data: UpdateCollectionInput
 ): Promise<{ success: boolean; error?: string }> => {
   try {
     if (!auth || !auth.currentUser) {
       return { success: false, error: 'User not authenticated' };
     }
 
+    // Validate inputs with Zod
+    const validatedGameId = CollectionItemSchema.shape.gameId.parse(gameId);
+    const validatedData = UpdateCollectionInputSchema.parse(data);
+
     const userId = auth.currentUser.uid;
-    const gameDocId = gameId.toString();
+    const gameDocId = validatedGameId.toString();
     const collectionRef = doc(db!, `collections/${userId}/games`, gameDocId);
     
     const collectionSnap = await getDoc(collectionRef);
@@ -166,13 +167,22 @@ export const updateCollection = async (
     }
 
     await updateDoc(collectionRef, {
-      ...data,
+      ...validatedData,
       updatedAt: new Date().toISOString()
     });
 
     return { success: true };
   } catch (error: any) {
     console.error('Error updating collection:', error);
+    
+    // Handle Zod validation errors
+    if (error.name === 'ZodError') {
+      return { 
+        success: false, 
+        error: error.issues.map((issue: any) => issue.message).join(', ')
+      };
+    }
+    
     return { success: false, error: error.message };
   }
 };
@@ -218,6 +228,12 @@ export const getUserCollection = async (
       return { items: [], hasMore: false, error: 'Database not initialized' };
     }
 
+    // Validate inputs
+    const validatedUserId = CollectionItemSchema.shape.userId.parse(userId);
+    if (status) {
+      CollectionItemSchema.shape.status.parse(status);
+    }
+
     // Build the query with proper ordering
     let collectionQuery = query(
       collection(db, `collections/${userId}/games`),
@@ -246,16 +262,33 @@ export const getUserCollection = async (
 
     collectionSnapshot.forEach((doc) => {
       newLastDoc = doc;
-      items.push({
-        id: doc.id,
-        ...doc.data()
-      } as CollectionItem);
+      try {
+        // Validate collection item data from Firestore
+        const itemData = CollectionItemSchema.parse({
+          id: doc.id,
+          ...doc.data()
+        });
+        items.push(itemData);
+      } catch (validationError) {
+        console.error('Invalid collection item data in Firestore:', validationError);
+        // Skip invalid items rather than failing the entire request
+      }
     });
 
     const hasMore = items.length === pageSize;
     return { items, lastDoc: newLastDoc, hasMore };
   } catch (error: any) {
     console.error('Error getting collection:', error);
+    
+    // Handle Zod validation errors
+    if (error.name === 'ZodError') {
+      return { 
+        items: [], 
+        hasMore: false, 
+        error: error.issues.map((issue: any) => issue.message).join(', ')
+      };
+    }
+    
     return { items: [], hasMore: false, error: error.message };
   }
 };
@@ -270,18 +303,28 @@ export const getUserGameInCollection = async (
       return null;
     }
 
-    const gameDocId = gameId.toString();
-    const collectionRef = doc(db, `collections/${userId}/games`, gameDocId);
+    // Validate inputs
+    const validatedUserId = CollectionItemSchema.shape.userId.parse(userId);
+    const validatedGameId = CollectionItemSchema.shape.gameId.parse(gameId);
+
+    const gameDocId = validatedGameId.toString();
+    const collectionRef = doc(db, `collections/${validatedUserId}/games`, gameDocId);
     const collectionDoc = await getDoc(collectionRef);
 
     if (!collectionDoc.exists()) {
       return null;
     }
 
-    return {
-      id: collectionDoc.id,
-      ...collectionDoc.data()
-    } as CollectionItem;
+    try {
+      // Validate collection item data from Firestore
+      return CollectionItemSchema.parse({
+        id: collectionDoc.id,
+        ...collectionDoc.data()
+      });
+    } catch (validationError) {
+      console.error('Invalid collection item data in Firestore:', validationError);
+      return null;
+    }
   } catch (error: any) {
     console.error('Error checking game in collection:', error);
     return null;
@@ -291,15 +334,7 @@ export const getUserGameInCollection = async (
 // Get collection statistics for a user (count by status)
 export const getUserCollectionStats = async (
   userId: string
-): Promise<{ 
-  total: number;
-  completed: number;
-  playing: number;
-  toPlay: number;
-  abandoned: number;
-  wishlist: number; 
-  error?: string;
-}> => {
+): Promise<CollectionStats & { error?: string }> => {
   try {
     if (!db) {
       return { 
@@ -309,9 +344,12 @@ export const getUserCollectionStats = async (
       };
     }
 
-    const collectionSnapshot = await getDocs(collection(db, `collections/${userId}/games`));
+    // Validate userId
+    const validatedUserId = CollectionItemSchema.shape.userId.parse(userId);
+
+    const collectionSnapshot = await getDocs(collection(db, `collections/${validatedUserId}/games`));
     
-    let stats = {
+    let stats: CollectionStats = {
       total: 0,
       completed: 0,
       playing: 0,
@@ -332,9 +370,20 @@ export const getUserCollectionStats = async (
       else if (data.status === 'wishlist') stats.wishlist++;
     });
     
-    return stats;
+    // Validate stats before returning
+    return CollectionStatsSchema.parse(stats);
   } catch (error: any) {
     console.error('Error getting collection stats:', error);
+    
+    // Handle Zod validation errors
+    if (error.name === 'ZodError') {
+      return { 
+        total: 0, completed: 0, playing: 0, 
+        toPlay: 0, abandoned: 0, wishlist: 0,
+        error: error.issues.map((issue: any) => issue.message).join(', ')
+      };
+    }
+    
     return { 
       total: 0, completed: 0, playing: 0, 
       toPlay: 0, abandoned: 0, wishlist: 0,

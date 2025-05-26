@@ -1,44 +1,38 @@
 import { db, auth } from './authenticate';
-import { collection, updateDoc, deleteDoc, doc, getDocs, getDoc, query, where, orderBy, limit, startAfter, DocumentSnapshot, setDoc, addDoc } from 'firebase/firestore';
-
-export interface List {
-  id?: string;
-  userId: string;
-  name: string;
-  description?: string;
-  icon?: string; // Optional icon name (for visual customization)
-  color?: string; // Optional color (for visual customization)
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface ListGame {
-  gameId: number;
-  gameName: string;
-  gameCover: string;
-  addedAt: string;
-  notes?: string;
-}
+import { collection, updateDoc, deleteDoc, doc, getDocs, getDoc, query, orderBy, limit, startAfter, DocumentSnapshot, setDoc, addDoc } from 'firebase/firestore';
+import { 
+  ListSchema, 
+  ListGameSchema, 
+  CreateListInputSchema, 
+  UpdateListInputSchema,
+  type List,
+  type ListGame,
+  type CreateListInput,
+  type UpdateListInput
+} from '../schemas';
 
 // Create a new custom list
 export const createList = async (
-  listData: Omit<List, 'id' | 'userId' | 'createdAt' | 'updatedAt'>
+  listData: CreateListInput
 ): Promise<{ success: boolean; error?: string; listId?: string }> => {
   try {
     if (!auth || !auth.currentUser) {
       return { success: false, error: 'User not authenticated' };
     }
 
+    // Validate input with Zod
+    const validatedData = CreateListInputSchema.parse(listData);
+
     const userId = auth.currentUser.uid;
     const now = new Date().toISOString();
     
     // Create a clean object
-    const newList = {
+    const newList: Omit<List, 'id'> = {
       userId,
-      name: listData.name,
-      description: listData.description || '',
-      icon: listData.icon || 'list',
-      color: listData.color || '#7c3aed',
+      name: validatedData.name,
+      description: validatedData.description || '',
+      icon: validatedData.icon || 'list',
+      color: validatedData.color || '#7c3aed',
       createdAt: now,
       updatedAt: now
     };
@@ -50,6 +44,15 @@ export const createList = async (
     return { success: true, listId: docRef.id };
   } catch (error: any) {
     console.error('Error creating list:', error);
+    
+    // Handle Zod validation errors
+    if (error.name === 'ZodError') {
+      return { 
+        success: false, 
+        error: error.issues.map((issue: any) => issue.message).join(', ')
+      };
+    }
+    
     return { success: false, error: error.message };
   }
 };
@@ -57,12 +60,15 @@ export const createList = async (
 // Update an existing list metadata
 export const updateList = async (
   listId: string,
-  data: { name?: string; description?: string; icon?: string; color?: string }
+  data: UpdateListInput
 ): Promise<{ success: boolean; error?: string }> => {
   try {
     if (!auth || !auth.currentUser) {
       return { success: false, error: 'User not authenticated' };
     }
+
+    // Validate input with Zod
+    const validatedData = UpdateListInputSchema.parse(data);
 
     const userId = auth.currentUser.uid;
     const listRef = doc(db!, `gameList/${userId}/lists`, listId);
@@ -74,19 +80,24 @@ export const updateList = async (
 
     // Update only the provided fields
     const updateData: any = {
+      ...validatedData,
       updatedAt: new Date().toISOString()
     };
-    
-    if (data.name !== undefined) updateData.name = data.name;
-    if (data.description !== undefined) updateData.description = data.description;
-    if (data.icon !== undefined) updateData.icon = data.icon;
-    if (data.color !== undefined) updateData.color = data.color;
     
     await updateDoc(listRef, updateData);
 
     return { success: true };
   } catch (error: any) {
     console.error('Error updating list:', error);
+    
+    // Handle Zod validation errors
+    if (error.name === 'ZodError') {
+      return { 
+        success: false, 
+        error: error.issues.map((issue: any) => issue.message).join(', ')
+      };
+    }
+    
     return { success: false, error: error.message };
   }
 };
@@ -139,8 +150,11 @@ export const getUserLists = async (
       return { lists: [], error: 'Database not initialized' };
     }
 
+    // Validate userId
+    const validatedUserId = ListSchema.shape.userId.parse(userId);
+
     const listsQuery = query(
-      collection(db, `gameList/${userId}/lists`),
+      collection(db, `gameList/${validatedUserId}/lists`),
       orderBy('updatedAt', 'desc')
     );
     
@@ -148,15 +162,31 @@ export const getUserLists = async (
     const lists: List[] = [];
     
     listsSnapshot.forEach((doc) => {
-      lists.push({
-        id: doc.id,
-        ...doc.data()
-      } as List);
+      try {
+        // Validate list data from Firestore
+        const listData = ListSchema.parse({
+          id: doc.id,
+          ...doc.data()
+        });
+        lists.push(listData);
+      } catch (validationError) {
+        console.error('Invalid list data in Firestore:', validationError);
+        // Skip invalid lists rather than failing the entire request
+      }
     });
 
     return { lists };
   } catch (error: any) {
     console.error('Error getting user lists:', error);
+    
+    // Handle Zod validation errors
+    if (error.name === 'ZodError') {
+      return { 
+        lists: [], 
+        error: error.issues.map((issue: any) => issue.message).join(', ')
+      };
+    }
+    
     return { lists: [], error: error.message };
   }
 };
@@ -170,6 +200,9 @@ export const addGameToList = async (
     if (!auth || !auth.currentUser) {
       return { success: false, error: 'User not authenticated' };
     }
+
+    // Validate input with Zod
+    const validatedData = ListGameSchema.omit({ addedAt: true }).parse(gameData);
 
     const userId = auth.currentUser.uid;
     const now = new Date().toISOString();
@@ -190,12 +223,12 @@ export const addGameToList = async (
     const gameDoc = await getDoc(gameRef);
     
     // Create a clean object
-    const gameObject = {
-      gameId: gameData.gameId,
-      gameName: gameData.gameName,
-      gameCover: gameData.gameCover,
+    const gameObject: ListGame = {
+      gameId: validatedData.gameId,
+      gameName: validatedData.gameName,
+      gameCover: validatedData.gameCover,
       addedAt: now,
-      notes: gameData.notes || ''
+      notes: validatedData.notes || ''
     };
     
     await setDoc(gameRef, gameObject);
@@ -208,6 +241,15 @@ export const addGameToList = async (
     return { success: true, gameId: gameDocId };
   } catch (error: any) {
     console.error('Error adding game to list:', error);
+    
+    // Handle Zod validation errors
+    if (error.name === 'ZodError') {
+      return { 
+        success: false, 
+        error: error.issues.map((issue: any) => issue.message).join(', ')
+      };
+    }
+    
     return { success: false, error: error.message };
   }
 };
@@ -265,8 +307,11 @@ export const getGamesInList = async (
       return { games: [], hasMore: false, error: 'Database not initialized' };
     }
 
+    // Validate inputs
+    const validatedUserId = ListSchema.shape.userId.parse(userId);
+
     // Check if list exists
-    const listRef = doc(db, `gameList/${userId}/lists`, listId);
+    const listRef = doc(db, `gameList/${validatedUserId}/lists`, listId);
     const listDoc = await getDoc(listRef);
     
     if (!listDoc.exists()) {
@@ -275,7 +320,7 @@ export const getGamesInList = async (
     
     // Build the query
     let gamesQuery = query(
-      collection(db, `gameList/${userId}/lists/${listId}/games`),
+      collection(db, `gameList/${validatedUserId}/lists/${listId}/games`),
       orderBy('addedAt', 'desc')
     );
     
@@ -292,7 +337,14 @@ export const getGamesInList = async (
     
     gamesSnapshot.forEach((doc) => {
       newLastDoc = doc;
-      games.push(doc.data() as ListGame);
+      try {
+        // Validate game data from Firestore
+        const gameData = ListGameSchema.parse(doc.data());
+        games.push(gameData);
+      } catch (validationError) {
+        console.error('Invalid game data in Firestore:', validationError);
+        // Skip invalid games rather than failing the entire request
+      }
     });
     
     const hasMore = games.length === pageSize;
@@ -300,6 +352,16 @@ export const getGamesInList = async (
     return { games, lastDoc: newLastDoc, hasMore };
   } catch (error: any) {
     console.error('Error getting games in list:', error);
+    
+    // Handle Zod validation errors
+    if (error.name === 'ZodError') {
+      return { 
+        games: [], 
+        hasMore: false, 
+        error: error.issues.map((issue: any) => issue.message).join(', ')
+      };
+    }
+    
     return { games: [], hasMore: false, error: error.message };
   }
 };
