@@ -149,12 +149,24 @@ export const getReviewsByGame = async (gameId: number, pageSize: number = 10, la
       const userId = paths[1]; // review/{userId}/reviews/{gameId}
       
       try {
-        // Validate review data from Firestore
-        const reviewData = ReviewSchema.parse({ 
+        const rawData = doc.data();
+        // Create safe review data with proper defaults
+        const safeReviewData = {
           id: doc.id, 
-          ...doc.data(),
-          userId: userId 
-        });
+          userId: userId,
+          username: rawData?.username || '',
+          userProfileImage: rawData?.userProfileImage || '',
+          gameId: rawData?.gameId || 0,
+          gameName: rawData?.gameName || '',
+          gameCover: rawData?.gameCover || '',
+          rating: rawData?.rating || 1,
+          comment: rawData?.comment || 'No comment provided',
+          createdAt: rawData?.createdAt || new Date().toISOString(),
+          updatedAt: rawData?.updatedAt || new Date().toISOString()
+        };
+        
+        // Validate review data from Firestore
+        const reviewData = ReviewSchema.parse(safeReviewData);
         reviews.push(reviewData);
       } catch (validationError) {
         console.error('Invalid review data in Firestore:', validationError);
@@ -265,30 +277,16 @@ export const getUserGameReview = async (userId: string, gameId: number): Promise
         gameName: reviewData?.gameName || '',
         gameCover: reviewData?.gameCover || '',
         rating: reviewData?.rating || 1,
-        comment: reviewData?.comment || '', // Provide empty string as fallback
+        comment: reviewData?.comment || 'No comment provided', // Changed from empty string to valid default
         createdAt: reviewData?.createdAt || new Date().toISOString(),
         updatedAt: reviewData?.updatedAt || new Date().toISOString()
       };
-      
-      // Validate with the safe data
+
+      // Validate the complete review object
       return ReviewSchema.parse(safeReviewData);
     } catch (validationError) {
-      console.error('Invalid review data in Firestore:', validationError);
-      
-      // If validation fails, return a basic review object with minimal data
-      const reviewData = reviewDoc.data();
-      return {
-        id: reviewDoc.id,
-        userId: validatedUserId,
-        username: reviewData?.username || 'Unknown User',
-        gameId: validatedGameId,
-        gameName: reviewData?.gameName || 'Unknown Game',
-        gameCover: reviewData?.gameCover || '',
-        rating: reviewData?.rating || 1,
-        comment: reviewData?.comment || 'No comment provided',
-        createdAt: reviewData?.createdAt || new Date().toISOString(),
-        updatedAt: reviewData?.updatedAt || new Date().toISOString()
-      } as Review;
+      console.error('Review validation error:', validationError);
+      return null;
     }
     
   } catch (error: any) {

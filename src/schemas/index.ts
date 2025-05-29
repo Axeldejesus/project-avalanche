@@ -93,7 +93,7 @@ export const ReviewInputSchema = z.object({
   gameName: z.string().min(1, "Game name is required"),
   gameCover: z.string().min(1, "Game cover is required"),
   rating: z.number().min(1).max(5, "Rating must be between 1 and 5"),
-  comment: z.string().min(1, "Comment is required")
+  comment: z.string().min(1, "Comment is required").or(z.literal("")).transform(val => val === "" ? "No comment provided" : val)
 });
 
 export const UpdateReviewInputSchema = z.object({
