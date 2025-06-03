@@ -294,3 +294,6 @@ export const getUserGameReview = async (userId: string, gameId: number): Promise
     return null;
   }
 };
+
+// Export the Review type for convenience
+export type { Review, ReviewInput, UpdateReviewInput };

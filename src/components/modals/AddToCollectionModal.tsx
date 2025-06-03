@@ -6,14 +6,15 @@ import styles from '../../styles/Modal.module.css';
 import collectionStyles from '../../styles/CollectionModal.module.css';
 import { FiCheck, FiClock, FiPlay, FiAward, FiX, FiHeart, FiInfo, FiTrash2, FiPlus, FiRefreshCw, FiList, FiEdit } from 'react-icons/fi';
 import { FaSpinner } from 'react-icons/fa';
-import { addToCollection, getUserGameInCollection, CollectionItem, removeFromCollection } from '../../services/collectionService';
+import { addToCollection, getUserGameInCollection, removeFromCollection } from '../../services/collectionService';
+import { type CollectionItem } from '../../schemas';
 import { 
   getUserLists, 
   getListsContainingGame, 
-  List, 
   addGameToList, 
   removeGameFromList 
 } from '../../services/listService';
+import { type List } from '../../schemas';
 import { useAuth } from '../../context/AuthContext';
 
 // Define the type for collection status

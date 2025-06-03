@@ -39,6 +39,7 @@ import {
   getReviewsByUser, 
   getUserGameReview 
 } from '../reviewService';
+import { type Review } from '../../schemas';
 import { 
   setupTestEnvironment, 
   teardownTestEnvironment, 

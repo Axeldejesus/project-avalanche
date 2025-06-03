@@ -424,5 +424,7 @@ export const getUserCollectionForStats = async (
     return { items: [], error: error.message };
   }
 };
-export { CollectionItem };
+
+// Export types for convenience
+export type { CollectionItem, CollectionStats, AddToCollectionInput, UpdateCollectionInput };
 

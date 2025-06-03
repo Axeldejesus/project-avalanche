@@ -7,10 +7,9 @@ import {
 } from 'react-icons/fi';
 import { 
   getUserCollectionStats, 
-  getUserCollectionForStats, 
-  CollectionItem, 
-  CollectionStats 
+  getUserCollectionForStats
 } from '@/services/collectionService';
+import { type CollectionItem, type CollectionStats } from '@/schemas';
 import styles from './stats.module.css';
 import { Doughnut, Line } from 'react-chartjs-2';
 import {

@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { FiStar } from 'react-icons/fi';
 import { DocumentSnapshot } from 'firebase/firestore';
-import { getReviewsByUser, Review } from '../services/reviewService';
+import { getReviewsByUser } from '../services/reviewService';
+import { type Review } from '../schemas';
 import FirebaseIndexHelper from './FirebaseIndexHelper';
 import styles from '../styles/UserReviews.module.css';
 

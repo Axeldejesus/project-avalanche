@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react';
 import { FiStar, FiChevronRight, FiChevronLeft } from 'react-icons/fi';
 import { DocumentSnapshot } from 'firebase/firestore';
-import { getReviewsByGame, Review } from '../services/reviewService';
+import { getReviewsByGame } from '../services/reviewService';
+import { type Review } from '../schemas';
 import FirebaseIndexHelper from './FirebaseIndexHelper';
 import styles from '../styles/ReviewsList.module.css';
 

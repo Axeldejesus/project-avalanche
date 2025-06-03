@@ -8,7 +8,7 @@ interface UserMenuProps {
 
 const UserMenu: React.FC<UserMenuProps> = ({ user }) => {
   const pathname = usePathname();
-  const isProfilePage = pathname === '/profile' || pathname.startsWith('/profile/');
+  const isProfilePage = pathname === '/profile' || pathname?.startsWith('/profile/');
 
   return (
     <div className={styles.userMenu}>
