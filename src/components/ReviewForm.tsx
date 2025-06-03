@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { FiStar, FiEdit, FiTrash2, FiCheck, FiX } from 'react-icons/fi';
-import { addReview, updateReview, deleteReview, getUserGameReview, Review } from '../services/reviewService';
+import { addReview, updateReview, deleteReview, getUserGameReview } from '../services/reviewService';
+import { Review } from '../schemas/index';
 import { useAuth } from '../context/AuthContext';
 import styles from '../styles/ReviewForm.module.css';
 
@@ -31,7 +32,7 @@ const ReviewForm: React.FC<ReviewFormProps> = ({ gameId, gameName, gameCover, on
         if (review) {
           setExistingReview(review);
           setRating(review.rating);
-          setComment(review.comment);
+          setComment(review.comment || ''); // Handle undefined comment
         }
       }
     };
@@ -75,16 +76,17 @@ const ReviewForm: React.FC<ReviewFormProps> = ({ gameId, gameName, gameCover, on
       let result;
 
       if (existingReview && isEditing) {
-        result = await updateReview(String(gameId), {
-          rating,
-          comment
-        });
+        const updateData: any = {};
+        if (rating > 0) updateData.rating = rating;
+        if (comment.trim() !== '') updateData.comment = comment;
+        
+        result = await updateReview(String(gameId), updateData);
 
         if (result.success) {
           setExistingReview({
             ...existingReview,
             rating,
-            comment,
+            comment: comment || undefined, // Handle empty comment
             updatedAt: new Date().toISOString()
           });
           setSuccess('Your review has been updated!');
@@ -99,14 +101,14 @@ const ReviewForm: React.FC<ReviewFormProps> = ({ gameId, gameName, gameCover, on
         if (existingUserReview) {
           setExistingReview(existingUserReview);
           setRating(existingUserReview.rating);
-          setComment(existingUserReview.comment);
+          setComment(existingUserReview.comment || ''); // Handle undefined comment
           setIsEditing(true);
           setError('You already reviewed this game. You can edit your existing review.');
           setIsSubmitting(false);
           return;
         }
 
-        result = await addReview({
+        const reviewData: any = {
           userId: user.uid,
           username: userProfile.username || user.email!.split('@')[0],
           userProfileImage: userProfile.profileImageUrl,
@@ -114,8 +116,13 @@ const ReviewForm: React.FC<ReviewFormProps> = ({ gameId, gameName, gameCover, on
           gameName,
           gameCover,
           rating,
-          comment
-        });
+        };
+        
+        if (comment.trim() !== '') {
+          reviewData.comment = comment;
+        }
+
+        result = await addReview(reviewData);
 
         if (result.success && result.reviewId) {
           setExistingReview({
@@ -127,7 +134,7 @@ const ReviewForm: React.FC<ReviewFormProps> = ({ gameId, gameName, gameCover, on
             gameName,
             gameCover,
             rating,
-            comment,
+            comment: comment || undefined, // Handle empty comment
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString()
           });
@@ -177,13 +184,13 @@ const ReviewForm: React.FC<ReviewFormProps> = ({ gameId, gameName, gameCover, on
   const handleCancel = () => {
     if (existingReview) {
       setRating(existingReview.rating);
-      setComment(existingReview.comment);
+      setComment(existingReview.comment || ''); // Handle undefined comment
     } else {
       setRating(0);
       setComment('');
     }
     setIsEditing(false);
-    setSuccess(null); // Clear the success message when canceling
+    setSuccess(null);
   };
 
   if (!user) {

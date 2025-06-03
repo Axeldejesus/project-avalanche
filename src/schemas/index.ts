@@ -21,7 +21,7 @@ export const ReviewSchema = z.object({
   gameName: z.string().min(1, "Game name is required"),
   gameCover: z.string().min(1, "Game cover is required"),
   rating: z.number().min(1).max(5, "Rating must be between 1 and 5"),
-  comment: z.string().min(1, "Comment is required"),
+  comment: z.string().optional(), // Changed from required to optional
   createdAt: z.string(),
   updatedAt: z.string()
 });
@@ -93,12 +93,12 @@ export const ReviewInputSchema = z.object({
   gameName: z.string().min(1, "Game name is required"),
   gameCover: z.string().min(1, "Game cover is required"),
   rating: z.number().min(1).max(5, "Rating must be between 1 and 5"),
-  comment: z.string().min(1, "Comment is required").or(z.literal("")).transform(val => val === "" ? "No comment provided" : val)
+  comment: z.string().optional()
 });
 
 export const UpdateReviewInputSchema = z.object({
   rating: z.number().min(1).max(5, "Rating must be between 1 and 5").optional(),
-  comment: z.string().min(1, "Comment cannot be empty").optional()
+  comment: z.string().optional()
 }).refine(data => data.rating !== undefined || data.comment !== undefined, {
   message: "At least one field (rating or comment) must be provided"
 });

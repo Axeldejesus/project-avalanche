@@ -155,12 +155,12 @@ export const getReviewsByGame = async (gameId: number, pageSize: number = 10, la
           id: doc.id, 
           userId: userId,
           username: rawData?.username || '',
-          userProfileImage: rawData?.userProfileImage || '',
+          userProfileImage: rawData?.userProfileImage,
           gameId: rawData?.gameId || 0,
           gameName: rawData?.gameName || '',
           gameCover: rawData?.gameCover || '',
           rating: rawData?.rating || 1,
-          comment: rawData?.comment || 'No comment provided',
+          comment: rawData?.comment,
           createdAt: rawData?.createdAt || new Date().toISOString(),
           updatedAt: rawData?.updatedAt || new Date().toISOString()
         };
@@ -272,12 +272,12 @@ export const getUserGameReview = async (userId: string, gameId: number): Promise
         id: reviewDoc.id,
         userId: validatedUserId,
         username: reviewData?.username || '',
-        userProfileImage: reviewData?.userProfileImage || '',
+        userProfileImage: reviewData?.userProfileImage,
         gameId: validatedGameId,
         gameName: reviewData?.gameName || '',
         gameCover: reviewData?.gameCover || '',
         rating: reviewData?.rating || 1,
-        comment: reviewData?.comment || 'No comment provided', // Changed from empty string to valid default
+        comment: reviewData?.comment,
         createdAt: reviewData?.createdAt || new Date().toISOString(),
         updatedAt: reviewData?.updatedAt || new Date().toISOString()
       };
