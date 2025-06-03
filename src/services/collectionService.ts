@@ -4,7 +4,7 @@ import {
   CollectionItemSchema, 
   CollectionStatsSchema, 
   AddToCollectionInputSchema, 
-  UpdateCollectionInputSchema,
+  UpdateCollectionItemInputSchema,
   type CollectionItem,
   type CollectionStats,
   type AddToCollectionInput,
@@ -155,7 +155,7 @@ export const updateCollection = async (
 
     // Validate inputs with Zod
     const validatedGameId = CollectionItemSchema.shape.gameId.parse(gameId);
-    const validatedData = UpdateCollectionInputSchema.parse(data);
+    const validatedData = UpdateCollectionItemInputSchema.parse(data);
 
     const userId = auth.currentUser.uid;
     const gameDocId = validatedGameId.toString();

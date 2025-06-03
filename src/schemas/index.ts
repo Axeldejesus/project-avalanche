@@ -119,23 +119,41 @@ export const UpdateListInputSchema = z.object({
   message: "At least one field must be provided"
 });
 
+// Add input schemas for collection operations
 export const AddToCollectionInputSchema = z.object({
   gameId: z.number().int().positive("Game ID must be a positive integer"),
   gameName: z.string().min(1, "Game name is required"),
   gameCover: z.string().min(1, "Game cover is required"),
   status: z.enum(["completed", "playing", "toPlay", "abandoned", "wishlist"]),
-  notes: z.string().optional(),
+  platform: z.string().optional(),
+  platforms: z.array(z.string()).optional(),
+  genre: z.string().optional(),
+  genres: z.array(z.string()).optional(),
   rating: z.number().min(1).max(5).optional(),
+  notes: z.string().optional(),
   hoursPlayed: z.number().min(0).optional()
 });
 
-export const UpdateCollectionInputSchema = z.object({
+export const UpdateCollectionItemInputSchema = z.object({
   status: z.enum(["completed", "playing", "toPlay", "abandoned", "wishlist"]).optional(),
-  notes: z.string().optional(),
   rating: z.number().min(1).max(5).optional(),
-  hoursPlayed: z.number().min(0).optional()
+  notes: z.string().optional(),
+  hoursPlayed: z.number().min(0).optional(),
+  platform: z.string().optional(),
+  platforms: z.array(z.string()).optional(),
+  genre: z.string().optional(),
+  genres: z.array(z.string()).optional()
 }).refine(data => Object.values(data).some(val => val !== undefined), {
   message: "At least one field must be provided"
+});
+
+// Add list management input schemas
+export const AddToListInputSchema = z.object({
+  listId: z.string().min(1, "List ID is required"),
+  gameId: z.number().int().positive("Game ID must be a positive integer"),
+  gameName: z.string().min(1, "Game name is required"),
+  gameCover: z.string().min(1, "Game cover is required"),
+  notes: z.string().optional()
 });
 
 // Type exports
@@ -152,4 +170,5 @@ export type UpdateReviewInput = z.infer<typeof UpdateReviewInputSchema>;
 export type CreateListInput = z.infer<typeof CreateListInputSchema>;
 export type UpdateListInput = z.infer<typeof UpdateListInputSchema>;
 export type AddToCollectionInput = z.infer<typeof AddToCollectionInputSchema>;
-export type UpdateCollectionInput = z.infer<typeof UpdateCollectionInputSchema>;
+export type UpdateCollectionInput = z.infer<typeof UpdateCollectionItemInputSchema>;
+export type AddToListInput = z.infer<typeof AddToListInputSchema>;

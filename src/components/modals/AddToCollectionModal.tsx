@@ -16,6 +16,9 @@ import {
 } from '../../services/listService';
 import { useAuth } from '../../context/AuthContext';
 
+// Define the type for collection status
+type CollectionStatus = "completed" | "playing" | "toPlay" | "abandoned" | "wishlist";
+
 interface AddToCollectionModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -28,31 +31,31 @@ interface AddToCollectionModalProps {
 // Collection status options with icons and descriptions
 const COLLECTION_STATUSES = [
   { 
-    id: 'playing', 
+    id: 'playing' as CollectionStatus, 
     label: 'Currently Playing', 
     icon: <FiPlay />, 
     description: 'Games you are actively playing right now'
   },
   { 
-    id: 'completed', 
+    id: 'completed' as CollectionStatus, 
     label: 'Completed', 
     icon: <FiAward />, 
     description: 'Games you have finished playing'
   },
   { 
-    id: 'toPlay', 
+    id: 'toPlay' as CollectionStatus, 
     label: 'Plan to Play', 
     icon: <FiClock />, 
     description: 'Games you plan to play in the future'
   },
   { 
-    id: 'abandoned', 
+    id: 'abandoned' as CollectionStatus, 
     label: 'Abandoned', 
     icon: <FiX />, 
     description: 'Games you started but don\'t plan to finish'
   },
   { 
-    id: 'wishlist', 
+    id: 'wishlist' as CollectionStatus, 
     label: 'Wishlist', 
     icon: <FiHeart />, 
     description: 'Games you want to buy in the future'
@@ -67,7 +70,7 @@ const AddToCollectionModal: React.FC<AddToCollectionModalProps> = ({
   gameCover,
   onCollectionUpdated
 }) => {
-  const [selectedStatus, setSelectedStatus] = useState<string>('playing');
+  const [selectedStatus, setSelectedStatus] = useState<CollectionStatus>('playing');
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [isDeleting, setIsDeleting] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
@@ -227,7 +230,7 @@ const AddToCollectionModal: React.FC<AddToCollectionModalProps> = ({
     }
   };
 
-  const handleStatusSelect = (status: string) => {
+  const handleStatusSelect = (status: CollectionStatus) => {
     setSelectedStatus(status);
   };
 
