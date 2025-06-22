@@ -52,7 +52,7 @@ export default function ScreenshotGallery({ screenshots, gameName }: ScreenshotG
       <div className={styles.screenshotsGrid}>
         {screenshots.map((screenshot, index) => (
           <div 
-            key={index} 
+            key={`${screenshot}-${index}`} 
             className={styles.screenshotWrapper}
             onClick={() => setActiveIndex(index)}
           >

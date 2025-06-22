@@ -133,8 +133,8 @@ const ReviewsList: React.FC<ReviewsListProps> = ({ gameId, refreshTrigger = 0 })
       ) : (
         <>
           <div className={styles.reviewsList}>
-            {reviews.map((review) => (
-              <div key={review.id} className={styles.reviewItem}>
+            {reviews.map((review, idx) => (
+              <div key={`${review.id}-${idx}`} className={styles.reviewItem}>
                 <div className={styles.reviewHeader}>
                   <div className={styles.reviewUser}>
                     {review.userProfileImage ? (
@@ -142,8 +142,15 @@ const ReviewsList: React.FC<ReviewsListProps> = ({ gameId, refreshTrigger = 0 })
                         src={review.userProfileImage} 
                         alt={review.username} 
                         className={styles.userAvatar} 
+                        onError={(e) => {
+                          // Fallback to placeholder if image fails to load
+                          const target = e.target as HTMLImageElement;
+                          target.style.display = 'none';
+                          target.nextElementSibling?.classList.remove('hidden');
+                        }}
                       />
-                    ) : (
+                    ) : null}
+                    {!review.userProfileImage && (
                       <div className={styles.userAvatarPlaceholder}>
                         {review.username.charAt(0).toUpperCase()}
                       </div>
@@ -153,7 +160,7 @@ const ReviewsList: React.FC<ReviewsListProps> = ({ gameId, refreshTrigger = 0 })
                   <div className={styles.reviewRating}>
                     {Array.from({ length: 5 }).map((_, i) => (
                       <FiStar
-                        key={i}
+                        key={`star-${review.id}-${i}`}
                         className={i < review.rating ? styles.starFilled : styles.star}
                         fill={i < review.rating ? '#FFD700' : 'none'}
                       />

@@ -111,12 +111,16 @@ const ReviewForm: React.FC<ReviewFormProps> = ({ gameId, gameName, gameCover, on
         const reviewData: any = {
           userId: user.uid,
           username: userProfile.username || user.email!.split('@')[0],
-          userProfileImage: userProfile.profileImageUrl,
           gameId,
           gameName,
           gameCover,
           rating,
         };
+        
+        // Only include userProfileImage if it exists and is not empty
+        if (userProfile.profileImageUrl && userProfile.profileImageUrl.trim() !== '') {
+          reviewData.userProfileImage = userProfile.profileImageUrl;
+        }
         
         if (comment.trim() !== '') {
           reviewData.comment = comment;
@@ -125,19 +129,28 @@ const ReviewForm: React.FC<ReviewFormProps> = ({ gameId, gameName, gameCover, on
         result = await addReview(reviewData);
 
         if (result.success && result.reviewId) {
-          setExistingReview({
+          const newReview: Review = {
             id: result.reviewId,
             userId: user.uid,
             username: userProfile.username || user.email!.split('@')[0],
-            userProfileImage: userProfile.profileImageUrl,
             gameId,
             gameName,
             gameCover,
             rating,
-            comment: comment || undefined, // Handle empty comment
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString()
-          });
+          };
+
+          // Only include optional fields if they exist
+          if (userProfile.profileImageUrl && userProfile.profileImageUrl.trim() !== '') {
+            newReview.userProfileImage = userProfile.profileImageUrl;
+          }
+          
+          if (comment.trim() !== '') {
+            newReview.comment = comment;
+          }
+
+          setExistingReview(newReview);
           setSuccess('Your review has been submitted!');
           onReviewSubmitted();
         } else {

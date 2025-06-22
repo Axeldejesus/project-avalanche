@@ -292,9 +292,9 @@ const UserReviews: React.FC<UserReviewsProps> = ({ userId }) => {
         <>
           <div className={`${styles.userReviewsList} ${loading ? styles.fadedContent : ''}`}>
             {reviews.length > 0 ? (
-              reviews.map((review) => (
+              reviews.map((review, idx) => (
                 <div 
-                  key={review.id} 
+                  key={`${review.id}-${idx}`} 
                   className={styles.userReviewItem}
                   onClick={() => navigateToGame(review.gameId)}
                 >
@@ -310,7 +310,7 @@ const UserReviews: React.FC<UserReviewsProps> = ({ userId }) => {
                         <div className={styles.reviewRating}>
                           {Array.from({ length: 5 }).map((_, i) => (
                             <FiStar
-                              key={i}
+                              key={`star-${review.id}-${i}`}
                               className={i < review.rating ? styles.starFilled : styles.star}
                               fill={i < review.rating ? '#FFD700' : 'none'}
                             />

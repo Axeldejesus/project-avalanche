@@ -30,11 +30,27 @@ export const addReview = async (reviewData: ReviewInput & { userId: string; user
     // Chemin: review/{userId}/reviews/{gameId}
     const reviewRef = doc(db!, `review/${validatedData.userId}/reviews`, reviewId);
     
-    const reviewDocument: Review = {
-      ...validatedData,
+    // Create review document, excluding undefined fields
+    const reviewDocument: any = {
+      userId: validatedData.userId,
+      username: validatedData.username,
+      gameId: validatedData.gameId,
+      gameName: validatedData.gameName,
+      gameCover: validatedData.gameCover,
+      rating: validatedData.rating,
       createdAt: now,
       updatedAt: now
     };
+
+    // Only include userProfileImage if it's defined and not empty
+    if (validatedData.userProfileImage && validatedData.userProfileImage.trim() !== '') {
+      reviewDocument.userProfileImage = validatedData.userProfileImage;
+    }
+
+    // Only include comment if it's defined and not empty
+    if (validatedData.comment && validatedData.comment.trim() !== '') {
+      reviewDocument.comment = validatedData.comment;
+    }
 
     await setDoc(reviewRef, reviewDocument);
 

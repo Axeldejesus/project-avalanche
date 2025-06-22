@@ -21,7 +21,7 @@ export const ReviewSchema = z.object({
   gameName: z.string().min(1, "Game name is required"),
   gameCover: z.string().min(1, "Game cover is required"),
   rating: z.number().min(1).max(5, "Rating must be between 1 and 5"),
-  comment: z.string().optional(), // Changed from required to optional
+  comment: z.string().optional(),
   createdAt: z.string(),
   updatedAt: z.string()
 });

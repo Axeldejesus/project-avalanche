@@ -205,14 +205,14 @@ const GameList = ({
   
   return (
     <div className={viewMode === 'grid' ? styles.collectionGrid : styles.collectionList}>
-      {games.map(game => {
+      {games.map((game, idx) => {
         const gameId = game.gameId;
         const gameName = game.gameName;
         const gameCover = game.gameCover;
         
         return (
           <div 
-            key={gameId} 
+            key={`${gameId}-${idx}`} 
             className={viewMode === 'grid' ? styles.gameCard : styles.gameListItem}
             onClick={() => navigateToGame(gameId)}
           >
@@ -770,9 +770,9 @@ export default function CollectionsPage() {
                 </div>
               ) : (
                 <div className={styles.userLists}>
-                  {customLists.map(list => (
+                  {customLists.map((list, idx) => (
                     <div 
-                      key={list.id} 
+                      key={`${list.id}-${idx}`} 
                       className={`${styles.listItem} ${activeListId === list.id ? styles.activeList : ''}`}
                       onClick={() => handleListClick(list.id || null)}
                     >

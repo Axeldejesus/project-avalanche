@@ -540,9 +540,9 @@ export default function GamesPage() {
               </div>
             ) : (
               <div className={styles.gameList}>
-                {games.map(game => (
+                {games.map((game, idx) => (
                   <div 
-                    key={game.id} 
+                    key={`${game.id}-${idx}`} 
                     className={styles.gameListItem}
                     onClick={() => handleGameClick(game.id)}
                   >

@@ -267,7 +267,7 @@ export default function GameDetailPage({ params }: { params: Promise<{ id: strin
               {gameDetail.genres.length > 0 && (
                 <div className={styles.gameGenres}>
                   {gameDetail.genres.map((genre, index) => (
-                    <span key={index} className={styles.genrePill}>
+                    <span key={`${genre}-${index}`} className={styles.genrePill}>
                       {genre}
                     </span>
                   ))}
@@ -405,7 +405,7 @@ export default function GameDetailPage({ params }: { params: Promise<{ id: strin
                 <h3>Publishers</h3>
                 <ul className={styles.simpleList}>
                   {gameDetail.publishers.map((publisher, index) => (
-                    <li key={index}>{publisher}</li>
+                    <li key={`${publisher}-${index}`}>{publisher}</li>
                   ))}
                 </ul>
               </motion.div>
@@ -419,7 +419,7 @@ export default function GameDetailPage({ params }: { params: Promise<{ id: strin
                 <h3>Release Dates</h3>
                 <ul className={styles.releaseDatesList}>
                   {gameDetail.releaseDates.map((release, index) => (
-                    <li key={index}>
+                    <li key={`${release.platform}-${release.date}-${index}`}>
                       <span className={styles.releasePlatform}>{release.platform}</span>
                       <span className={styles.releaseDate}>{formatReleaseDate(release.date)}</span>
                     </li>

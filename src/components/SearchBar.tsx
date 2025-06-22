@@ -133,9 +133,9 @@ export default function SearchBar() {
       
       {showResults && results.length > 0 && (
         <div className={styles.resultsDropdown}>
-          {results.map((game) => (
+          {results.map((game, idx) => (
             <div
-              key={game.id}
+              key={`${game.id}-${idx}`}
               className={styles.resultItem}
               onClick={() => handleResultClick(game.id)}
             >

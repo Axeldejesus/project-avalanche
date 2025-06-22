@@ -114,7 +114,7 @@ const PlatformFilters: React.FC<PlatformFiltersProps> = ({
     <div className={styles.platformButtons}>
       {Object.entries(PLATFORMS).map(([key, id]) => (
         <button 
-          key={key}
+          key={`${key}-${id}`}
           className={`${styles.platformButton} ${selectedPlatforms.includes(id) ? styles.platformButtonActive : ''}`}
           onClick={() => togglePlatformFilter(id)}
         >
@@ -201,8 +201,8 @@ const GameItem: React.FC<GameItemProps> = ({
     <div className={styles.listGameInfo}>
       <div className={styles.listGameTitle}>{game.name}</div>
       <div className={styles.listGamePlatforms}>
-        {game.platforms.map(platformId => (
-          <span key={platformId} className={styles.platformIcon}>
+        {game.platforms.map((platformId, idx) => (
+          <span key={`${platformId}-${idx}`} className={styles.platformIcon}>
             <PlatformImage platformId={platformId} alt="" size={16} />
           </span>
         ))}
@@ -234,9 +234,9 @@ const MonthSection: React.FC<MonthSectionProps> = ({
       <span>{games.length} {games.length === 1 ? 'game' : 'games'}</span>
     </div>
     <div className={styles.listMonthGames}>
-      {games.map(game => (
+      {games.map((game, idx) => (
         <GameItem 
-          key={game.id} 
+          key={`${game.id}-${idx}`} 
           game={game} 
           formatDate={formatDate} 
           onGameClick={onGameClick} 

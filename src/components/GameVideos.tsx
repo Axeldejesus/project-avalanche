@@ -65,9 +65,9 @@ const GameVideos: React.FC<GameVideosProps> = ({ gameId }) => {
         Game Videos
       </h2>
       <div className={styles.videoGrid}>
-        {videos.map((video) => (
+        {videos.map((video, idx) => (
           <GameVideo
-            key={video.id}
+            key={`${video.id}-${idx}`}
             videoId={video.videoId}
             title={video.name}
             thumbnailUrl={video.thumbnailUrl}

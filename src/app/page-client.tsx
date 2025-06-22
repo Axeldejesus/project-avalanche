@@ -180,8 +180,8 @@ const HomePage: React.FC<HomePageProps> = ({
               </div>
               {recommendedGames.length > 0 ? (
                 <div className={styles.gameGrid}>
-                  {recommendedGames.map((game: Game) => (
-                    <GameCard key={game.id} game={game} />
+                  {recommendedGames.map((game, idx) => (
+                    <GameCard key={`${game.id}-${idx}`} game={game} />
                   ))}
                 </div>
               ) : (
@@ -198,9 +198,9 @@ const HomePage: React.FC<HomePageProps> = ({
                 </div>
                 
                 {newReleaseGames.length > 0 ? (
-                  newReleaseGames.map((game: NewReleaseGame) => (
+                  newReleaseGames.map((game, idx) => (
                     <div 
-                      key={game.id} 
+                      key={`${game.id}-${idx}`} 
                       className={styles.newReleaseCard} 
                       onClick={(e) => navigateToGameDetail(game.id, e)}
                       style={{ cursor: 'pointer' }}
@@ -236,9 +236,9 @@ const HomePage: React.FC<HomePageProps> = ({
                 </div>
                 
                 {upcomingGames.length > 0 ? (
-                  upcomingGames.slice(0, 3).map((game: UpcomingGame) => (
+                  upcomingGames.slice(0, 3).map((game, idx) => (
                     <div 
-                      key={game.id} 
+                      key={`${game.id}-${idx}`} 
                       className={styles.newReleaseCard} 
                       onClick={(e) => navigateToGameDetail(game.id, e)}
                       style={{ cursor: 'pointer' }}
@@ -280,13 +280,13 @@ const HomePage: React.FC<HomePageProps> = ({
                 {platforms.length > 0 ? (
                   <div className={styles.platformsCompactGrid}>
                     {platforms
-                      .filter((platform: Platform) => {
+                      .filter((platform) => {
                         const platformId = platform.id;
                         return platformId === 167 || platformId === 169 || platformId === 6 || platformId === 130;
                       })
-                      .map((platform: Platform) => (
+                      .map((platform, idx) => (
                         <div 
-                          key={platform.id} 
+                          key={`${platform.id}-${idx}`} 
                           className={styles.platformCompactCard}
                           onClick={(e) => navigateToGamesWithPlatform(platform.id, e)}
                           style={{ cursor: 'pointer' }}
