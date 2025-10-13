@@ -1,6 +1,7 @@
 import './globals.css';
 import { Space_Grotesk, Oxanium } from 'next/font/google';
 import { AuthProvider } from '../context/AuthContext'; // Import du provider d'authentification
+import { ToastProvider } from '@/context/ToastContext';
 import type { Metadata } from 'next';
 
 // Définition des polices avec next/font
@@ -32,7 +33,9 @@ export default function RootLayout({
     <html lang="en" className={`${spaceGrotesk.variable} ${oxanium.variable}`}>
       <body>
         <AuthProvider>
-          {children}
+          <ToastProvider>
+            {children}
+          </ToastProvider>
         </AuthProvider>
       </body>
     </html>

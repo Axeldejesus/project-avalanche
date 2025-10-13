@@ -4,7 +4,8 @@ import React, { useState, useEffect } from 'react';
 import Modal from './Modal';
 import styles from '../../styles/Modal.module.css';
 import { FaEye, FaEyeSlash, FaSpinner } from 'react-icons/fa';
-import { loginUser } from '../../services/authenticate';
+import { loginUser, getUserProfile } from '../../services/authenticate';
+import { useToast } from '@/context/ToastContext';
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -19,6 +20,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSwitchToRegi
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [success, setSuccess] = useState(false);
+  const { showToast } = useToast();
   
   // Reset form when modal closes
   useEffect(() => {
@@ -50,11 +52,21 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSwitchToRegi
         console.log('Login successful:', result.user);
         setSuccess(true);
         
-        // Close modal after a short delay
+        // Get username from Firestore
+        const profileResult = await getUserProfile(result.user!.uid);
+        const username = profileResult.success && profileResult.data?.username 
+          ? profileResult.data.username 
+          : result.user!.email?.split('@')[0] || 'User';
+        
+        // Close modal first
         setTimeout(() => {
           onClose();
-          // Optional: redirect or update interface
-        }, 1000);
+          
+          // Show toast after modal is closed
+          setTimeout(() => {
+            showToast(`Welcome back, ${username}! 🎮`, 'success');
+          }, 300);
+        }, 500);
       } else {
         // Handle specific errors
         if (result.error === 'auth/user-not-found' || result.error === 'auth/wrong-password') {

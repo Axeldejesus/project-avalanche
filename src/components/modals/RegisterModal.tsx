@@ -5,6 +5,7 @@ import Modal from './Modal';
 import styles from '../../styles/Modal.module.css';
 import { FaEye, FaEyeSlash, FaSpinner } from 'react-icons/fa';
 import { registerUser } from '../../services/authenticate';
+import { useToast } from '@/context/ToastContext';
 
 interface RegisterModalProps {
   isOpen: boolean;
@@ -22,20 +23,7 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, onSwitch
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [success, setSuccess] = useState(false);
-  
-  // Reset form when modal closes
-  useEffect(() => {
-    if (!isOpen) {
-      setUsername('');
-      setEmail('');
-      setPassword('');
-      setConfirmPassword('');
-      setError('');
-      setShowPassword(false);
-      setShowConfirmPassword(false);
-      setSuccess(false);
-    }
-  }, [isOpen]);
+  const { showToast } = useToast();
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -73,11 +61,15 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, onSwitch
         console.log('Registration successful:', result.user);
         setSuccess(true);
         
-        // Close modal after a short delay
+        // Close modal first
         setTimeout(() => {
           onClose();
-          // Optional: redirect or update user interface
-        }, 1000);
+          
+          // Show toast after modal is closed
+          setTimeout(() => {
+            showToast(`Welcome to Avalanche, ${username}! 🎉`, 'success');
+          }, 300);
+        }, 500);
       } else {
         // Handle specific errors
         if (result.error === 'auth/email-already-in-use') {

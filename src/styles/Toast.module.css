@@ -1,0 +1,121 @@
+.toast {
+  position: fixed;
+  top: 5rem;
+  right: 2rem;
+  min-width: 320px;
+  max-width: 500px;
+  padding: 1rem 1.25rem;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  z-index: 10001;
+  animation: slideIn 0.3s ease-out;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(10px);
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(400px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.toast.success {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.95), rgba(5, 150, 105, 0.95));
+  border: 1px solid rgba(16, 185, 129, 0.5);
+}
+
+.toast.error {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.95), rgba(220, 38, 38, 0.95));
+  border: 1px solid rgba(239, 68, 68, 0.5);
+}
+
+.toast.info {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.95), rgba(37, 99, 235, 0.95));
+  border: 1px solid rgba(59, 130, 246, 0.5);
+}
+
+.toastIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+
+.toastMessage {
+  flex: 1;
+  color: white;
+  font-size: 0.95rem;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.toastClose {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.toastClose:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(1.1);
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .toast {
+    top: 4rem;
+    right: 1rem;
+    left: 1rem;
+    min-width: auto;
+    max-width: none;
+    padding: 0.9rem 1rem;
+  }
+  
+  .toastIcon {
+    width: 28px;
+    height: 28px;
+    font-size: 1rem;
+  }
+  
+  .toastMessage {
+    font-size: 0.9rem;
+  }
+  
+  .toastClose {
+    width: 22px;
+    height: 22px;
+  }
+}
+
+@media (max-width: 480px) {
+  .toast {
+    top: 3.5rem;
+    padding: 0.8rem 0.9rem;
+  }
+  
+  .toastMessage {
+    font-size: 0.85rem;
+  }
+}
