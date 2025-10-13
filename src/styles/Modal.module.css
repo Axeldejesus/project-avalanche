@@ -8,7 +8,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  z-index: 10000; /* Augmenté de 1000 à 10000 */
   opacity: 0;
   visibility: hidden;
   transition: opacity 0.3s, visibility 0.3s;
@@ -77,9 +77,18 @@
 
 /* Responsive adjustments */
 @media (max-width: 480px) {
+  .overlay {
+    padding: 20px;
+    z-index: 10000; /* S'assurer que c'est au-dessus du menu mobile */
+  }
+  
   .authModal {
     width: 95%;
     max-width: 100%;
+  }
+  
+  .modal {
+    max-height: 95vh;
   }
 }
 
@@ -184,7 +193,7 @@
 
 .switchText {
   text-align: center;
-  margin-top: 16px;
+  margin: 20px;
   color: #b3b3b3;
   font-size: 14px;
 }

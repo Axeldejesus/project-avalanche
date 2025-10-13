@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Modal from './Modal';
 import styles from '../../styles/Modal.module.css';
-import { FaGoogle, FaDiscord, FaTwitter, FaEye, FaEyeSlash, FaSpinner } from 'react-icons/fa';
+import { FaEye, FaEyeSlash, FaSpinner } from 'react-icons/fa';
 import { registerUser } from '../../services/authenticate';
 
 interface RegisterModalProps {
@@ -183,20 +183,6 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, onSwitch
             "Register"
           )}
         </button>
-        
-        <div className={styles.divider}>or</div>
-        
-        <div className={styles.socialLogin}>
-          <button type="button" className={styles.socialButton} disabled={loading}>
-            <FaGoogle /> Continue with Google
-          </button>
-          <button type="button" className={styles.socialButton} disabled={loading}>
-            <FaDiscord /> Continue with Discord
-          </button>
-          <button type="button" className={styles.socialButton} disabled={loading}>
-            <FaTwitter /> Continue with Twitter
-          </button>
-        </div>
       </form>
       
       <div className={styles.switchText}>

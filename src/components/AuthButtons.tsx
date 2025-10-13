@@ -126,55 +126,73 @@ const AuthButtons: React.FC = () => {
     setIsRegisterModalOpen(false);
   };
   
-  // Show nothing during initial loading
-  if (isLoading) {
-    return <div className={styles.authLoading}></div>; // Empty div with minimal width to prevent layout shift
-  }
+  // Add event listeners for opening modals from mobile menu
+  useEffect(() => {
+    const handleOpenLoginModal = () => {
+      console.log('openLoginModal event received'); // Debug log
+      setIsLoginModalOpen(true);
+      setIsRegisterModalOpen(false);
+    };
+    
+    const handleOpenRegisterModal = () => {
+      console.log('openRegisterModal event received'); // Debug log
+      setIsRegisterModalOpen(true);
+      setIsLoginModalOpen(false);
+    };
+    
+    window.addEventListener('openLoginModal', handleOpenLoginModal as EventListener);
+    window.addEventListener('openRegisterModal', handleOpenRegisterModal as EventListener);
+    
+    return () => {
+      window.removeEventListener('openLoginModal', handleOpenLoginModal as EventListener);
+      window.removeEventListener('openRegisterModal', handleOpenRegisterModal as EventListener);
+    };
+  }, []);
   
-  // If user is logged in, show avatar
-  if (currentUser && userProfile) {
-    return (
-      <div className={`${styles.userMenu} ${styles.userMenuLoggedIn}`}>
-        <Link href="/profile">
-          <div className={`${styles.userButton} ${isProfilePage ? styles.userButtonActive : ''}`}>
-            {userProfile.profileImageUrl ? (
-              <div 
-                className={styles.userAvatar}
-                style={{ 
-                  backgroundImage: `url(${userProfile.profileImageUrl})`,
-                  backgroundSize: 'cover',
-                  backgroundPosition: 'center',
-                  width: '100%',
-                  height: '100%',
-                  borderRadius: '50%'
-                }}
-              />
-            ) : (
-              userProfile.username?.[0]?.toUpperCase() || 'A'
-            )}
-          </div>
-        </Link>
-        <div className={styles.usernameDisplay}>
-          {userProfile.username || 'User'}
-        </div>
-      </div>
-    );
-  }
-  
-  // Otherwise show login/register buttons
+  // Always render modals (even when user is logged in) to handle mobile menu events
   return (
     <>
-      <div className={styles.userMenu}>
-        <div className={styles.authButtonsContainer}>
-          <button className={styles.loginBtn} onClick={openLoginModal}>
-            <FiLogIn className={styles.buttonIcon} /> Login
-          </button>
-          <button className={styles.registerBtn} onClick={openRegisterModal}>
-            <FiUserPlus className={styles.buttonIcon} /> Register
-          </button>
+      {isLoading ? (
+        <div className={styles.authLoading}></div>
+      ) : currentUser && userProfile ? (
+        <div className={`${styles.userMenu} ${styles.userMenuLoggedIn}`}>
+          <Link href="/profile">
+            <div className={`${styles.userButton} ${isProfilePage ? styles.userButtonActive : ''}`}>
+              {userProfile.profileImageUrl ? (
+                <div 
+                  className={styles.userAvatar}
+                  style={{ 
+                    backgroundImage: `url(${userProfile.profileImageUrl})`,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                    width: '100%',
+                    height: '100%',
+                    borderRadius: '50%'
+                  }}
+                />
+              ) : (
+                userProfile.username?.[0]?.toUpperCase() || 'A'
+              )}
+            </div>
+          </Link>
+          <div className={styles.usernameDisplay}>
+            {userProfile.username || 'User'}
+          </div>
         </div>
-      </div>
+      ) : (
+        <div className={styles.userMenu}>
+          <div className={styles.authButtonsContainer}>
+            <button className={styles.loginBtn} onClick={openLoginModal}>
+              <FiLogIn className={styles.buttonIcon} /> Login
+            </button>
+            <button className={styles.registerBtn} onClick={openRegisterModal}>
+              <FiUserPlus className={styles.buttonIcon} /> Register
+            </button>
+          </div>
+        </div>
+      )}
       
+      {/* Always render modals */}
       <LoginModal 
         isOpen={isLoginModalOpen} 
         onClose={closeLoginModal} 
