@@ -320,17 +320,25 @@ export default function CollectionsPage() {
         stats: CollectionStats;
         lists: Array<List & { gameCount: number }>;
         games: CollectionItem[];
+        hasMoreCollection: boolean;
+        activeStatus?: string | null;
       }>(`collection_${user.uid}`);
       
       if (cachedData) {
         setStats(cachedData.stats);
         setCustomLists(cachedData.lists);
         setCollectionGames(cachedData.games);
+        setHasMoreCollection(cachedData.hasMoreCollection || false);
+        // Restaurer aussi le statut actif si présent
+        if (cachedData.activeStatus !== undefined) {
+          setActiveStatus(cachedData.activeStatus);
+        }
         setLoading(false);
-        console.log('Using cached collection data');
-        return;
+        console.log('Using cached collection data', { hasMore: cachedData.hasMoreCollection });
+        return; // Important : ne pas charger les données si on a le cache
       }
       
+      // Seulement charger si pas de cache
       loadAllData();
       
       const savedViewMode = localStorage.getItem('collectionViewMode');
@@ -344,7 +352,8 @@ export default function CollectionsPage() {
   
   // Load collection games when active status changes
   useEffect(() => {
-    if (user && activeTab === 'collection') {
+    // Ne charger que si les données ne viennent pas du cache
+    if (user && activeTab === 'collection' && collectionGames.length === 0) {
       loadCollectionGames(true);
     }
   }, [activeStatus, activeTab]);
@@ -479,8 +488,14 @@ export default function CollectionsPage() {
   // Handle collection status filter clicks
   const handleStatusClick = (status: string | null) => {
     setActiveStatus(status);
-    // Reset pagination
+    // Reset pagination et vider les jeux pour forcer le rechargement
     setCollectionLastDoc(undefined);
+    setCollectionGames([]);
+    setHasMoreCollection(false);
+    // Invalider le cache car le filtre a changé
+    if (user) {
+      CacheManager.remove(`collection_${user.uid}`);
+    }
   };
   
   // Handle list selection
@@ -509,7 +524,7 @@ export default function CollectionsPage() {
       const [statsResult, listsResult, gamesResult] = await Promise.all([
         user ? getUserCollectionStats(user.uid) : Promise.resolve(null),
         user ? getListsWithCounts(user.uid) : Promise.resolve(null),
-        user ? getUserCollection(user.uid, undefined, 12) : Promise.resolve(null)
+        user ? getUserCollection(user.uid, activeStatus || undefined, 12) : Promise.resolve(null)
       ]);
       
       if (statsResult && !statsResult.error) {
@@ -533,11 +548,13 @@ export default function CollectionsPage() {
           {
             stats: statsResult,
             lists: listsResult?.lists || [],
-            games: gamesResult?.items || []
+            games: gamesResult?.items || [],
+            hasMoreCollection: gamesResult?.hasMore || false,
+            activeStatus: activeStatus
           },
           true // Utiliser aussi localStorage
         );
-        console.log('Collection data cached');
+        console.log('Collection data cached with hasMore:', gamesResult?.hasMore);
       }
       
     } catch (error) {
