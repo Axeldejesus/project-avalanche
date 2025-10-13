@@ -5,12 +5,13 @@ import { useRouter } from 'next/navigation';
 import Header from '@/components/Header';
 import { useAuth } from '@/context/AuthContext';
 import { getUserCollection, getUserCollectionStats, removeFromCollection } from '@/services/collectionService';
-import { type CollectionItem } from '@/schemas';
+import { type CollectionItem, type CollectionStats } from '@/schemas';
 import { getUserLists, getListsWithCounts, getGamesInList, deleteList, removeGameFromList, createList } from '@/services/listService';
 import { type List, type ListGame } from '@/schemas';
 import { FiList, FiPlay, FiClock, FiAward, FiX, FiHeart, FiSearch, FiTrash2, FiPlus, FiEdit2, FiTag, FiLayers, FiGrid, FiChevronDown, FiChevronUp, FiFilm, FiBookmark, FiStar } from 'react-icons/fi';
 import { FaGamepad } from 'react-icons/fa';
 import { DocumentSnapshot } from 'firebase/firestore';
+import { CacheManager } from '@/utils/cacheManager';
 import styles from './collections.module.css';
 
 const AVAILABLE_ICONS = [
@@ -277,6 +278,10 @@ export default function CollectionsPage() {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<number | null>(null);
   
+  // Ajouter un cache avec timestamp
+  const [cacheTimestamp, setCacheTimestamp] = useState<number>(0);
+  const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes en millisecondes
+  
   // Collection stats
   const [stats, setStats] = useState({
     total: 0,
@@ -298,26 +303,36 @@ export default function CollectionsPage() {
   
   // Load collection and lists data
   useEffect(() => {
-    // Considérer l'authentification comme en cours de chargement par défaut
     setAuthLoading(true);
     
-    // Définir un délai avant de considérer que l'utilisateur n'est pas authentifié
     const authTimeout = setTimeout(() => {
       setAuthChecked(true);
       setAuthLoading(false);
-    }, 1500); // Attendre 1.5 secondes
+    }, 1500);
     
     if (user) {
-      // Si l'utilisateur est connecté, effacer le délai et charger les données
       clearTimeout(authTimeout);
       setAuthChecked(true);
       setAuthLoading(false);
       
-      loadCollectionStats();
-      loadCustomLists();
-      loadCollectionGames(true);
+      // Utiliser le CacheManager
+      const cachedData = CacheManager.get<{
+        stats: CollectionStats;
+        lists: Array<List & { gameCount: number }>;
+        games: CollectionItem[];
+      }>(`collection_${user.uid}`);
       
-      // Restore view mode from local storage
+      if (cachedData) {
+        setStats(cachedData.stats);
+        setCustomLists(cachedData.lists);
+        setCollectionGames(cachedData.games);
+        setLoading(false);
+        console.log('Using cached collection data');
+        return;
+      }
+      
+      loadAllData();
+      
       const savedViewMode = localStorage.getItem('collectionViewMode');
       if (savedViewMode === 'list' || savedViewMode === 'grid') {
         setViewMode(savedViewMode as 'grid' | 'list');
@@ -486,6 +501,59 @@ export default function CollectionsPage() {
     }
   };
   
+  // Nouvelle fonction pour charger toutes les données et les mettre en cache
+  const loadAllData = async () => {
+    setLoading(true);
+    
+    try {
+      const [statsResult, listsResult, gamesResult] = await Promise.all([
+        user ? getUserCollectionStats(user.uid) : Promise.resolve(null),
+        user ? getListsWithCounts(user.uid) : Promise.resolve(null),
+        user ? getUserCollection(user.uid, undefined, 12) : Promise.resolve(null)
+      ]);
+      
+      if (statsResult && !statsResult.error) {
+        setStats(statsResult);
+      }
+      
+      if (listsResult && !listsResult.error) {
+        setCustomLists(listsResult.lists);
+      }
+      
+      if (gamesResult && !gamesResult.error) {
+        setCollectionGames(gamesResult.items);
+        setCollectionLastDoc(gamesResult.lastDoc);
+        setHasMoreCollection(gamesResult.hasMore);
+      }
+      
+      // Utiliser CacheManager avec localStorage pour persistance
+      if (user) {
+        CacheManager.set(
+          `collection_${user.uid}`,
+          {
+            stats: statsResult,
+            lists: listsResult?.lists || [],
+            games: gamesResult?.items || []
+          },
+          true // Utiliser aussi localStorage
+        );
+        console.log('Collection data cached');
+      }
+      
+    } catch (error) {
+      console.error('Error loading collection data:', error);
+      setError('Failed to load collection data');
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  // Invalider le cache lors de modifications
+  const invalidateCache = () => {
+    sessionStorage.removeItem('collectionCache');
+    sessionStorage.removeItem('collectionCacheTimestamp');
+  };
+  
   // Handle game deletion from collection
   const handleDeleteCollectionGame = async (gameId: number) => {
     if (!user) return;
@@ -498,14 +566,13 @@ export default function CollectionsPage() {
         
         if (result.success) {
           setSuccessMessage(`Game removed from your collection!`);
-          
-          // Remove the game from the local state
           setCollectionGames(collectionGames.filter(game => game.gameId !== gameId));
           
-          // Refresh stats after deletion
+          // Invalider le cache
+          CacheManager.remove(`collection_${user.uid}`);
+          CacheManager.invalidatePattern(`statsCache_${user.uid}`);
           loadCollectionStats();
           
-          // Clear success message after a delay
           setTimeout(() => {
             setSuccessMessage(null);
           }, 3000);
@@ -528,14 +595,12 @@ export default function CollectionsPage() {
         
         if (result.success) {
           setSuccessMessage(`Game removed from list!`);
-          
-          // Remove the game from the local state
           setListGames(listGames.filter(game => game.gameId !== gameId));
           
-          // Refresh lists data to update counts
+          // Invalider le cache
+          invalidateCache();
           loadCustomLists();
           
-          // Clear success message after a delay
           setTimeout(() => {
             setSuccessMessage(null);
           }, 3000);
@@ -608,6 +673,7 @@ export default function CollectionsPage() {
   
   // Handle successful list creation
   const handleListCreated = () => {
+    invalidateCache();
     loadCustomLists();
     setSuccessMessage('New list created successfully!');
     setTimeout(() => {
@@ -997,5 +1063,5 @@ export default function CollectionsPage() {
       )}
     </div>
   );
-}
+};
 

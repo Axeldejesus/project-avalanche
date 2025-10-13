@@ -24,6 +24,7 @@ import {
   Tooltip,
   Legend,
 } from 'chart.js';
+import { CacheManager } from '@/utils/cacheManager';
 
 // Enregistrer les composants nécessaires pour Chart.js
 ChartJS.register(
@@ -74,18 +75,50 @@ const StatsClient: React.FC<StatsClientProps> = ({ userId }) => {
       setError(null);
       
       try {
-        // Charger les statistiques de base
-        const statsResult = await getUserCollectionStats(userId);
-        setStats(statsResult);
+        // Utiliser le CacheManager
+        const cachedData = CacheManager.get<{
+          stats: CollectionStats;
+          items: CollectionItem[];
+        }>(`statsCache_${userId}`);
         
-        // Charger tous les jeux pour l'analyse détaillée
-        const gamesResult = await getUserCollectionForStats(userId);
+        if (cachedData) {
+          setStats(cachedData.stats);
+          setGames(cachedData.items);
+          
+          if (cachedData.items && cachedData.items.length > 0) {
+            analyzeCollectionData(cachedData.items);
+          }
+          
+          setIsLoading(false);
+          console.log('Using cached stats data');
+          return;
+        }
         
-        if (gamesResult.items && gamesResult.items.length > 0) {
-          setGames(gamesResult.items);
-          analyzeCollectionData(gamesResult.items);
+        // Pas de cache valide, charger depuis Firestore
+        const result = await getUserCollectionForStats(userId);
+        
+        if (result.error) {
+          setError(result.error);
         } else {
-          setError("No games found in your collection");
+          setStats(result.stats);
+          setGames(result.items);
+          
+          if (result.items && result.items.length > 0) {
+            analyzeCollectionData(result.items);
+          } else {
+            setError("No games found in your collection");
+          }
+          
+          // Utiliser CacheManager avec localStorage
+          CacheManager.set(
+            `statsCache_${userId}`,
+            {
+              stats: result.stats,
+              items: result.items
+            },
+            true // Persistance avec localStorage
+          );
+          console.log('Stats data cached');
         }
       } catch (error: any) {
         setError(error.message || "Failed to load statistics");
@@ -425,5 +458,4 @@ const StatsClient: React.FC<StatsClientProps> = ({ userId }) => {
     </main>
   );
 };
-
 export default StatsClient;

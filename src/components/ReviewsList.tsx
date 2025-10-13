@@ -20,9 +20,19 @@ const ReviewsList: React.FC<ReviewsListProps> = ({ gameId, refreshTrigger = 0 })
   const [lastDoc, setLastDoc] = useState<DocumentSnapshot | undefined>(undefined);
   const [hasMore, setHasMore] = useState<boolean>(true);
   const [page, setPage] = useState<number>(1);
+  // Cache pour stocker les pages déjà chargées
+  const [pageCache, setPageCache] = useState<Map<number, { reviews: Review[], lastDoc?: DocumentSnapshot }>>(new Map());
   const pageSize = 5;
 
-  const loadReviews = async (reset = false) => {
+  const loadReviews = async (reset = false, targetPage?: number) => {
+    // Si la page est en cache et qu'on ne force pas le reset, utiliser le cache
+    if (!reset && targetPage && pageCache.has(targetPage)) {
+      const cached = pageCache.get(targetPage)!;
+      setReviews(cached.reviews);
+      setLastDoc(cached.lastDoc);
+      return;
+    }
+
     setLoading(true);
     setError(null);
     
@@ -46,8 +56,16 @@ const ReviewsList: React.FC<ReviewsListProps> = ({ gameId, refreshTrigger = 0 })
       
       if (reset) {
         setReviews(result.reviews);
+        // Réinitialiser le cache en cas de reset
+        const newCache = new Map();
+        newCache.set(1, { reviews: result.reviews, lastDoc: result.lastDoc });
+        setPageCache(newCache);
       } else {
-        setReviews(prev => [...prev, ...result.reviews]);
+        const newReviews = [...reviews, ...result.reviews];
+        setReviews(newReviews);
+        // Ajouter au cache
+        const currentPage = page + 1;
+        setPageCache(prev => new Map(prev).set(currentPage, { reviews: result.reviews, lastDoc: result.lastDoc }));
       }
       
       setLastDoc(result.lastDoc);
@@ -69,32 +87,28 @@ const ReviewsList: React.FC<ReviewsListProps> = ({ gameId, refreshTrigger = 0 })
   };
 
   useEffect(() => {
+    // Vider le cache seulement si gameId change
+    setPageCache(new Map());
     loadReviews(true);
     setPage(1);
   }, [gameId, refreshTrigger]);
 
   const handleLoadMore = () => {
-    loadReviews();
+    loadReviews(false, page + 1);
     setPage(prev => prev + 1);
   };
 
   const handlePrevPage = () => {
     if (page > 1) {
-      // Since we can't easily go back in Firestore queries, we'll refetch from the beginning
-      // and load the appropriate number of items
-      setPage(prev => {
-        const newPage = prev - 1;
-        // Reset and fetch again
-        setLastDoc(undefined);
-        setReviews([]);
-        setLoading(true);
-        
-        // Need to fetch all reviews up to the previous page in a real app
-        // For this demo, we'll just reset to page 1
-        loadReviews(true);
-        
-        return newPage;
-      });
+      const prevPage = page - 1;
+      setPage(prevPage);
+      
+      // Utiliser le cache si disponible
+      if (pageCache.has(prevPage)) {
+        const cached = pageCache.get(prevPage)!;
+        setReviews(cached.reviews);
+        setLastDoc(cached.lastDoc);
+      }
     }
   };
 

@@ -10,24 +10,29 @@ import styles from './stats.module.css';
 export default function StatsPage() {
   const [authChecked, setAuthChecked] = useState(false);
   const [authLoading, setAuthLoading] = useState(true);
+  const [cacheKey, setCacheKey] = useState<number>(0);
   const { user } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
-    // Considérer l'authentification comme en cours de chargement par défaut
     setAuthLoading(true);
     
-    // Définir un délai avant de considérer que l'utilisateur n'est pas authentifié
     const authTimeout = setTimeout(() => {
       setAuthChecked(true);
       setAuthLoading(false);
-    }, 1500); // Attendre 1.5 secondes
+    }, 1500);
     
     if (user) {
-      // Si l'utilisateur est connecté, effacer le délai et charger les données
       clearTimeout(authTimeout);
       setAuthChecked(true);
       setAuthLoading(false);
+      
+      // Vérifier si on doit forcer un rechargement (après modification)
+      const forceReload = sessionStorage.getItem('statsForceReload');
+      if (forceReload === 'true') {
+        sessionStorage.removeItem('statsForceReload');
+        setCacheKey(Date.now()); // Force le rechargement
+      }
     }
     
     return () => clearTimeout(authTimeout);
@@ -62,7 +67,7 @@ export default function StatsPage() {
   return (
     <div className={styles.pageContainer}>
       <Header />
-      {user && <StatsClient userId={user.uid} />}
+      {user && <StatsClient userId={user.uid} key={cacheKey} />}
     </div>
   );
 }

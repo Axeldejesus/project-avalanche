@@ -10,6 +10,7 @@ import {
   type AddToCollectionInput,
   type UpdateCollectionInput
 } from '../schemas';
+import { CacheManager } from '../utils/cacheManager';
 
 // Add a game to the user's collection
 export const addToCollection = async (
@@ -20,7 +21,6 @@ export const addToCollection = async (
       return { success: false, error: 'User not authenticated' };
     }
 
-    // Validate input with Zod
     const validatedData = AddToCollectionInputSchema.extend({
       userId: CollectionItemSchema.shape.userId
     }).parse(collectionData);
@@ -28,110 +28,65 @@ export const addToCollection = async (
     const userId = auth.currentUser.uid;
     const now = new Date().toISOString();
     
-    // Récupérer les détails du jeu depuis l'API pour obtenir les genres et plateformes
     let gameDetails;
     try {
-      // Supprimer le paramètre userId qui n'est plus nécessaire
       const response = await fetch(`/api/game-details?id=${collectionData.gameId}`);
       if (response.ok) {
         gameDetails = await response.json();
       }
     } catch (err) {
       console.error('Error fetching game details:', err);
-      // On continue même si on ne peut pas récupérer les détails
     }
     
-    // Check if game already exists in collection first
-    const existingItem = await getUserGameInCollection(userId, validatedData.gameId);
-    
-    if (existingItem) {
-      // Game exists, update its status instead
-      const collectionRef = doc(db!, `collections/${userId}/games`, existingItem.id!);
-      
-      // Create update object only with defined fields to avoid Firestore errors
-      const updateData: any = {
-        status: validatedData.status,
-        updatedAt: now
-      };
-      
-      // Only include these fields if they are defined
-      if (validatedData.notes !== undefined) {
-        updateData.notes = validatedData.notes;
-      }
-      
-      if (validatedData.rating !== undefined) {
-        updateData.rating = validatedData.rating;
-      }
-      
-      if (validatedData.hoursPlayed !== undefined) {
-        updateData.hoursPlayed = validatedData.hoursPlayed;
-      }
-      
-      // Ajouter les informations de plateforme et de genre automatiquement si disponibles
-      if (gameDetails) {
-        // Plateforme principale (préférée ou première)
-        updateData.platform = gameDetails.platform;
-        // Toutes les plateformes disponibles
-        updateData.platforms = gameDetails.platforms || [];
-        // Genre principal
-        updateData.genre = gameDetails.genre;
-        // Tous les genres
-        updateData.genres = gameDetails.genres || [];
-      }
-      
-      await updateDoc(collectionRef, updateData);
-      
-      return { success: true, collectionId: existingItem.id };
-    }
-    
-    // Game doesn't exist, create new entry
-    // Use gameId as document ID for easier lookup
     const gameDocId = validatedData.gameId.toString();
     const collectionRef = doc(db!, `collections/${userId}/games`, gameDocId);
     
-    // Create a clean object without undefined values
-    const newGameData: Omit<CollectionItem, 'id'> = {
+    const gameData: any = {
       userId,
       gameId: validatedData.gameId,
       gameName: validatedData.gameName,
       gameCover: validatedData.gameCover,
       status: validatedData.status,
-      addedAt: now,
       updatedAt: now
     };
     
-    // Ajouter les informations de plateforme et de genre automatiquement si disponibles
     if (gameDetails) {
-      // Plateforme principale (préférée ou première)
-      newGameData.platform = gameDetails.platform;
-      // Toutes les plateformes disponibles
-      newGameData.platforms = gameDetails.platforms || [];
-      // Genre principal
-      newGameData.genre = gameDetails.genre;
-      // Tous les genres
-      newGameData.genres = gameDetails.genres || [];
+      gameData.platform = gameDetails.platform;
+      gameData.platforms = gameDetails.platforms || [];
+      gameData.genre = gameDetails.genre;
+      gameData.genres = gameDetails.genres || [];
     }
     
-    // Only add optional fields if they're defined
     if (validatedData.notes !== undefined) {
-      (newGameData as any).notes = validatedData.notes;
+      gameData.notes = validatedData.notes;
     }
     
     if (validatedData.rating !== undefined) {
-      (newGameData as any).rating = validatedData.rating;
+      gameData.rating = validatedData.rating;
     }
     
     if (validatedData.hoursPlayed !== undefined) {
-      (newGameData as any).hoursPlayed = validatedData.hoursPlayed;
+      gameData.hoursPlayed = validatedData.hoursPlayed;
     }
     
-    await setDoc(collectionRef, newGameData);
+    // Utiliser setDoc avec merge - une seule opération au lieu de getDoc + setDoc/updateDoc
+    gameData.addedAt = now;
+    await setDoc(collectionRef, gameData, { 
+      merge: true,
+      mergeFields: ['status', 'updatedAt', 'notes', 'rating', 'hoursPlayed', 'platform', 'platforms', 'genre', 'genres']
+    });
+    
+    // Invalider les caches avec CacheManager
+    if (typeof window !== 'undefined') {
+      CacheManager.remove(`collection_${userId}`);
+      CacheManager.invalidatePattern(`statsCache_${userId}`);
+      sessionStorage.setItem('statsForceReload', 'true');
+    }
 
     return { success: true, collectionId: gameDocId };
   } catch (error: any) {
     console.error('Error adding to collection:', error);
     
-    // Handle Zod validation errors
     if (error.name === 'ZodError') {
       return { 
         success: false, 
@@ -392,36 +347,60 @@ export const getUserCollectionStats = async (
   }
 };
 
-// Nouvelle fonction pour récupérer tous les jeux d'un utilisateur pour l'analyse statistique
+// Nouvelle fonction fusionnée pour récupérer tous les jeux avec les stats en une seule requête
 export const getUserCollectionForStats = async (
   userId: string
-): Promise<{ items: CollectionItem[]; error?: string }> => {
+): Promise<{ items: CollectionItem[]; stats: CollectionStats; error?: string }> => {
   try {
     if (!db) {
-      return { items: [], error: 'Database not initialized' };
+      return { 
+        items: [], 
+        stats: { total: 0, completed: 0, playing: 0, toPlay: 0, abandoned: 0, wishlist: 0 },
+        error: 'Database not initialized' 
+      };
     }
 
-    // Correction du chemin de collection pour correspondre aux autres fonctions
     const collectionRef = collection(db, `collections/${userId}/games`);
     const q = query(collectionRef, orderBy('addedAt', 'desc'));
     
     const querySnapshot = await getDocs(q);
     
     const items: CollectionItem[] = [];
+    const stats: CollectionStats = {
+      total: 0,
+      completed: 0,
+      playing: 0,
+      toPlay: 0,
+      abandoned: 0,
+      wishlist: 0
+    };
     
     querySnapshot.forEach((doc) => {
       const data = doc.data() as CollectionItem;
-      items.push({
+      const item = {
         ...data,
         id: doc.id
-      });
+      };
+      items.push(item);
+      
+      // Calculer les stats en même temps
+      stats.total++;
+      if (data.status === 'completed') stats.completed++;
+      else if (data.status === 'playing') stats.playing++;
+      else if (data.status === 'toPlay') stats.toPlay++;
+      else if (data.status === 'abandoned') stats.abandoned++;
+      else if (data.status === 'wishlist') stats.wishlist++;
     });
     
-    console.log(`Fetched ${items.length} games for statistics`);
-    return { items };
+    console.log(`Fetched ${items.length} games with stats in one query`);
+    return { items, stats };
   } catch (error: any) {
     console.error('Error getting collection for stats:', error);
-    return { items: [], error: error.message };
+    return { 
+      items: [], 
+      stats: { total: 0, completed: 0, playing: 0, toPlay: 0, abandoned: 0, wishlist: 0 },
+      error: error.message 
+    };
   }
 };
 

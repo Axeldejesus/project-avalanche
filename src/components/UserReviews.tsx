@@ -108,39 +108,29 @@ const UserReviews: React.FC<UserReviewsProps> = ({ userId }) => {
     }
   };
 
-  // Handle page change
+  // Optimiser changePage pour utiliser le cache
   const changePage = async (pageNumber: number) => {
     if (pageNumber < 1 || pageNumber > totalPages || pageNumber === currentPage) return;
     
-    // Show loading only if we don't have cached reviews for this page
-    if (!pageReviews[pageNumber]) {
-      setLoading(true);
+    // Si les reviews de cette page sont en cache, les utiliser directement
+    if (pageReviews[pageNumber] && pageReviews[pageNumber].length > 0) {
+      setReviews(pageReviews[pageNumber]);
+      setCurrentPage(pageNumber);
+      
+      // Précharger la page suivante si nécessaire
+      if (pageReviews[pageNumber].length === pageSize && !pageReviews[pageNumber + 1]) {
+        prefetchNextPage(pageNumber + 1);
+      }
+      return;
     }
 
+    setLoading(true);
+
     try {
-      // If we already have the reviews for this page, use them
-      if (pageReviews[pageNumber]) {
-        setReviews(pageReviews[pageNumber]);
-        setCurrentPage(pageNumber);
-        
-        // If this page exists but is empty, adjust the total number of pages
-        if (pageReviews[pageNumber].length === 0) {
-          setTotalPages(pageNumber - 1);
-          changePage(pageNumber - 1);
-          return;
-        }
-        
-        // Only try to prefetch the next page if we have a full page of reviews
-        // This prevents creating phantom pages when we're on the last real page
-        if (pageReviews[pageNumber].length === pageSize) {
-          prefetchNextPage(pageNumber + 1);
-        }
-        return;
-      }
-      
       const lastDoc = pageLastDocs[pageNumber - 1];
       if (!lastDoc && pageNumber > 1) {
         setError('Cannot load this page. Please try going to a previous page first.');
+        setLoading(false);
         return;
       }
       
@@ -148,53 +138,45 @@ const UserReviews: React.FC<UserReviewsProps> = ({ userId }) => {
       
       if (result.indexRequired) {
         setError('Database index is being created. Please wait a moment and try again.');
+        setLoading(false);
         return;
       }
       
       if (result.error) {
         setError(result.error);
+        setLoading(false);
         return;
       }
       
-      // Si nous avons obtenu une page vide, ajuster le nombre de pages et retourner à la page précédente
+      // Si page vide, ajuster totalPages
       if (result.reviews.length === 0 && pageNumber > 1) {
-        // Cache quand même cette page vide
         setPageReviews(prev => ({ ...prev, [pageNumber]: [] }));
-        // Ajuster le nombre total de pages
         setTotalPages(pageNumber - 1);
-        // Retourner à la dernière page valide
         changePage(pageNumber - 1);
         return;
       }
       
-      // Update reviews display
+      // Mettre à jour l'affichage
       setReviews(result.reviews);
       
-      // Cache the reviews for this page
+      // Mettre en cache
       setPageReviews(prev => ({ ...prev, [pageNumber]: result.reviews }));
       
-      // Store the last document for pagination, ensuring it's safe for the type
       if (result.lastDoc) {
         setPageLastDocs(prev => ({ ...prev, [pageNumber]: result.lastDoc }));
       }
       
-      // Update current page
       setCurrentPage(pageNumber);
       
-      // Only increase total pages if:
-      // 1. We have more reviews according to hasMore flag
-      // 2. AND this page has exactly pageSize reviews (it's a full page)
-      // 3. AND we've verified by actually attempting to load the next page
+      // Vérifier s'il y a plus de pages uniquement si nécessaire
       if (result.hasMore && result.reviews.length === pageSize && pageNumber >= totalPages) {
-        // Attempt to actually load one item from the next page to confirm it exists
-        // before increasing the page count
         const nextPageCheckResult = await getReviewsByUser(userId, 1, result.lastDoc);
         if (nextPageCheckResult.reviews.length > 0) {
           setTotalPages(pageNumber + 1);
         }
       }
       
-      // Only prefetch next page if this page is full
+      // Précharger la page suivante si la page actuelle est pleine
       if (result.reviews.length === pageSize) {
         prefetchNextPage(pageNumber + 1);
       }
