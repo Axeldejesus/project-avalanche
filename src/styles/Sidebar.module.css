@@ -185,3 +185,57 @@
   color: #b0b3b8;
   margin-bottom: 1rem;
 }
+
+/* Responsive adjustments for sidebar */
+@media (max-width: 768px) {
+  .sidebar {
+    display: none;
+  }
+}
+
+/* Mobile calendar button - shown in header or as floating button */
+.mobileCalendarButton {
+  display: none;
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #7c3aed, #6d28d9);
+  color: white;
+  border: none;
+  box-shadow: 0 8px 20px rgba(124, 58, 237, 0.4);
+  cursor: pointer;
+  z-index: 90;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  transition: all 0.3s ease;
+}
+
+.mobileCalendarButton:hover {
+  transform: scale(1.1);
+  box-shadow: 0 10px 25px rgba(124, 58, 237, 0.5);
+}
+
+.mobileCalendarButton:active {
+  transform: scale(0.95);
+}
+
+@media (max-width: 768px) {
+  .mobileCalendarButton {
+    display: flex;
+  }
+}
+
+@media (max-width: 480px) {
+  .mobileCalendarButton {
+    width: 50px;
+    height: 50px;
+    bottom: 1rem;
+    right: 1rem;
+    font-size: 1.3rem;
+  }
+}

@@ -4,7 +4,7 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import Modal from './Modal';
 import styles from '../../styles/GameCalendarModal.module.css';
 import { useRouter } from 'next/navigation';
-import { FaCalendarAlt, FaSpinner, FaSearch, FaChevronLeft, FaChevronRight } from 'react-icons/fa';
+import { FaCalendarAlt, FaSpinner, FaSearch, FaChevronLeft, FaChevronRight, FaArrowUp } from 'react-icons/fa';
 import PlatformImage from '../PlatformImage';
 
 // Types
@@ -308,9 +308,16 @@ const GameCalendarModal: React.FC<GameCalendarModalProps> = ({ isOpen, onClose }
   const [searchResults, setSearchResults] = useState<CalendarGames>({});
   const [activeQuarter, setActiveQuarter] = useState(1);
   const [selectedMonth, setSelectedMonth] = useState<string | null>(null);
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [touchEnd, setTouchEnd] = useState<number | null>(null);
+  const [showScrollTop, setShowScrollTop] = useState(false);
+  
+  // Minimum swipe distance (in px)
+  const minSwipeDistance = 50;
   
   // Refs
   const monthRefs = useRef<{[key: string]: HTMLDivElement | null}>({});
+  const contentRef = useRef<HTMLDivElement | null>(null);
   const router = useRouter();
   
   // Reset when modal opens
@@ -438,6 +445,48 @@ const GameCalendarModal: React.FC<GameCalendarModalProps> = ({ isOpen, onClose }
     }
   };
   
+  const onTouchStart = (e: React.TouchEvent) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+  
+  const onTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+  
+  const onTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > minSwipeDistance;
+    const isRightSwipe = distance < -minSwipeDistance;
+    
+    // Swipe between quarters
+    if (isLeftSwipe && activeQuarter < 4) {
+      setActiveQuarter(activeQuarter + 1);
+    }
+    if (isRightSwipe && activeQuarter > 1) {
+      setActiveQuarter(activeQuarter - 1);
+    }
+  };
+  
+  // Handle scroll to show/hide scroll to top button
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const target = e.currentTarget;
+    const scrollTop = target.scrollTop;
+    setShowScrollTop(scrollTop > 300);
+  };
+  
+  // Scroll to top function
+  const scrollToTop = () => {
+    if (contentRef.current) {
+      contentRef.current.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      });
+    }
+  };
+  
   // Derived state
   const filteredGames = useMemo(() => {
     if (debouncedSearchTerm.trim()) {
@@ -463,10 +512,17 @@ const GameCalendarModal: React.FC<GameCalendarModalProps> = ({ isOpen, onClose }
     <Modal 
       isOpen={isOpen} 
       onClose={onClose} 
-      title="Release Calendar"
+      title="🎮 Release Calendar"
       className={styles.calendarModal}
     >
-      <div className={styles.calendarModalContent}>
+      <div 
+        ref={contentRef}
+        className={styles.calendarModalContent}
+        onScroll={handleScroll}
+        onTouchStart={onTouchStart}
+        onTouchMove={onTouchMove}
+        onTouchEnd={onTouchEnd}
+      >
         {/* Calendar Header */}
         <CalendarHeader 
           year={year} 
@@ -536,6 +592,15 @@ const GameCalendarModal: React.FC<GameCalendarModalProps> = ({ isOpen, onClose }
             })}
           </div>
         )}
+        
+        {/* Scroll to Top Button */}
+        <button 
+          className={`${styles.scrollToTopButton} ${showScrollTop ? styles.visible : ''}`}
+          onClick={scrollToTop}
+          aria-label="Scroll to top"
+        >
+          <FaArrowUp />
+        </button>
       </div>
     </Modal>
   );

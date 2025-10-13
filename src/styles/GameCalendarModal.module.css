@@ -1,13 +1,12 @@
-
 .calendarModal {
-  width: 90% !important;
-  max-width: 1200px !important;
+  width: 95% !important;
+  max-width: 1400px !important;
 }
 
 .calendarModalContent {
-  max-height: 80vh;
+  max-height: 85vh;
   overflow-y: auto;
-  padding: 0 16px 20px 16px;
+  padding: 0 20px 24px 20px;
   scrollbar-width: thin;
   scrollbar-color: rgba(108, 92, 231, 0.5) rgba(30, 30, 30, 0.5);
 }
@@ -332,6 +331,11 @@
   color: #ffffff;
 }
 
+.listMonthHeader span {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.8);
+}
+
 .listMonthGames {
   padding: 0;
   max-height: 500px;
@@ -365,17 +369,22 @@
 }
 
 .listGameImage {
-  width: 40px;
-  height: 50px;
+  width: 50px;
+  height: 65px;
   border-radius: 6px;
   overflow: hidden;
   margin-right: 15px;
   box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
   transition: transform 0.25s ease;
+  flex-shrink: 0;
 }
 
-.listGame:hover .listGameImage {
-  transform: scale(1.05);
+.listGameImage img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
 }
 
 .listGameInfo {
@@ -452,6 +461,79 @@
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
 }
 
+/* Load More Button */
+.loadMoreButton {
+  display: flex;
+  justify-content: center;
+  padding: 1rem 0;
+}
+
+.loadMoreBtn {
+  background: linear-gradient(135deg, rgba(108, 92, 231, 0.2), rgba(108, 92, 231, 0.1));
+  border: 1px solid rgba(108, 92, 231, 0.3);
+  color: #a5b4fc;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.loadMoreBtn:hover {
+  background: linear-gradient(135deg, rgba(108, 92, 231, 0.3), rgba(108, 92, 231, 0.2));
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(108, 92, 231, 0.2);
+}
+
+.loadMoreBtn:active {
+  transform: translateY(0);
+}
+
+/* Scroll to Top Button */
+.scrollToTopButton {
+  position: absolute;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: rgba(30, 30, 45, 0.85);
+  backdrop-filter: blur(10px);
+  color: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(108, 92, 231, 0.2);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  transition: all 0.3s ease;
+  z-index: 50;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(10px);
+}
+
+.scrollToTopButton.visible {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.scrollToTopButton:hover {
+  background: rgba(108, 92, 231, 0.2);
+  color: #ffffff;
+  border-color: rgba(108, 92, 231, 0.4);
+  transform: translateY(-3px);
+  box-shadow: 0 6px 16px rgba(108, 92, 231, 0.3);
+}
+
+.scrollToTopButton:active {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(108, 92, 231, 0.2);
+}
+
 /* ==================== 
    ANIMATIONS
    ==================== */
@@ -475,11 +557,38 @@
    RESPONSIVE DESIGN
    ==================== */
 @media (max-width: 768px) {
+  .calendarModal {
+    width: 98% !important;
+    max-width: 100% !important;
+    margin: 0.25rem !important;
+  }
+  
+  .calendarModalContent {
+    padding: 0 0.75rem 1rem 0.75rem;
+    max-height: 88vh;
+  }
+  
   .calendarHeader {
     flex-direction: column;
     height: auto;
-    gap: 15px;
-    padding-bottom: 15px;
+    gap: 1rem;
+    padding: 1rem 0 0.75rem 0;
+    margin-bottom: 1rem;
+  }
+  
+  .yearNavigation {
+    width: 100%;
+    justify-content: center;
+    margin: 0;
+  }
+  
+  .yearSelector {
+    font-size: 1.1rem;
+  }
+  
+  .yearButton {
+    width: 36px;
+    height: 36px;
   }
   
   .searchContainer {
@@ -487,66 +596,330 @@
     left: 0;
     transform: none;
     width: 100%;
+    margin-top: 0;
   }
   
-  .yearNavigation {
-    width: 100%;
-    justify-content: center;
+  .searchInput {
+    font-size: 0.9rem;
+    padding: 0.65rem 1rem 0.65rem 2.5rem;
   }
   
-  .monthNavigation {
-    flex-wrap: wrap;
+  .searchIcon {
+    left: 0.75rem;
+    font-size: 0.9rem;
   }
   
-  .monthNavItem {
-    font-size: 13px;
-    padding: 6px 10px;
+  /* Platform Filters - Horizontal scroll on mobile */
+  .platformFilters {
+    padding: 0.75rem;
+    margin-bottom: 1rem;
+  }
+  
+  .filtersTitle {
+    font-size: 0.8rem;
+    margin-bottom: 0.75rem;
   }
   
   .platformButtons {
-    justify-content: center;
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    gap: 0.5rem;
+    padding-bottom: 0.5rem;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+  }
+  
+  .platformButtons::-webkit-scrollbar {
+    height: 3px;
+  }
+  
+  .platformButtons::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+  }
+  
+  .platformButtons::-webkit-scrollbar-thumb {
+    background: rgba(124, 58, 237, 0.3);
+    border-radius: 3px;
+  }
+  
+  .platformButton {
+    padding: 0.6rem 0.9rem;
+    font-size: 0.85rem;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  
+  /* Quarter Tabs - Compact version */
+  .quarterTabs {
+    margin: 1rem 0 0.75rem 0;
+    padding: 4px;
+  }
+  
+  .quarterTab {
+    padding: 0.7rem 0.5rem;
+    font-size: 0.9rem;
+  }
+  
+  /* Month Navigation - Horizontal scroll */
+  .monthNavigation {
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 0.5rem;
+    scrollbar-width: thin;
+  }
+  
+  .monthNavigation::-webkit-scrollbar {
+    height: 3px;
+  }
+  
+  .monthNavigation::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+  }
+  
+  .monthNavigation::-webkit-scrollbar-thumb {
+    background: rgba(124, 58, 237, 0.3);
+    border-radius: 3px;
+  }
+  
+  .monthNavItem {
+    padding: 0.6rem 1rem;
+    font-size: 0.85rem;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  
+  /* List View - Mobile optimized */
+  .listView {
+    gap: 1rem;
+  }
+  
+  .listMonth {
+    border-radius: 10px;
+  }
+  
+  .listMonthHeader {
+    padding: 0.75rem 1rem;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+  }
+  
+  .listMonthHeader h3 {
+    font-size: 1.1rem;
+  }
+  
+  .listMonthHeader span {
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.6);
+  }
+  
+  .listMonthGames {
+    max-height: none;
+  }
+  
+  /* Game Item - Card style for mobile */
+  .listGame {
+    padding: 0.75rem;
+    flex-direction: column;
+    align-items: stretch;
+    border-bottom: none;
+    background: rgba(20, 20, 30, 0.4);
+    border-radius: 8px;
+    margin: 0.5rem;
+    gap: 0.75rem;
+  }
+  
+  .listGame:last-child {
+    margin-bottom: 0.5rem;
+  }
+  
+  .listGame:hover {
+    transform: none;
+    background-color: rgba(108, 92, 231, 0.15);
   }
   
   .listGameDate {
-    min-width: 80px;
-    font-size: 13px;
+    min-width: auto;
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.5);
+    order: -1;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  
+  .listGameImage {
+    width: 100%;
+    height: 200px;
+    margin-right: 0;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  }
+  
+  .listGameImage img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    image-rendering: auto;
+  }
+  
+  .listGameInfo {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .listGameTitle {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+  }
+  
+  .listGamePlatforms {
+    justify-content: flex-start;
+    gap: 0.5rem;
+  }
+  
+  .platformIcon {
+    padding: 0.35rem;
+  }
+  
+  /* Status Messages */
+  .emptyQuarterMessage {
+    padding: 2rem 1.5rem;
+    font-size: 0.9rem;
+  }
+  
+  .loadingContainer {
+    padding: 3rem 1rem;
+  }
+  
+  .loadingSpinner {
+    font-size: 2rem;
+  }
+  
+  .loadMoreButton {
+    padding: 0.75rem 0;
+  }
+  
+  .loadMoreBtn {
+    padding: 0.65rem 1.25rem;
+    font-size: 0.85rem;
+    width: 100%;
+    max-width: 300px;
+  }
+  
+  .scrollToTopButton {
+    bottom: 1rem;
+    right: 1rem;
+    width: 40px;
+    height: 40px;
+    font-size: 1rem;
+    border-radius: 10px;
   }
 }
 
 @media (max-width: 480px) {
   .calendarModalContent {
-    padding: 0 10px 15px 10px;
+    padding: 0 0.5rem 0.75rem 0.5rem;
+  }
+  
+  .calendarHeader {
+    padding: 0.75rem 0 0.5rem 0;
+  }
+  
+  .yearSelector {
+    font-size: 1rem;
+    gap: 0.5rem;
+  }
+  
+  .yearButton {
+    width: 32px;
+    height: 32px;
+  }
+  
+  .searchInput {
+    font-size: 0.85rem;
+    padding: 0.6rem 0.9rem 0.6rem 2.25rem;
+  }
+  
+  .platformFilters {
+    padding: 0.6rem;
   }
   
   .platformButton {
-    padding: 8px 10px;
-    font-size: 13px;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8rem;
+    gap: 0.35rem;
   }
   
   .quarterTab {
-    padding: 10px 8px;
-    font-size: 14px;
-  }
-  
-  .monthNavigation {
-    gap: 5px;
+    padding: 0.6rem 0.4rem;
+    font-size: 0.85rem;
   }
   
   .monthNavItem {
-    font-size: 12px;
-    padding: 5px 8px;
+    padding: 0.5rem 0.8rem;
+    font-size: 0.8rem;
+  }
+  
+  .listMonthHeader {
+    padding: 0.65rem 0.75rem;
+  }
+  
+  .listMonthHeader h3 {
+    font-size: 1rem;
   }
   
   .listGame {
-    padding: 12px 15px;
-  }
-  
-  .listGameTitle {
-    font-size: 14px;
+    padding: 0.65rem;
+    margin: 0.4rem;
   }
   
   .listGameImage {
-    width: 35px;
-    height: 42px;
+    height: 180px;
+    border-radius: 8px;
+  }
+  
+  .listGameTitle {
+    font-size: 0.95rem;
+  }
+  
+  .listGameDate {
+    font-size: 0.7rem;
+  }
+  
+  .platformIcon {
+    padding: 0.3rem;
+  }
+  
+  .scrollToTopButton {
+    bottom: 0.75rem;
+    right: 0.75rem;
+    width: 36px;
+    height: 36px;
+    font-size: 0.9rem;
+  }
+}
+
+/* Add touch-friendly interactions */
+@media (hover: none) and (pointer: coarse) {
+  .platformButton,
+  .quarterTab,
+  .monthNavItem,
+  .listGame {
+    -webkit-tap-highlight-color: rgba(124, 58, 237, 0.2);
+  }
+  
+  .listGame:active {
+    transform: scale(0.98);
+  }
+  
+  .platformButton:active,
+  .quarterTab:active,
+  .monthNavItem:active {
+    transform: scale(0.95);
   }
 }

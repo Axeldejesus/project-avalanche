@@ -34,21 +34,32 @@ const Sidebar: React.FC = () => {
   };
   
   return (
-    <aside className={styles.sidebar}>
-      <div className={styles.calendarBox}>
-        <h3>Release Calendar</h3>
-        <p>Track upcoming game releases</p>
-        <button className={styles.button} onClick={openCalendarModal}>
-          <Calendar className="mr-2" size={16} />
-          View Calendar
-        </button>
-      </div>
+    <>
+      <aside className={styles.sidebar}>
+        <div className={styles.calendarBox}>
+          <h3>Release Calendar</h3>
+          <p>Track upcoming game releases</p>
+          <button className={styles.button} onClick={openCalendarModal}>
+            <Calendar className="mr-2" size={16} />
+            View Calendar
+          </button>
+        </div>
+      </aside>
+      
+      {/* Mobile floating calendar button */}
+      <button 
+        className={styles.mobileCalendarButton}
+        onClick={openCalendarModal}
+        aria-label="Open Release Calendar"
+      >
+        <Calendar />
+      </button>
   
       <GameCalendarModal 
         isOpen={isCalendarModalOpen} 
         onClose={closeCalendarModal} 
       />
-    </aside>
+    </>
   );
 };
 

@@ -89,7 +89,7 @@ export async function GET(request: Request): Promise<NextResponse> {
         calendarGames[monthName].push({
           id: game.id,
           name: game.name,
-          cover: getImageUrl(game.cover?.image_id, 'cover_small'),
+          cover: getImageUrl(game.cover?.image_id, 'cover_big'), // Changed from 'cover_small' to 'cover_big'
           release_date: game.first_release_date,
           platforms: game.platforms?.map(p => p.id) || []
         });
@@ -99,7 +99,6 @@ export async function GET(request: Request): Promise<NextResponse> {
     return NextResponse.json(calendarGames);
   } catch (error) {
     console.error('Error fetching calendar games:', error);
-    // Ne jamais retourner de jeux fictifs ici
     return NextResponse.json({ error: 'Failed to fetch calendar data' }, { status: 500 });
   }
 }
