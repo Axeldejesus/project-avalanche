@@ -12,6 +12,7 @@ const Header: React.FC = () => {
       
       <Navigation />
       
+      {/* AuthButtonsWrapper is only visible on desktop */}
       <AuthButtonsWrapper />
     </header>
   );
