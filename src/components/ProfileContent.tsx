@@ -11,6 +11,7 @@ import UserAvatar from './UserAvatar';
 import { uploadProfileImage } from '../services/imageService';
 import { FiEdit2, FiCheck, FiX, FiUser, FiMail, FiCalendar, FiLogOut, FiTrash2 } from 'react-icons/fi';
 import UserReviews from './UserReviews';
+import PageLoader from './PageLoader';
 
 const ProfileContent: React.FC = () => {
   const [userProfile, setUserProfile] = useState<any>(null);
@@ -22,6 +23,7 @@ const ProfileContent: React.FC = () => {
   const [newUsername, setNewUsername] = useState('');
   const [usernameError, setUsernameError] = useState('');
   const [usernameSuccess, setUsernameSuccess] = useState('');
+  const [isNavigating, setIsNavigating] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -45,53 +47,14 @@ const ProfileContent: React.FC = () => {
   }, [router]);
 
   const handleLogout = () => {
-    // Créer un écran de chargement
-    const loadingScreen = document.createElement('div');
-    loadingScreen.style.position = 'fixed';
-    loadingScreen.style.top = '0';
-    loadingScreen.style.left = '0';
-    loadingScreen.style.width = '100%';
-    loadingScreen.style.height = '100%';
-    loadingScreen.style.backgroundColor = '#121212';
-    loadingScreen.style.display = 'flex';
-    loadingScreen.style.flexDirection = 'column';
-    loadingScreen.style.alignItems = 'center';
-    loadingScreen.style.justifyContent = 'center';
-    loadingScreen.style.zIndex = '9999';
-    loadingScreen.style.color = 'white';
-    loadingScreen.style.fontSize = '20px';
-    loadingScreen.style.fontFamily = 'var(--font-space-grotesk), sans-serif';
-    
-    // Ajouter un spinner (cercle de chargement)
-    const spinner = document.createElement('div');
-    spinner.style.border = '5px solid rgba(255, 255, 255, 0.1)';
-    spinner.style.borderTop = '5px solid #7c3aed';
-    spinner.style.borderRadius = '50%';
-    spinner.style.width = '50px';
-    spinner.style.height = '50px';
-    spinner.style.animation = 'spin 1s linear infinite';
-    spinner.style.marginBottom = '20px';
-    
-    // Ajouter une règle d'animation pour le spinner
-    const style = document.createElement('style');
-    style.textContent = '@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }';
-    document.head.appendChild(style);
-    
-    // Ajouter le message
-    const message = document.createElement('p');
-    message.textContent = 'Logging out, please wait...';
-    
-    // Assembler et ajouter à la page
-    loadingScreen.appendChild(spinner);
-    loadingScreen.appendChild(message);
-    document.body.appendChild(loadingScreen);
+    setIsNavigating(true);
     
     // Lancer la déconnexion en arrière-plan
     logoutUser().catch(error => {
       console.error('Logout error:', error);
     });
     
-    // Rediriger après un court délai pour s'assurer que l'écran de chargement s'affiche
+    // Rediriger après un court délai
     setTimeout(() => {
       window.location.href = '/';
     }, 300);
@@ -203,101 +166,105 @@ const ProfileContent: React.FC = () => {
   }
 
   return (
-    <div className={styles.profileContainer}>
-      <h1 className={styles.profileTitle}>Your Profile</h1>
+    <>
+      {isNavigating && <PageLoader />}
       
-      <div className={styles.profileCard}>
-        <div className={styles.profileHeader}>
-          <div className={styles.profileAvatarContainer}>
-            <UserAvatar 
-              username={userProfile.username} 
-              imageUrl={userProfile.profileImageUrl}
-              editable={true}
-              onImageUpload={handleImageUpload}
-              size="large"
-            />
-            {uploadError && <div className={styles.errorMessage}>{uploadError}</div>}
-            {uploadSuccess && <div className={styles.successMessage}>{uploadSuccess}</div>}
+      <div className={styles.profileContainer}>
+        <h1 className={styles.profileTitle}>Your Profile</h1>
+        
+        <div className={styles.profileCard}>
+          <div className={styles.profileHeader}>
+            <div className={styles.profileAvatarContainer}>
+              <UserAvatar 
+                username={userProfile.username} 
+                imageUrl={userProfile.profileImageUrl}
+                editable={true}
+                onImageUpload={handleImageUpload}
+                size="large"
+              />
+              {uploadError && <div className={styles.errorMessage}>{uploadError}</div>}
+              {uploadSuccess && <div className={styles.successMessage}>{uploadSuccess}</div>}
+            </div>
+            
+            <div className={styles.profileInfo}>
+              {isEditingUsername ? (
+                <div className={styles.usernameEditContainer}>
+                  <input
+                    type="text"
+                    value={newUsername}
+                    onChange={(e) => setNewUsername(e.target.value)}
+                    className={styles.usernameInput}
+                    placeholder="Enter new username"
+                    autoFocus
+                  />
+                  <div className={styles.usernameEditButtons}>
+                    <button onClick={saveUsername} className={styles.usernameEditButton} aria-label="Save username">
+                      <FiCheck />
+                    </button>
+                    <button onClick={cancelEditingUsername} className={styles.usernameEditButton} aria-label="Cancel editing">
+                      <FiX />
+                    </button>
+                  </div>
+                  {usernameError && <div className={styles.usernameErrorMessage}>{usernameError}</div>}
+                </div>
+              ) : (
+                <div className={styles.usernameContainer}>
+                  <h2 className={styles.profileUsername}>
+                    <span className={styles.usernameIcon}><FiUser /></span>
+                    {userProfile.username}
+                  </h2>
+                  <button onClick={startEditingUsername} className={styles.editButton} aria-label="Edit username">
+                    <FiEdit2 />
+                  </button>
+                  {usernameSuccess && <div className={styles.usernameSuccessMessage}>{usernameSuccess}</div>}
+                </div>
+              )}
+              
+              <div className={styles.profileEmail}>
+                <FiMail />
+                <span>{userProfile.email}</span>
+              </div>
+              
+              <div className={styles.profileJoinDate}>
+                <FiCalendar />
+                <span>Member since: {new Date(userProfile.createdAt).toLocaleDateString()}</span>
+              </div>
+              
+              
+            </div>
           </div>
           
-          <div className={styles.profileInfo}>
-            {isEditingUsername ? (
-              <div className={styles.usernameEditContainer}>
-                <input
-                  type="text"
-                  value={newUsername}
-                  onChange={(e) => setNewUsername(e.target.value)}
-                  className={styles.usernameInput}
-                  placeholder="Enter new username"
-                  autoFocus
-                />
-                <div className={styles.usernameEditButtons}>
-                  <button onClick={saveUsername} className={styles.usernameEditButton} aria-label="Save username">
-                    <FiCheck />
-                  </button>
-                  <button onClick={cancelEditingUsername} className={styles.usernameEditButton} aria-label="Cancel editing">
-                    <FiX />
-                  </button>
-                </div>
-                {usernameError && <div className={styles.usernameErrorMessage}>{usernameError}</div>}
-              </div>
-            ) : (
-              <div className={styles.usernameContainer}>
-                <h2 className={styles.profileUsername}>
-                  <span className={styles.usernameIcon}><FiUser /></span>
-                  {userProfile.username}
-                </h2>
-                <button onClick={startEditingUsername} className={styles.editButton} aria-label="Edit username">
-                  <FiEdit2 />
-                </button>
-                {usernameSuccess && <div className={styles.usernameSuccessMessage}>{usernameSuccess}</div>}
-              </div>
-            )}
-            
-            <div className={styles.profileEmail}>
-              <FiMail />
-              <span>{userProfile.email}</span>
-            </div>
-            
-            <div className={styles.profileJoinDate}>
-              <FiCalendar />
-              <span>Member since: {new Date(userProfile.createdAt).toLocaleDateString()}</span>
-            </div>
-            
-            
+          <div className={styles.profileDivider}></div>
+          
+          <div className={styles.profileActions}>
+            <button 
+              className={styles.logoutButton}
+              onClick={handleLogout}
+            >
+              <FiLogOut />
+              <span>Logout</span>
+            </button>
+            <button 
+              className={styles.deleteAccountButton}
+              onClick={openDeleteModal}
+            >
+              <FiTrash2 />
+              <span>Delete Account</span>
+            </button>
           </div>
         </div>
-        
-        <div className={styles.profileDivider}></div>
-        
-        <div className={styles.profileActions}>
-          <button 
-            className={styles.logoutButton}
-            onClick={handleLogout}
-          >
-            <FiLogOut />
-            <span>Logout</span>
-          </button>
-          <button 
-            className={styles.deleteAccountButton}
-            onClick={openDeleteModal}
-          >
-            <FiTrash2 />
-            <span>Delete Account</span>
-          </button>
-        </div>
+
+        {userProfile && (
+          <UserReviews userId={auth?.currentUser?.uid || ''} />
+        )}
+
+        <DeleteAccountModal 
+          isOpen={isDeleteModalOpen} 
+          onClose={closeDeleteModal} 
+          onAccountDeleted={handleAccountDeleted} 
+        />
       </div>
-
-      {userProfile && (
-        <UserReviews userId={auth?.currentUser?.uid || ''} />
-      )}
-
-      <DeleteAccountModal 
-        isOpen={isDeleteModalOpen} 
-        onClose={closeDeleteModal} 
-        onAccountDeleted={handleAccountDeleted} 
-      />
-    </div>
+    </>
   );
 };
 
