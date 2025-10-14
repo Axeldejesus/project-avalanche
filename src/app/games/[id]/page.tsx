@@ -17,6 +17,8 @@ import { useAuth } from '@/context/AuthContext';
 import { usePathname, useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import AddToCollectionModal from '@/components/modals/AddToCollectionModal';
+import LoginModal from '@/components/modals/LoginModal';
+import RegisterModal from '@/components/modals/RegisterModal';
 import { getUserGameInCollection } from '@/services/collectionService';
 
 // Dynamically load review components to improve initial page performance
@@ -116,6 +118,9 @@ export default function GameDetailPage({ params }: { params: Promise<{ id: strin
 
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isDesktopMenuOpen, setIsDesktopMenuOpen] = useState(false);
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
 
   useEffect(() => {
     const fetchGameDetail = async () => {
@@ -190,11 +195,14 @@ export default function GameDetailPage({ params }: { params: Promise<{ id: strin
       if (isMobileMenuOpen && !target.closest(`.${styles.mobileNav}`) && !target.closest(`.${styles.mobileMenuToggle}`)) {
         setIsMobileMenuOpen(false);
       }
+      if (isDesktopMenuOpen && !target.closest(`.${styles.desktopNavMenu}`) && !target.closest(`.${styles.desktopMenuToggle}`)) {
+        setIsDesktopMenuOpen(false);
+      }
     };
     
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [isSearchOpen, isMobileMenuOpen]);
+  }, [isSearchOpen, isMobileMenuOpen, isDesktopMenuOpen]);
   
   // Toggle search on mobile
   const toggleSearch = (e: React.MouseEvent) => {
@@ -210,11 +218,23 @@ export default function GameDetailPage({ params }: { params: Promise<{ id: strin
     setIsMobileMenuOpen(!isMobileMenuOpen);
   };
   
-  // Close menus
+  // Toggle desktop menu
+  const toggleDesktopMenu = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDesktopMenuOpen(!isDesktopMenuOpen);
+  };
+
+  // Close mobile menu
   const closeMobileMenu = () => {
     setIsMobileMenuOpen(false);
   };
   
+  // Close desktop menu
+  const closeDesktopMenu = () => {
+    setIsDesktopMenuOpen(false);
+  };
+
   // Handle navigation
   const handleNavigation = (path: string, event: React.MouseEvent) => {
     event.preventDefault();
@@ -246,16 +266,41 @@ export default function GameDetailPage({ params }: { params: Promise<{ id: strin
   
   const handleLoginClick = () => {
     closeMobileMenu();
-    const event = new CustomEvent('openLoginModal');
-    window.dispatchEvent(event);
+    closeDesktopMenu();
+    setIsLoginModalOpen(true);
+    setIsRegisterModalOpen(false);
   };
   
   const handleRegisterClick = () => {
     closeMobileMenu();
-    const event = new CustomEvent('openRegisterModal');
-    window.dispatchEvent(event);
+    closeDesktopMenu();
+    setIsRegisterModalOpen(true);
+    setIsLoginModalOpen(false);
   };
   
+  // Add event listeners for opening modals
+  useEffect(() => {
+    const handleOpenLoginModal = () => {
+      console.log('openLoginModal event received in game detail');
+      setIsLoginModalOpen(true);
+      setIsRegisterModalOpen(false);
+    };
+    
+    const handleOpenRegisterModal = () => {
+      console.log('openRegisterModal event received in game detail');
+      setIsRegisterModalOpen(true);
+      setIsLoginModalOpen(false);
+    };
+    
+    window.addEventListener('openLoginModal', handleOpenLoginModal as EventListener);
+    window.addEventListener('openRegisterModal', handleOpenRegisterModal as EventListener);
+    
+    return () => {
+      window.removeEventListener('openLoginModal', handleOpenLoginModal as EventListener);
+      window.removeEventListener('openRegisterModal', handleOpenRegisterModal as EventListener);
+    };
+  }, []);
+
   const isActive = (path: string) => {
     if (path === '/' && pathname === '/') return true;
     if (path !== '/' && pathname?.startsWith(path)) return true;
@@ -333,7 +378,94 @@ export default function GameDetailPage({ params }: { params: Promise<{ id: strin
           <div className={styles.topBar}>
             <div className={styles.backButtonWrapper}>
               <BackButton />
+              <button 
+                className={styles.desktopMenuToggle}
+                onClick={toggleDesktopMenu}
+                aria-label="Toggle navigation menu"
+              >
+                <FiMenu size={20} />
+              </button>
             </div>
+            
+            {/* Desktop navigation menu */}
+            {isDesktopMenuOpen && (
+              <div className={styles.desktopNavMenu}>
+                <div className={styles.desktopNavHeader}>
+                  {user && userProfile ? (
+                    <>
+                      <button 
+                        className={styles.desktopNavProfileButton}
+                        onClick={handleProfileClick}
+                        aria-label="Go to profile"
+                      >
+                        {userProfile.profileImageUrl ? (
+                          <img 
+                            src={userProfile.profileImageUrl} 
+                            alt={userProfile.username} 
+                            className={styles.desktopNavProfileAvatar}
+                          />
+                        ) : (
+                          getInitials(userProfile.username || user.email || 'User')
+                        )}
+                      </button>
+                      <div className={styles.desktopNavUsername}>
+                        {userProfile.username || user.email?.split('@')[0] || 'User'}
+                      </div>
+                    </>
+                  ) : (
+                    <div className={styles.desktopNavAuthButtons}>
+                      <button 
+                        className={styles.desktopLoginBtn}
+                        onClick={handleLoginClick}
+                      >
+                        Log In
+                      </button>
+                      <button 
+                        className={styles.desktopRegisterBtn}
+                        onClick={handleRegisterClick}
+                      >
+                        Sign Up
+                      </button>
+                    </div>
+                  )}
+                </div>
+                
+                <div className={styles.desktopNavItems}>
+                  <a 
+                    href="/" 
+                    className={`${styles.desktopNavItem} ${isActive('/') ? styles.active : ''}`}
+                    onClick={(e) => handleNavigation('/', e)}
+                  >
+                    <FiHome className={styles.navIcon} />
+                    <span>Home</span>
+                  </a>
+                  <a 
+                    href="/games" 
+                    className={`${styles.desktopNavItem} ${isActive('/games') ? styles.active : ''}`}
+                    onClick={(e) => handleNavigation('/games', e)}
+                  >
+                    <RiGamepadFill className={styles.navIcon} />
+                    <span>Games</span>
+                  </a>
+                  <a 
+                    href="/collections" 
+                    className={`${styles.desktopNavItem} ${isActive('/collections') ? styles.active : ''}`}
+                    onClick={(e) => handleNavigation('/collections', e)}
+                  >
+                    <BsCollectionPlay className={styles.navIcon} />
+                    <span>Collections</span>
+                  </a>
+                  <a 
+                    href="/stats" 
+                    className={`${styles.desktopNavItem} ${isActive('/stats') ? styles.active : ''}`}
+                    onClick={(e) => handleNavigation('/stats', e)}
+                  >
+                    <FiBarChart2 className={styles.navIcon} />
+                    <span>Stats</span>
+                  </a>
+                </div>
+              </div>
+            )}
             
             {/* Desktop search bar */}
             <div className={styles.desktopSearchContainer}>
@@ -683,6 +815,25 @@ export default function GameDetailPage({ params }: { params: Promise<{ id: strin
           onCollectionUpdated={handleCollectionUpdated}
         />
       )}
+
+      {/* Add the modals at the end */}
+      <LoginModal 
+        isOpen={isLoginModalOpen} 
+        onClose={() => setIsLoginModalOpen(false)} 
+        onSwitchToRegister={() => {
+          setIsLoginModalOpen(false);
+          setIsRegisterModalOpen(true);
+        }} 
+      />
+      
+      <RegisterModal 
+        isOpen={isRegisterModalOpen} 
+        onClose={() => setIsRegisterModalOpen(false)} 
+        onSwitchToLogin={() => {
+          setIsRegisterModalOpen(false);
+          setIsLoginModalOpen(true);
+        }} 
+      />
     </motion.div>
   );
 }

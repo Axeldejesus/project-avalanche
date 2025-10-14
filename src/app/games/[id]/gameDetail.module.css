@@ -38,6 +38,39 @@
 /* Style le wrapper du bouton back pour correspondre aux autres contrôles mobiles */
 .backButtonWrapper {
   display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+/* Desktop menu toggle button */
+.desktopMenuToggle {
+  background: rgba(30, 30, 45, 0.7);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: white;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.desktopMenuToggle:hover {
+  background: rgba(40, 40, 55, 0.8);
+  border-color: rgba(108, 92, 231, 0.4);
+  transform: translateY(-2px);
+}
+
+.desktopMenuToggle:active {
+  transform: scale(0.95);
+  background: rgba(40, 40, 55, 0.9);
 }
 
 /* Desktop search container */
@@ -87,19 +120,20 @@
   background: rgba(40, 40, 55, 0.9);
 }
 
-/* Empêcher le double-tap zoom sur iOS */
-@media (max-width: 768px) {
-  .mobileSearchToggle,
-  .mobileMenuToggle {
-    -webkit-touch-callout: none;
-  }
-}
-
-/* Mobile search dropdown */
-.mobileSearchContainer {
-  padding: 0 1rem 1rem;
+/* Desktop navigation menu dropdown */
+.desktopNavMenu {
+  position: absolute;
+  top: 70px;
+  left: 7rem; /* Ajusté pour être après le bouton back */
+  width: 280px;
+  background: linear-gradient(to bottom, #1a1b2e, #12141d);
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+  z-index: 100;
   animation: slideDown 0.3s ease;
-  z-index: 9;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(20px);
 }
 
 @keyframes slideDown {
@@ -113,93 +147,17 @@
   }
 }
 
-/* Mobile menu overlay */
-.mobileMenuOverlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.7);
-  z-index: 999;
-  backdrop-filter: blur(4px);
-  animation: fadeIn 0.3s ease;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-/* Mobile navigation drawer - styled like Home.module.css */
-.mobileNav {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 280px;
-  height: 100vh;
-  background: linear-gradient(to bottom, #1a1b2e, #12141d);
-  z-index: 1000;
-  padding: 2rem 1.5rem;
-  overflow-y: auto;
-  box-shadow: 4px 0 20px rgba(0, 0, 0, 0.3);
-  animation: slideInLeft 0.3s ease;
-}
-
-@keyframes slideInLeft {
-  from {
-    transform: translateX(-100%);
-  }
-  to {
-    transform: translateX(0);
-  }
-}
-
-.mobileNavHeader {
+.desktopNavHeader {
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
   padding-bottom: 1.5rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  gap: 1rem;
-}
-
-.mobileNavHeaderTop {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  width: 100%;
-}
-
-.mobileCloseButton {
-  background: transparent;
-  border: none;
-  color: #ffffff;
-  font-size: 1.5rem;
-  cursor: pointer;
-  padding: 0.5rem;
-  transition: all 0.2s ease;
-}
-
-.mobileCloseButton:hover {
-  transform: rotate(90deg);
-  color: rgba(255, 255, 255, 0.7);
-}
-
-.mobileNavProfile {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
   gap: 0.75rem;
-  width: 100%;
 }
 
-.mobileNavProfileButton {
+.desktopNavProfileButton {
   width: 60px;
   height: 60px;
   border-radius: 50%;
@@ -217,20 +175,20 @@
   box-shadow: 0 4px 15px rgba(124, 58, 237, 0.4);
 }
 
-.mobileNavProfileButton:hover {
+.desktopNavProfileButton:hover {
   transform: scale(1.05);
   border-color: rgba(124, 58, 237, 0.6);
   box-shadow: 0 6px 20px rgba(124, 58, 237, 0.6);
 }
 
-.mobileNavProfileAvatar {
+.desktopNavProfileAvatar {
   width: 100%;
   height: 100%;
   border-radius: 50%;
   object-fit: cover;
 }
 
-.mobileNavUsername {
+.desktopNavUsername {
   font-size: 0.95rem;
   color: #ffffff;
   font-weight: 600;
@@ -245,13 +203,13 @@
   white-space: nowrap;
 }
 
-.mobileNavItems {
+.desktopNavItems {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
 }
 
-.mobileNavItem {
+.desktopNavItem {
   display: flex;
   align-items: center;
   padding: 1rem;
@@ -263,36 +221,35 @@
   font-size: 1rem;
 }
 
-.mobileNavItem:hover {
+.desktopNavItem:hover {
   background: rgba(124, 58, 237, 0.1);
   color: #ffffff;
 }
 
-.mobileNavItem.active {
+.desktopNavItem.active {
   background: rgba(124, 58, 237, 0.2);
   color: #ffffff;
   border-left: 3px solid #7c3aed;
 }
 
-.mobileNavItem .navIcon {
+.desktopNavItem .navIcon {
   font-size: 1.2rem;
   margin-right: 1rem;
 }
 
-.mobileNavAuthButtons {
+.desktopNavAuthButtons {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 0.75rem;
   width: 100%;
-  padding: 0 0.5rem;
 }
 
-.mobileLoginBtn,
-.mobileRegisterBtn {
+.desktopLoginBtn,
+.desktopRegisterBtn {
   width: 100%;
-  padding: 0.9rem 1.5rem;
+  padding: 0.75rem 1.25rem;
   border-radius: 12px;
-  font-size: 1rem;
+  font-size: 0.95rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -303,27 +260,27 @@
   border: none;
 }
 
-.mobileLoginBtn {
+.desktopLoginBtn {
   background-color: rgba(255, 255, 255, 0.08);
   color: #ffffff;
   border: 1px solid rgba(255, 255, 255, 0.15);
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
-.mobileLoginBtn:active {
-  transform: scale(0.98);
+.desktopLoginBtn:hover {
   background-color: rgba(255, 255, 255, 0.12);
+  transform: translateY(-2px);
 }
 
-.mobileRegisterBtn {
+.desktopRegisterBtn {
   background: linear-gradient(135deg, #7c3aed, #6c5ce7);
   color: #ffffff;
   box-shadow: 0 6px 15px rgba(108, 92, 231, 0.3);
 }
 
-.mobileRegisterBtn:active {
-  transform: scale(0.98);
+.desktopRegisterBtn:hover {
   background: linear-gradient(135deg, #6d28d9, #5b21b6);
+  transform: translateY(-2px);
 }
 
 .heroContent {
@@ -768,6 +725,226 @@
   color: #8e44ad;
 }
 
+/* Mobile search dropdown */
+.mobileSearchContainer {
+  padding: 0 1rem 1rem;
+  animation: slideDown 0.3s ease;
+  z-index: 9;
+}
+
+/* Mobile menu overlay */
+.mobileMenuOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  z-index: 999;
+  backdrop-filter: blur(4px);
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Mobile navigation drawer - styled like Home.module.css */
+.mobileNav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 280px;
+  height: 100vh;
+  background: linear-gradient(to bottom, #1a1b2e, #12141d);
+  z-index: 1000;
+  padding: 2rem 1.5rem;
+  overflow-y: auto;
+  box-shadow: 4px 0 20px rgba(0, 0, 0, 0.3);
+  animation: slideInLeft 0.3s ease;
+}
+
+@keyframes slideInLeft {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.mobileNavHeader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  gap: 1rem;
+}
+
+.mobileNavHeaderTop {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  width: 100%;
+}
+
+.mobileCloseButton {
+  background: transparent;
+  border: none;
+  color: #ffffff;
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0.5rem;
+  transition: all 0.2s ease;
+}
+
+.mobileCloseButton:hover {
+  transform: rotate(90deg);
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.mobileNavProfile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+.mobileNavProfileButton {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background-color: #6c5ce7;
+  color: #ffffff;
+  border: 2px solid rgba(124, 58, 237, 0.3);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 1.5rem;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(124, 58, 237, 0.4);
+}
+
+.mobileNavProfileButton:hover {
+  transform: scale(1.05);
+  border-color: rgba(124, 58, 237, 0.6);
+  box-shadow: 0 6px 20px rgba(124, 58, 237, 0.6);
+}
+
+.mobileNavProfileAvatar {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.mobileNavUsername {
+  font-size: 0.95rem;
+  color: #ffffff;
+  font-weight: 600;
+  text-align: center;
+  padding: 0.4rem 0.75rem;
+  border-radius: 10px;
+  background-color: rgba(124, 58, 237, 0.15);
+  border: 1px solid rgba(124, 58, 237, 0.3);
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mobileNavItems {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.mobileNavItem {
+  display: flex;
+  align-items: center;
+  padding: 1rem;
+  color: rgba(255, 255, 255, 0.75);
+  text-decoration: none;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  font-weight: 500;
+  font-size: 1rem;
+}
+
+.mobileNavItem:hover {
+  background: rgba(124, 58, 237, 0.1);
+  color: #ffffff;
+}
+
+.mobileNavItem.active {
+  background: rgba(124, 58, 237, 0.2);
+  color: #ffffff;
+  border-left: 3px solid #7c3aed;
+}
+
+.mobileNavItem .navIcon {
+  font-size: 1.2rem;
+  margin-right: 1rem;
+}
+
+.mobileNavAuthButtons {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  width: 100%;
+  padding: 0 0.5rem;
+}
+
+.mobileLoginBtn,
+.mobileRegisterBtn {
+  width: 100%;
+  padding: 0.9rem 1.5rem;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  letter-spacing: 0.3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+}
+
+.mobileLoginBtn {
+  background-color: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.mobileLoginBtn:active {
+  transform: scale(0.98);
+  background-color: rgba(255, 255, 255, 0.12);
+}
+
+.mobileRegisterBtn {
+  background: linear-gradient(135deg, #7c3aed, #6c5ce7);
+  color: #ffffff;
+  box-shadow: 0 6px 15px rgba(108, 92, 231, 0.3);
+}
+
+.mobileRegisterBtn:active {
+  transform: scale(0.98);
+  background: linear-gradient(135deg, #6d28d9, #5b21b6);
+}
+
 /* Responsive styles */
 @media (max-width: 1024px) {
   .twoColumnLayout {
@@ -812,6 +989,11 @@
   
   /* Hide desktop search on mobile */
   .desktopSearchContainer {
+    display: none;
+  }
+  
+  /* Hide desktop menu toggle on mobile */
+  .desktopMenuToggle {
     display: none;
   }
   
@@ -1000,6 +1182,10 @@
     width: 36px;
     height: 36px;
     font-size: 0.9rem;
+  }
+  
+  .desktopMenuToggle {
+    display: none;
   }
   
   .mobileNav {
