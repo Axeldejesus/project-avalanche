@@ -6,6 +6,7 @@ import Header from '@/components/Header';
 import { useAuth } from '@/context/AuthContext';
 import StatsClient from './stats-client';
 import styles from './stats.module.css';
+import { FiLogIn, FiUserPlus } from 'react-icons/fi';
 
 export default function StatsPage() {
   const [authChecked, setAuthChecked] = useState(false);
@@ -38,6 +39,16 @@ export default function StatsPage() {
     return () => clearTimeout(authTimeout);
   }, [user]);
 
+  const handleLoginClick = () => {
+    const event = new CustomEvent('openLoginModal');
+    window.dispatchEvent(event);
+  };
+  
+  const handleRegisterClick = () => {
+    const event = new CustomEvent('openRegisterModal');
+    window.dispatchEvent(event);
+  };
+
   // Afficher un spinner de chargement pendant la vérification d'authentification
   if (authLoading) {
     return (
@@ -59,6 +70,14 @@ export default function StatsPage() {
         <div className={styles.notLoggedIn}>
           <h2>Sign in to view your statistics</h2>
           <p>Create an account to track statistics about your gaming habits and preferences</p>
+          <div className={styles.authActions}>
+            <button className={`${styles.authButton} ${styles.loginButton}`} onClick={handleLoginClick}>
+              <FiLogIn /> Log In
+            </button>
+            <button className={`${styles.authButton} ${styles.registerButton}`} onClick={handleRegisterClick}>
+              <FiUserPlus /> Sign Up
+            </button>
+          </div>
         </div>
       </div>
     );

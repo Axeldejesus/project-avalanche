@@ -740,6 +740,12 @@
   margin: 2rem auto;
   border: 1px solid rgba(255, 255, 255, 0.05);
   animation: fadeIn 0.5s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%; /* Ajout pour forcer la largeur */
+  box-sizing: border-box; /* Inclure padding dans la largeur */
 }
 
 .notLoggedIn h2 {
@@ -751,190 +757,63 @@
 .notLoggedIn p {
   color: #9ca3af;
   max-width: 400px;
-  margin: 0 auto;
+  margin: 0 auto 2rem;
+  line-height: 1.6;
 }
 
-/* Modal for creating lists */
-.modalOverlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.7);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  backdrop-filter: blur(4px);
-}
-
-.modalContent {
-  background: rgba(30, 30, 45, 0.95);
-  border-radius: 16px;
-  width: 90%;
-  max-width: 500px;
-  padding: 2rem;
-  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.createListForm {
-  display: flex;
-  flex-direction: column;
-}
-
-.createListForm h3 {
-  font-size: 1.5rem;
-  margin-bottom: 1.5rem;
-  color: #e5e7eb;
-  text-align: center;
-  position: relative;
-  padding-bottom: 0.75rem;
-}
-
-.createListForm h3::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 60px;
-  height: 3px;
-  background: linear-gradient(90deg, #7c3aed, rgba(124, 58, 237, 0.3));
-  border-radius: 2px;
-}
-
-.formGroup {
-  margin-bottom: 1.25rem;
-}
-
-.formGroup label {
-  display: block;
-  margin-bottom: 0.5rem;
-  font-size: 0.95rem;
-  color: #d1d5db;
-}
-
-.formGroup input,
-.formGroup textarea {
-  width: 100%;
-  padding: 0.75rem 1rem;
-  background: rgba(20, 20, 30, 0.8);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
-  color: #e5e7eb;
-  font-size: 1rem;
-  transition: all 0.3s ease;
-}
-
-.formGroup input:focus,
-.formGroup textarea:focus {
-  border-color: rgba(124, 58, 237, 0.5);
-  outline: none;
-  box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.2);
-}
-
-.iconSelector {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 0.75rem;
-  margin-top: 0.5rem;
-}
-
-.iconOption {
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(20, 20, 30, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
-  color: #9ca3af;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  font-size: 1.2rem;
-}
-
-.iconOption:hover {
-  background: rgba(255, 255, 255, 0.08);
-  transform: translateY(-2px);
-}
-
-.selectedIcon {
-  background: rgba(124, 58, 237, 0.2);
-  color: #7c3aed;
-  border-color: rgba(124, 58, 237, 0.5);
-}
-
-.colorSelector {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 0.75rem;
-  margin-top: 0.5rem;
-}
-
-.colorOption {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  border: 3px solid rgba(255, 255, 255, 0.1);
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.colorOption:hover {
-  transform: scale(1.1);
-}
-
-.selectedColor {
-  box-shadow: 0 0 0 2px #fff, 0 0 0 4px currentColor;
-  transform: scale(1.1);
-}
-
-.formActions {
-  display: flex;
-  justify-content: flex-end;
+.authActions {
+  display: none; /* Masquer par défaut sur desktop */
   gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
   margin-top: 1.5rem;
 }
 
-.cancelButton {
+.authButton {
   padding: 0.75rem 1.5rem;
-  background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: #d1d5db;
   border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.2s ease;
   font-size: 0.95rem;
-}
-
-.cancelButton:hover {
-  background: rgba(255, 255, 255, 0.05);
-}
-
-.submitButton {
-  padding: 0.75rem 1.5rem;
-  background: linear-gradient(135deg, #7c3aed, #6d28d9);
-  color: white;
-  border: none;
-  border-radius: 8px;
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
-  font-size: 0.95rem;
-  font-weight: 500;
+  transition: all 0.3s ease;
+  letter-spacing: 0.3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-width: 120px;
 }
 
-.submitButton:hover {
+.loginButton {
+  background-color: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.loginButton:hover {
+  background-color: rgba(255, 255, 255, 0.12);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+  border-color: rgba(255, 255, 255, 0.25);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
 }
 
-.submitButton:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
+.registerButton {
+  background: linear-gradient(135deg, #7c3aed, #6c5ce7);
+  color: #ffffff;
+  border: none;
+  box-shadow: 0 6px 15px rgba(108, 92, 231, 0.3);
+}
+
+.registerButton:hover {
+  background: linear-gradient(135deg, #6d28d9, #5b21b6);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(108, 92, 231, 0.4);
+}
+
+.registerButton:active,
+.loginButton:active {
+  transform: translateY(0);
 }
 
 /* Responsive adjustments */
@@ -944,12 +823,30 @@
   }
   
   .notLoggedIn {
-    margin: 1.5rem 1rem;
+    margin: 1.5rem auto; /* Changé de "1.5rem 1rem" à "1.5rem auto" */
     padding: 2.5rem 1.5rem;
+    max-width: calc(100% - 2rem); /* Prendre en compte les marges */
+    width: calc(100% - 2rem); /* Assurer une largeur égale */
   }
   
   .notLoggedIn h2 {
     font-size: 1.5rem;
+  }
+  
+  .notLoggedIn p {
+    font-size: 0.95rem;
+  }
+  
+  .authActions {
+    display: flex; /* Afficher sur mobile/tablette */
+    flex-direction: column;
+    width: 100%;
+    align-items: center; /* Centrer les boutons */
+  }
+  
+  .authButton {
+    width: 100%;
+    max-width: 300px;
   }
   
   .loadingContainer {
@@ -959,13 +856,15 @@
 
 @media (max-width: 480px) {
   .main {
-    padding: 1rem 0.75rem;
+    padding: 1rem; /* Changé de "1rem 0.75rem" à "1rem" pour padding uniforme */
   }
   
   .notLoggedIn {
-    margin: 1rem;
+    margin: 1rem auto; /* Changé de "1rem 0.5rem" à "1rem auto" */
     padding: 2rem 1rem;
     border-radius: 12px;
+    max-width: calc(100% - 2rem);
+    width: calc(100% - 2rem);
   }
   
   .notLoggedIn h2 {
@@ -973,6 +872,11 @@
   }
   
   .notLoggedIn p {
+    font-size: 0.9rem;
+  }
+  
+  .authButton {
+    padding: 0.65rem 1.25rem;
     font-size: 0.9rem;
   }
   

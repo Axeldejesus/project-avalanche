@@ -8,7 +8,7 @@ import { getUserCollection, getUserCollectionStats, removeFromCollection } from 
 import { type CollectionItem, type CollectionStats } from '@/schemas';
 import { getUserLists, getListsWithCounts, getGamesInList, deleteList, removeGameFromList, createList } from '@/services/listService';
 import { type List, type ListGame } from '@/schemas';
-import { FiList, FiPlay, FiClock, FiAward, FiX, FiHeart, FiSearch, FiTrash2, FiPlus, FiEdit2, FiTag, FiLayers, FiGrid, FiChevronDown, FiChevronUp, FiFilm, FiBookmark, FiStar } from 'react-icons/fi';
+import { FiList, FiPlay, FiClock, FiAward, FiX, FiHeart, FiSearch, FiTrash2, FiPlus, FiEdit2, FiTag, FiLayers, FiGrid, FiChevronDown, FiChevronUp, FiFilm, FiBookmark, FiStar, FiLogIn, FiUserPlus } from 'react-icons/fi';
 import { FaGamepad } from 'react-icons/fa';
 import { DocumentSnapshot } from 'firebase/firestore';
 import { CacheManager } from '@/utils/cacheManager';
@@ -698,6 +698,16 @@ export default function CollectionsPage() {
     }, 3000);
   };
   
+  const handleLoginClick = () => {
+    const event = new CustomEvent('openLoginModal');
+    window.dispatchEvent(event);
+  };
+  
+  const handleRegisterClick = () => {
+    const event = new CustomEvent('openRegisterModal');
+    window.dispatchEvent(event);
+  };
+  
   // Afficher un spinner de chargement pendant la vérification d'authentification
   if (authLoading) {
     return (
@@ -719,6 +729,14 @@ export default function CollectionsPage() {
         <div className={styles.notLoggedIn}>
           <h2>Sign in to view your collection</h2>
           <p>Create an account to keep track of games you are playing, completed, or want to play</p>
+          <div className={styles.authActions}>
+            <button className={`${styles.authButton} ${styles.loginButton}`} onClick={handleLoginClick}>
+              <FiLogIn /> Log In
+            </button>
+            <button className={`${styles.authButton} ${styles.registerButton}`} onClick={handleRegisterClick}>
+              <FiUserPlus /> Sign Up
+            </button>
+          </div>
         </div>
       </div>
     );

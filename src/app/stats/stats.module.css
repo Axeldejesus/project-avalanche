@@ -107,6 +107,12 @@
   margin: 2rem auto;
   border: 1px solid rgba(255, 255, 255, 0.05);
   animation: fadeIn 0.5s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%; /* Ajout pour forcer la largeur */
+  box-sizing: border-box; /* Inclure padding dans la largeur */
 }
 
 .notLoggedIn h2 {
@@ -118,7 +124,63 @@
 .notLoggedIn p {
   color: #9ca3af;
   max-width: 400px;
-  margin: 0 auto;
+  margin: 0 auto 2rem;
+  line-height: 1.6;
+}
+
+.authActions {
+  display: none; /* Masquer par défaut sur desktop */
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 1.5rem;
+}
+
+.authButton {
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  letter-spacing: 0.3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-width: 120px;
+}
+
+.loginButton {
+  background-color: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.loginButton:hover {
+  background-color: rgba(255, 255, 255, 0.12);
+  transform: translateY(-2px);
+  border-color: rgba(255, 255, 255, 0.25);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+.registerButton {
+  background: linear-gradient(135deg, #7c3aed, #6c5ce7);
+  color: #ffffff;
+  border: none;
+  box-shadow: 0 6px 15px rgba(108, 92, 231, 0.3);
+}
+
+.registerButton:hover {
+  background: linear-gradient(135deg, #6d28d9, #5b21b6);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(108, 92, 231, 0.4);
+}
+
+.registerButton:active,
+.loginButton:active {
+  transform: translateY(0);
 }
 
 /* Summary cards */
@@ -367,11 +429,29 @@
   .loadingContainer,
   .notLoggedIn {
     padding: 2.5rem 1.5rem;
-    margin: 1.5rem 1rem;
+    margin: 1.5rem auto; /* Changé pour centrage uniforme */
+    max-width: calc(100% - 2rem);
+    width: calc(100% - 2rem);
   }
   
   .notLoggedIn h2 {
     font-size: 1.5rem;
+  }
+  
+  .notLoggedIn p {
+    font-size: 0.95rem;
+  }
+  
+  .authActions {
+    display: flex; /* Afficher sur mobile/tablette */
+    flex-direction: column;
+    width: 100%;
+    align-items: center; /* Centrer les boutons */
+  }
+  
+  .authButton {
+    width: 100%;
+    max-width: 300px;
   }
   
   .chartsGrid {
@@ -393,13 +473,15 @@
 
 @media (max-width: 480px) {
   .statsContainer {
-    padding: 1rem 0.75rem;
+    padding: 1rem; /* Padding uniforme */
   }
   
   .loadingContainer,
   .notLoggedIn {
     padding: 2rem 1rem;
-    margin: 1rem;
+    margin: 1rem auto; /* Changé pour centrage uniforme */
+    max-width: calc(100% - 2rem);
+    width: calc(100% - 2rem);
   }
   
   .notLoggedIn {
@@ -411,6 +493,11 @@
   }
   
   .notLoggedIn p {
+    font-size: 0.9rem;
+  }
+  
+  .authButton {
+    padding: 0.65rem 1.25rem;
     font-size: 0.9rem;
   }
   
