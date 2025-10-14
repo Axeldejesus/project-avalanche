@@ -294,11 +294,10 @@ export default function CollectionsPage() {
   const [listGames, setListGames] = useState<ListGame[]>([]);
   const [customLists, setCustomLists] = useState<Array<List & { gameCount: number }>>([]);
   const [loading, setLoading] = useState(true);
-  const [authChecked, setAuthChecked] = useState(false); // Ajout d'un nouvel état pour suivre la vérification d'auth
-  const [authLoading, setAuthLoading] = useState(true); // Ajout d'un nouvel état spécifique au chargement de l'auth
+  const [authChecked, setAuthChecked] = useState(false);
+  const [authLoading, setAuthLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [isCreatingList, setIsCreatingList] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<number | null>(null);
@@ -365,11 +364,6 @@ export default function CollectionsPage() {
       
       // Seulement charger si pas de cache
       loadAllData();
-      
-      const savedViewMode = localStorage.getItem('collectionViewMode');
-      if (savedViewMode === 'list' || savedViewMode === 'grid') {
-        setViewMode(savedViewMode as 'grid' | 'list');
-      }
     }
     
     return () => clearTimeout(authTimeout);
@@ -389,11 +383,6 @@ export default function CollectionsPage() {
       loadListGames(true);
     }
   }, [activeListId, activeTab]);
-  
-  // Save view mode to local storage
-  useEffect(() => {
-    localStorage.setItem('collectionViewMode', viewMode);
-  }, [viewMode]);
   
   // Collection stats
   const loadCollectionStats = async () => {
@@ -717,11 +706,6 @@ export default function CollectionsPage() {
       )
     : listGames;
   
-  // Toggle view mode
-  const toggleViewMode = () => {
-    setViewMode(prev => prev === 'grid' ? 'list' : 'grid');
-  };
-  
   // Handle successful list creation
   const handleListCreated = () => {
     invalidateCache();
@@ -784,7 +768,8 @@ export default function CollectionsPage() {
         <div className={styles.pageHeader}>
           <h1 className={styles.title}>Your Games</h1>
           
-          <div className={styles.viewControls}>
+          {/* Remove view controls */}
+          {/* <div className={styles.viewControls}>
             <button 
               className={styles.viewModeToggle}
               onClick={toggleViewMode}
@@ -793,7 +778,7 @@ export default function CollectionsPage() {
               {viewMode === 'grid' ? <FiList /> : <FiGrid />}
               <span>{viewMode === 'grid' ? 'List View' : 'Grid View'}</span>
             </button>
-          </div>
+          </div> */}
         </div>
         
         {successMessage && (
@@ -1016,7 +1001,7 @@ export default function CollectionsPage() {
                           <GameList 
                             games={filteredListGames} 
                             onDeleteGame={handleDeleteListGame}
-                            viewMode={viewMode}
+                            viewMode="grid"
                             deletingId={deletingId}
                             setDeletingId={setDeletingId}
                           />
@@ -1091,7 +1076,7 @@ export default function CollectionsPage() {
                 <GameList 
                   games={filteredCollectionGames} 
                   onDeleteGame={handleDeleteCollectionGame}
-                  viewMode={viewMode}
+                  viewMode="grid"
                   deletingId={deletingId}
                   setDeletingId={setDeletingId}
                 />
