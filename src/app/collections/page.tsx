@@ -576,6 +576,7 @@ export default function CollectionsPage() {
     setActiveListId(listId);
     setListLastDoc(undefined);
     setListGames([]);
+    setLoading(true); // Ajouter cette ligne pour indiquer qu'on commence à charger
   };
   
   // Load more games
@@ -1044,14 +1045,15 @@ export default function CollectionsPage() {
                           <div className={styles.spinner}></div>
                           <p>Loading games...</p>
                         </div>
+                      ) : filteredListGames.length === 0 && searchQuery.trim() !== '' ? (
+                        <div className={styles.emptyCollection}>
+                          <h3>No games found</h3>
+                          <p>No games matching "{searchQuery}" in this list</p>
+                        </div>
                       ) : filteredListGames.length === 0 ? (
                         <div className={styles.emptyCollection}>
                           <h3>No games found</h3>
-                          <p>
-                            {searchQuery.trim() !== ''
-                              ? `No games matching "${searchQuery}" in this list`
-                              : `No games in this list`}
-                          </p>
+                          <p>No games in this list</p>
                         </div>
                       ) : (
                         <>
