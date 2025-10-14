@@ -65,7 +65,13 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
+  /* Empêcher le zoom sur mobile */
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
+  position: relative;
 }
 
 .mobileSearchToggle:hover,
@@ -77,7 +83,16 @@
 
 .mobileSearchToggle:active,
 .mobileMenuToggle:active {
-  transform: translateY(0);
+  transform: scale(0.95);
+  background: rgba(40, 40, 55, 0.9);
+}
+
+/* Empêcher le double-tap zoom sur iOS */
+@media (max-width: 768px) {
+  .mobileSearchToggle,
+  .mobileMenuToggle {
+    -webkit-touch-callout: none;
+  }
 }
 
 /* Mobile search dropdown */
@@ -984,6 +999,7 @@
   .mobileMenuToggle {
     width: 36px;
     height: 36px;
+    font-size: 0.9rem;
   }
   
   .mobileNav {

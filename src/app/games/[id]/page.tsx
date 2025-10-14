@@ -183,7 +183,8 @@ export default function GameDetailPage({ params }: { params: Promise<{ id: strin
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as HTMLElement;
-      if (isSearchOpen && !target.closest(`.${styles.mobileSearchContainer}`)) {
+      // Ne pas fermer si on clique sur le bouton toggle lui-même
+      if (isSearchOpen && !target.closest(`.${styles.mobileSearchContainer}`) && !target.closest(`.${styles.mobileSearchToggle}`)) {
         setIsSearchOpen(false);
       }
       if (isMobileMenuOpen && !target.closest(`.${styles.mobileNav}`) && !target.closest(`.${styles.mobileMenuToggle}`)) {
@@ -196,12 +197,16 @@ export default function GameDetailPage({ params }: { params: Promise<{ id: strin
   }, [isSearchOpen, isMobileMenuOpen]);
   
   // Toggle search on mobile
-  const toggleSearch = () => {
+  const toggleSearch = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
     setIsSearchOpen(!isSearchOpen);
   };
   
   // Toggle mobile menu
-  const toggleMobileMenu = () => {
+  const toggleMobileMenu = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
     setIsMobileMenuOpen(!isMobileMenuOpen);
   };
   
@@ -340,6 +345,9 @@ export default function GameDetailPage({ params }: { params: Promise<{ id: strin
               <button 
                 className={styles.mobileSearchToggle}
                 onClick={toggleSearch}
+                onTouchStart={(e) => e.currentTarget.style.transform = 'scale(0.95)'}
+                onTouchEnd={(e) => e.currentTarget.style.transform = 'scale(1)'
+                }
                 aria-label="Toggle search"
               >
                 <FiSearch size={20} />
@@ -347,6 +355,8 @@ export default function GameDetailPage({ params }: { params: Promise<{ id: strin
               <button 
                 className={styles.mobileMenuToggle}
                 onClick={toggleMobileMenu}
+                onTouchStart={(e) => e.currentTarget.style.transform = 'scale(0.95)'}
+                onTouchEnd={(e) => e.currentTarget.style.transform = 'scale(1)'}
                 aria-label="Toggle menu"
               >
                 {isMobileMenuOpen ? <FiX size={24} /> : <FiMenu size={24} />}
