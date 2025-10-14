@@ -172,6 +172,63 @@ const CreateListForm = ({ onClose, onSuccess }: { onClose: () => void, onSuccess
   );
 };
 
+// Confirmation modal component
+const DeleteConfirmModal = ({ 
+  isOpen, 
+  onClose, 
+  onConfirm, 
+  gameName,
+  isDeleting 
+}: { 
+  isOpen: boolean, 
+  onClose: () => void, 
+  onConfirm: () => void, 
+  gameName: string,
+  isDeleting: boolean 
+}) => {
+  if (!isOpen) return null;
+  
+  return (
+    <div className={styles.modalOverlay} onClick={onClose}>
+      <div className={styles.deleteModalContent} onClick={(e) => e.stopPropagation()}>
+        <div className={styles.deleteModalHeader}>
+          <FiTrash2 className={styles.deleteModalIcon} />
+          <h3>Remove from Collection?</h3>
+        </div>
+        <p className={styles.deleteModalMessage}>
+          Are you sure you want to remove <strong>{gameName}</strong> from your collection? This action cannot be undone.
+        </p>
+        <div className={styles.deleteModalActions}>
+          <button 
+            className={styles.cancelDeleteButton}
+            onClick={onClose}
+            disabled={isDeleting}
+          >
+            Cancel
+          </button>
+          <button 
+            className={styles.confirmDeleteButton}
+            onClick={onConfirm}
+            disabled={isDeleting}
+          >
+            {isDeleting ? (
+              <>
+                <span className={styles.smallSpinner}></span>
+                Removing...
+              </>
+            ) : (
+              <>
+                <FiTrash2 />
+                Remove
+              </>
+            )}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // Game list component
 const GameList = ({ 
   games, 
@@ -187,20 +244,32 @@ const GameList = ({
   setDeletingId: (id: number | null) => void
 }): JSX.Element => {
   const router = useRouter();
-  
-  const handleDeleteGame = async (gameId: number, e: React.MouseEvent) => {
-    e.stopPropagation();
-    setDeletingId(gameId);
-    await onDeleteGame(gameId);
-    setDeletingId(null);
-  };
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [gameToDelete, setGameToDelete] = useState<{ id: number, name: string } | null>(null);
   
   const navigateToGame = (gameId: number) => {
-    sessionStorage.setItem('cameFromCollection', 'true');
-    sessionStorage.removeItem('cameFromGames');
-    sessionStorage.removeItem('cameFromHome');
-    sessionStorage.removeItem('cameFromProfile');
     router.push(`/games/${gameId}`);
+  };
+  
+  const handleDeleteClick = (gameId: number, gameName: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setGameToDelete({ id: gameId, name: gameName });
+    setDeleteModalOpen(true);
+  };
+  
+  const handleConfirmDelete = async () => {
+    if (gameToDelete) {
+      setDeletingId(gameToDelete.id);
+      await onDeleteGame(gameToDelete.id);
+      setDeletingId(null);
+      setDeleteModalOpen(false);
+      setGameToDelete(null);
+    }
+  };
+  
+  const handleCancelDelete = () => {
+    setDeleteModalOpen(false);
+    setGameToDelete(null);
   };
   
   const formatDate = (dateString: string) => {
@@ -230,58 +299,69 @@ const GameList = ({
   };
   
   return (
-    <div className={viewMode === 'grid' ? styles.collectionGrid : styles.collectionList}>
-      {games.map((game, idx) => {
-        const gameId = game.gameId;
-        const gameName = game.gameName;
-        const gameCover = game.gameCover;
-        
-        return (
-          <div 
-            key={`${gameId}-${idx}`} 
-            className={viewMode === 'grid' ? styles.gameCard : styles.gameListItem}
-            onClick={() => navigateToGame(gameId)}
-          >
-            <div className={viewMode === 'grid' ? styles.gameCardImage : styles.gameListImage}>
-              <img src={gameCover} alt={gameName} />
-              <div className={styles.gameStatus}>
-                {getStatusIcon(game)}
+    <>
+      <div className={viewMode === 'grid' ? styles.collectionGrid : styles.collectionList}>
+        {games.map((game, idx) => {
+          const gameId = game.gameId;
+          const gameName = game.gameName;
+          const gameCover = game.gameCover;
+          
+          return (
+            <div 
+              key={`${gameId}-${idx}`} 
+              className={viewMode === 'grid' ? styles.gameCard : styles.gameListItem}
+              onClick={() => navigateToGame(gameId)}
+            >
+              <div className={viewMode === 'grid' ? styles.gameCardImage : styles.gameListImage}>
+                <img src={gameCover} alt={gameName} />
+                <div className={styles.gameStatus}>
+                  {getStatusIcon(game)}
+                </div>
               </div>
-              <button 
-                className={styles.deleteButton}
-                onClick={(e) => handleDeleteGame(gameId, e)}
-                disabled={deletingId === gameId}
-                aria-label="Remove game"
-              >
-                {deletingId === gameId ? (
-                  <span className={styles.smallSpinner}></span>
-                ) : (
-                  <FiTrash2 />
-                )}
-              </button>
-            </div>
-            <div className={viewMode === 'grid' ? styles.gameCardContent : styles.gameListContent}>
-              <h3 className={viewMode === 'grid' ? styles.gameCardTitle : styles.gameListTitle}>
-                {gameName}
-              </h3>
-              <div className={viewMode === 'grid' ? styles.gameCardMeta : styles.gameListMeta}>
-                <span className={styles.gameCardDate}>
-                  Added {formatDate(getAddedDate(game))}
-                </span>
+              <div className={viewMode === 'grid' ? styles.gameCardContent : styles.gameListContent}>
+                <h3 className={viewMode === 'grid' ? styles.gameCardTitle : styles.gameListTitle}>
+                  {gameName}
+                </h3>
+                <div className={viewMode === 'grid' ? styles.gameCardMeta : styles.gameListMeta}>
+                  <span className={styles.gameCardDate}>
+                    Added {formatDate(getAddedDate(game))}
+                  </span>
+                  <button 
+                    className={styles.deleteButtonMeta}
+                    onClick={(e) => handleDeleteClick(gameId, gameName, e)}
+                    disabled={deletingId === gameId}
+                    aria-label="Remove game"
+                    title="Remove from collection"
+                  >
+                    {deletingId === gameId ? (
+                      <span className={styles.smallSpinner}></span>
+                    ) : (
+                      <FiTrash2 />
+                    )}
+                  </button>
+                </div>
                 {'rating' in game && game.rating && (
                   <span className={styles.gameCardRating}>
                     {game.rating}/5
                   </span>
                 )}
+                {'notes' in game && game.notes && (
+                  <p className={styles.gameNotes}>{game.notes}</p>
+                )}
               </div>
-              {'notes' in game && game.notes && (
-                <p className={styles.gameNotes}>{game.notes}</p>
-              )}
             </div>
-          </div>
-        );
-      })}
-    </div>
+          );
+        })}
+      </div>
+      
+      <DeleteConfirmModal
+        isOpen={deleteModalOpen}
+        onClose={handleCancelDelete}
+        onConfirm={handleConfirmDelete}
+        gameName={gameToDelete?.name || ''}
+        isDeleting={deletingId === gameToDelete?.id}
+      />
+    </>
   );
 };
 
@@ -565,30 +645,26 @@ export default function CollectionsPage() {
   const handleDeleteCollectionGame = async (gameId: number) => {
     if (!user) return;
     
-    if (window.confirm(`Are you sure you want to remove this game from your collection?`)) {
-      setDeletingId(gameId);
+    try {
+      const result = await removeFromCollection(gameId);
       
-      try {
-        const result = await removeFromCollection(gameId);
+      if (result.success) {
+        setSuccessMessage(`Game removed from your collection!`);
+        setCollectionGames(collectionGames.filter(game => game.gameId !== gameId));
         
-        if (result.success) {
-          setSuccessMessage(`Game removed from your collection!`);
-          setCollectionGames(collectionGames.filter(game => game.gameId !== gameId));
-          
-          // Invalider le cache
-          CacheManager.remove(`collection_${user.uid}`);
-          CacheManager.invalidatePattern(`statsCache_${user.uid}`);
-          loadCollectionStats();
-          
-          setTimeout(() => {
-            setSuccessMessage(null);
-          }, 3000);
-        } else {
-          setError(result.error || 'Failed to remove game from collection');
-        }
-      } catch (error: any) {
-        setError(error.message || 'An error occurred');
+        // Invalider le cache
+        CacheManager.remove(`collection_${user.uid}`);
+        CacheManager.invalidatePattern(`statsCache_${user.uid}`);
+        loadCollectionStats();
+        
+        setTimeout(() => {
+          setSuccessMessage(null);
+        }, 3000);
+      } else {
+        setError(result.error || 'Failed to remove game from collection');
       }
+    } catch (error: any) {
+      setError(error.message || 'An error occurred');
     }
   };
   
@@ -596,27 +672,25 @@ export default function CollectionsPage() {
   const handleDeleteListGame = async (gameId: number) => {
     if (!user || !activeListId) return;
     
-    if (window.confirm(`Are you sure you want to remove this game from this list?`)) {
-      try {
-        const result = await removeGameFromList(activeListId, gameId);
+    try {
+      const result = await removeGameFromList(activeListId, gameId);
+      
+      if (result.success) {
+        setSuccessMessage(`Game removed from list!`);
+        setListGames(listGames.filter(game => game.gameId !== gameId));
         
-        if (result.success) {
-          setSuccessMessage(`Game removed from list!`);
-          setListGames(listGames.filter(game => game.gameId !== gameId));
-          
-          // Invalider le cache
-          invalidateCache();
-          loadCustomLists();
-          
-          setTimeout(() => {
-            setSuccessMessage(null);
-          }, 3000);
-        } else {
-          setError(result.error || 'Failed to remove game from list');
-        }
-      } catch (error: any) {
-        setError(error.message || 'An error occurred');
+        // Invalider le cache
+        invalidateCache();
+        loadCustomLists();
+        
+        setTimeout(() => {
+          setSuccessMessage(null);
+        }, 3000);
+      } else {
+        setError(result.error || 'Failed to remove game from list');
       }
+    } catch (error: any) {
+      setError(error.message || 'An error occurred');
     }
   };
   
