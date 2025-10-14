@@ -865,11 +865,293 @@
     padding: 1.5rem 1rem;
   }
   
+  .pageHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  
+  .title {
+    font-size: 2rem;
+  }
+  
+  .viewControls {
+    justify-content: flex-end;
+    width: 100%;
+  }
+  
+  .statsBar {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: .75rem;
+  }
+  
+  .statItem {
+    min-width: unset;
+  }
+  
+  /* Optimisation de la grille pour mobile - 2 colonnes avec images complètes */
+  .collectionGrid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+  }
+  
+  .gameCard {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .gameCardImage {
+    height: 180px;
+    width: 100%;
+  }
+  
+  .gameCardContent {
+    padding: 0.75rem;
+  }
+  
+  .gameCardTitle {
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+    line-height: 1.3;
+  }
+  
+  .gameCardMeta {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  
+  .gameCardDate {
+    font-size: 0.75rem;
+  }
+  
+  .gameCardRating {
+    padding: 0.2rem 0.4rem;
+    font-size: 0.75rem;
+  }
+  
+  .gameNotes {
+    font-size: 0.8rem;
+    margin-top: 0.5rem;
+  }
+  
+  /* List view optimisé pour mobile - image complète en haut */
+  .gameListItem {
+    flex-direction: column;
+  }
+  
+  .gameListImage {
+    width: 100%;
+    height: 220px;
+  }
+  
+  .gameListContent {
+    padding: 1rem;
+  }
+  
+  .gameListTitle {
+    font-size: 1rem;
+    margin-bottom: 0.75rem;
+  }
+  
+  .gameListMeta {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  
+  /* Custom lists responsive - amélioration de la mise en page */
+  .listsContainer {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .listsSidebar {
+    order: 1;
+    max-height: unset;
+    padding: 1rem;
+  }
+  
+  .listsSidebar h3 {
+    font-size: 1rem;
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.5rem;
+  }
+  
+  .listsContent {
+    order: 2;
+    padding: 1rem;
+    min-height: 400px;
+  }
+  
+  /* Liste des custom lists en grille 2 colonnes sur mobile */
+  .userLists {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+    max-height: unset;
+  }
+  
+  .listItem {
+    flex-direction: column;
+    text-align: center;
+    padding: 0.75rem 0.5rem;
+    min-height: 90px;
+    gap: 0.5rem;
+  }
+  
+  .listItemIcon {
+    margin: 0;
+    font-size: 1.3rem;
+  }
+  
+  .listItemDetails {
+    width: 100%;
+  }
+  
+  .listItemName {
+    flex-direction: column;
+    gap: 0.25rem;
+    padding-right: 0;
+    font-size: 0.85rem;
+    line-height: 1.2;
+  }
+  
+  .listItemCount {
+    margin-left: 0;
+    position: static;
+    font-size: 0.75rem;
+    padding: 0.15rem 0.4rem;
+  }
+  
+  .deleteListButton {
+    position: absolute;
+    top: 0.25rem;
+    right: 0.25rem;
+    transform: none;
+    padding: 0.15rem;
+    font-size: 0.9rem;
+    opacity: 0.9;
+  }
+  
+  /* En-tête de liste custom */
+  .listHeader {
+    margin-bottom: 1rem;
+  }
+  
+  .listHeaderTitle {
+    font-size: 1.2rem;
+    gap: 0.5rem;
+  }
+  
+  .listHeaderIcon {
+    font-size: 1.1rem;
+  }
+  
+  .listHeaderDescription {
+    font-size: 0.85rem;
+    margin-top: 0.25rem;
+  }
+  
+  /* Tabs responsive */
+  .tabsContainer {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .tabs {
+    width: 100%;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.4rem;
+  }
+  
+  .tab {
+    flex: 1;
+    text-align: center;
+    padding: 0.6rem 1rem;
+    font-size: 0.85rem;
+  }
+  
+  .tab svg {
+    font-size: 1rem;
+  }
+  
+  .newListButton {
+    width: 100%;
+    justify-content: center;
+    padding: 0.7rem 1.25rem;
+  }
+  
+  /* Modal responsive - ajustements minimaux */
+  .modalOverlay {
+    padding: 0;
+    align-items: flex-end;
+  }
+  
+  .modalContent {
+    max-height: 90vh;
+    width: 100%;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+  }
+  
+  .createListForm {
+    padding: 1.5rem;
+  }
+  
+  .createListForm h3 {
+    font-size: 1.3rem;
+  }
+  
+  .formGroup label {
+    font-size: 0.85rem;
+  }
+  
+  .formGroup input,
+  .formGroup textarea {
+    font-size: 0.9rem;
+    padding: 0.65rem;
+  }
+  
+  .iconSelector {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.5rem;
+  }
+  
+  .iconOption {
+    padding: 0.6rem;
+    font-size: 1.3rem;
+  }
+  
+  .colorSelector {
+    grid-template-columns: repeat(5, 1fr);
+    gap: 0.4rem;
+  }
+  
+  .colorOption {
+    width: 32px;
+    height: 32px;
+  }
+  
+  .formActions {
+    flex-direction: column-reverse;
+    gap: 0.75rem;
+  }
+  
+  .cancelButton,
+  .submitButton {
+    width: 100%;
+    padding: 0.7rem 1.25rem;
+  }
+  
+  /* Autres éléments */
   .notLoggedIn {
-    margin: 1.5rem auto; /* Changé de "1.5rem 1rem" à "1.5rem auto" */
+    margin: 1.5rem auto;
     padding: 2.5rem 1.5rem;
-    max-width: calc(100% - 2rem); /* Prendre en compte les marges */
-    width: calc(100% - 2rem); /* Assurer une largeur égale */
+    max-width: calc(100% - 2rem);
+    width: calc(100% - 2rem);
   }
   
   .notLoggedIn h2 {
@@ -881,10 +1163,10 @@
   }
   
   .authActions {
-    display: flex; /* Afficher sur mobile/tablette */
+    display: flex;
     flex-direction: column;
     width: 100%;
-    align-items: center; /* Centrer les boutons */
+    align-items: center;
   }
   
   .authButton {
@@ -895,15 +1177,247 @@
   .loadingContainer {
     padding: 2.5rem 1.5rem;
   }
+  
+  .searchBar {
+    margin-bottom: 1rem;
+    padding: 0.6rem 1rem;
+  }
+  
+  .searchIcon {
+    font-size: 1.1rem;
+    margin-right: 0.5rem;
+  }
+  
+  .searchInput {
+    font-size: 0.9rem;
+  }
+  
+  .emptyList {
+    padding: 2rem 1rem;
+  }
+  
+  .emptyList p {
+    font-size: 0.9rem;
+  }
+  
+  .createListButtonLarge {
+    padding: 0.65rem 1.25rem;
+    font-size: 0.95rem;
+  }
 }
 
 @media (max-width: 480px) {
   .main {
-    padding: 1rem; /* Changé de "1rem 0.75rem" à "1rem" pour padding uniforme */
+    padding: 1rem;
   }
   
+  .title {
+    font-size: 1.75rem;
+  }
+  
+  /* Stats en une seule colonne sur très petit écran */
+  .statsBar {
+    grid-template-columns: 1fr;
+  }
+  
+  .statItem {
+    flex-direction: row;
+    justify-content: flex-start;
+    gap: 1rem;
+    padding: .75rem 1rem;
+  }
+  
+  .statIcon {
+    margin-bottom: 0;
+    font-size: 1.25rem;
+  }
+  
+  .statName {
+    text-align: left;
+    flex: 1;
+    margin-bottom: 0;
+  }
+  
+  .statCount {
+    font-size: 1.25rem;
+  }
+  
+  /* Grille 2 colonnes pour les jeux sur très petit écran */
+  .collectionGrid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+  }
+  
+  .gameCardImage {
+    height: 160px;
+  }
+  
+  .gameCardContent {
+    padding: 0.6rem;
+  }
+  
+  .gameCardTitle {
+    font-size: 0.85rem;
+    margin-bottom: 0.4rem;
+  }
+  
+  .gameCardDate {
+    font-size: 0.7rem;
+  }
+  
+  .gameCardRating {
+    font-size: 0.7rem;
+    padding: 0.15rem 0.3rem;
+  }
+  
+  .gameNotes {
+    font-size: 0.75rem;
+  }
+  
+  .gameListImage {
+    height: 200px;
+  }
+  
+  .gameListContent {
+    padding: 0.75rem;
+  }
+  
+  .gameListTitle {
+    font-size: 0.95rem;
+  }
+  
+  /* Liste des custom lists en une seule colonne sur très petit écran */
+  .userLists {
+    grid-template-columns: 1fr;
+  }
+  
+  .listItem {
+    flex-direction: row;
+    text-align: left;
+    min-height: unset;
+    padding: 0.75rem;
+    gap: 0.75rem;
+  }
+  
+  .listItemIcon {
+    margin: 0;
+    font-size: 1.25rem;
+  }
+  
+  .listItemName {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    padding-right: 35px;
+    font-size: 0.9rem;
+  }
+  
+  .listItemCount {
+    position: static;
+    margin-left: auto;
+  }
+  
+  .deleteListButton {
+    right: 0.5rem;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+  
+  .listsSidebar {
+    padding: 0.75rem;
+  }
+  
+  .listsContent {
+    padding: 0.75rem;
+  }
+  
+  .listHeaderTitle {
+    font-size: 1.1rem;
+  }
+  
+  .listHeaderDescription {
+    font-size: 0.8rem;
+  }
+  
+  /* Tabs plus compacts */
+  .tabs {
+    gap: 0.4rem;
+    padding: 0.3rem;
+  }
+  
+  .tab {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8rem;
+  }
+  
+  .tab svg {
+    font-size: 0.95rem;
+  }
+  
+  .newListButton {
+    padding: 0.65rem 1rem;
+    font-size: 0.9rem;
+  }
+  
+  /* Modal encore plus compacte */
+  .createListForm {
+    padding: 1.25rem;
+  }
+  
+  .createListForm h3 {
+    font-size: 1.2rem;
+    margin-bottom: 1.25rem;
+  }
+  
+  .formGroup {
+    margin-bottom: 1.25rem;
+  }
+  
+  .formGroup label {
+    font-size: 0.8rem;
+    margin-bottom: 0.4rem;
+  }
+  
+  .formGroup input,
+  .formGroup textarea {
+    font-size: 0.85rem;
+    padding: 0.6rem;
+  }
+  
+  .iconSelector {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.4rem;
+  }
+  
+  .iconOption {
+    padding: 0.5rem;
+    font-size: 1.2rem;
+  }
+  
+  .colorSelector {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.35rem;
+  }
+  
+  .colorOption {
+    width: 28px;
+    height: 28px;
+  }
+  
+  .formActions {
+    margin-top: 1.5rem;
+    gap: 0.6rem;
+  }
+  
+  .cancelButton,
+  .submitButton {
+    padding: 0.65rem 1rem;
+    font-size: 0.9rem;
+  }
+  
+  /* Autres éléments compacts */
   .notLoggedIn {
-    margin: 1rem auto; /* Changé de "1rem 0.5rem" à "1rem auto" */
+    margin: 1rem auto;
     padding: 2rem 1rem;
     border-radius: 12px;
     max-width: calc(100% - 2rem);
@@ -925,6 +1439,40 @@
   
   .loadingContainer {
     padding: 2rem 1rem;
+  }
+  
+  .searchBar {
+    padding: 0.55rem 0.85rem;
+  }
+  
+  .searchIcon {
+    font-size: 1rem;
+  }
+  
+  .searchInput {
+    font-size: 0.85rem;
+  }
+  
+  .emptyList {
+    padding: 1.5rem 0.75rem;
+  }
+  
+  .emptyListsContent {
+    padding: 1.5rem;
+    min-height: 250px;
+  }
+  
+  .emptyListsContent h3 {
+    font-size: 1.2rem;
+  }
+  
+  .emptyListsContent p {
+    font-size: 0.85rem;
+  }
+  
+  .createListButtonLarge {
+    padding: 0.65rem 1.25rem;
+    font-size: 0.95rem;
   }
 }
 
