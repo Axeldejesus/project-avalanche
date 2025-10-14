@@ -381,6 +381,8 @@ export default function CollectionsPage() {
   const [isCreatingList, setIsCreatingList] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [deleteListModalOpen, setDeleteListModalOpen] = useState(false);
+  const [listToDelete, setListToDelete] = useState<{ id: string, name: string } | null>(null);
   
   // Ajouter un cache avec timestamp
   const [cacheTimestamp, setCacheTimestamp] = useState<number>(0);
@@ -696,54 +698,64 @@ export default function CollectionsPage() {
   };
   
   // Delete a custom list
-  const handleDeleteList = async (listId: string) => {
-    if (!user) return;
+  const handleDeleteListClick = (listId: string, listName: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setListToDelete({ id: listId, name: listName });
+    setDeleteListModalOpen(true);
+  };
+  
+  const handleConfirmDeleteList = async () => {
+    if (!listToDelete || !user) return;
     
-    if (window.confirm(`Are you sure you want to delete this list? All games in the list will be removed from it.`)) {
-      try {
-        // Déterminer la prochaine liste active AVANT la suppression
-        const remainingLists = customLists.filter(list => list.id !== listId);
-        
-        // Si la liste supprimée est active, changer la liste active AVANT de supprimer
-        if (activeListId === listId) {
-          if (remainingLists.length > 0) {
-            setActiveListId(remainingLists[0].id || null);
-            setListGames([]); // Vider les jeux pour éviter d'afficher l'ancienne liste
-          } else {
-            // Aucune autre liste, passer à la collection
-            setActiveTab('collection');
-            setActiveListId(null);
-            setListGames([]);
-          }
-        }
-        
-        // Maintenant supprimer la liste
-        const result = await deleteList(listId);
-        
-        if (result.success) {
-          setSuccessMessage(`List deleted successfully!`);
-          
-          // Recharger les listes
-          await loadCustomLists();
-          
-          // Charger les jeux de la nouvelle liste active si on est toujours dans l'onglet lists
-          if (activeTab === 'lists' && activeListId && activeListId !== listId) {
-            loadListGames(true);
-          }
-          
-          // Clear success message after a delay
-          setTimeout(() => {
-            setSuccessMessage(null);
-          }, 3000);
+    try {
+      // Déterminer la prochaine liste active AVANT la suppression
+      const remainingLists = customLists.filter(list => list.id !== listToDelete.id);
+      
+      // Si la liste supprimée est active, changer la liste active AVANT de supprimer
+      if (activeListId === listToDelete.id) {
+        if (remainingLists.length > 0) {
+          setActiveListId(remainingLists[0].id || null);
+          setListGames([]);
         } else {
-          setError(result.error || 'Failed to delete list');
+          setActiveTab('collection');
+          setActiveListId(null);
+          setListGames([]);
         }
-      } catch (error: any) {
-        setError(error.message || 'An error occurred');
       }
+      
+      // Maintenant supprimer la liste
+      const result = await deleteList(listToDelete.id);
+      
+      if (result.success) {
+        setSuccessMessage(`List "${listToDelete.name}" deleted successfully!`);
+        
+        // Recharger les listes
+        await loadCustomLists();
+        
+        // Charger les jeux de la nouvelle liste active si on est toujours dans l'onglet lists
+        if (activeTab === 'lists' && activeListId && activeListId !== listToDelete.id) {
+          loadListGames(true);
+        }
+        
+        setTimeout(() => {
+          setSuccessMessage(null);
+        }, 3000);
+      } else {
+        setError(result.error || 'Failed to delete list');
+      }
+    } catch (error: any) {
+      setError(error.message || 'An error occurred');
+    } finally {
+      setDeleteListModalOpen(false);
+      setListToDelete(null);
     }
   };
   
+  const handleCancelDeleteList = () => {
+    setDeleteListModalOpen(false);
+    setListToDelete(null);
+  };
+
   // Filtered games based on search query
   const filteredCollectionGames = searchQuery.trim() !== ''
     ? collectionGames.filter(game => 
@@ -963,18 +975,13 @@ export default function CollectionsPage() {
                           <span className={styles.listItemCount}>{list.gameCount}</span>
                         </div>
                       </div>
-                      {activeListId === list.id && (
-                        <button 
-                          className={styles.deleteListButton}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDeleteList(list.id || '');
-                          }}
-                          title="Delete list"
-                        >
-                          <FiTrash2 />
-                        </button>
-                      )}
+                      <button 
+                        className={styles.deleteListButton}
+                        onClick={(e) => handleDeleteListClick(list.id || '', list.name, e)}
+                        title="Delete list"
+                      >
+                        <FiTrash2 />
+                      </button>
                     </div>
                   ))}
                 </div>
@@ -1171,6 +1178,36 @@ export default function CollectionsPage() {
               onClose={() => setIsCreatingList(false)}
               onSuccess={handleListCreated}
             />
+          </div>
+        </div>
+      )}
+      
+      {/* Delete list confirmation modal */}
+      {deleteListModalOpen && (
+        <div className={styles.modalOverlay} onClick={handleCancelDeleteList}>
+          <div className={styles.deleteModalContent} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.deleteModalHeader}>
+              <FiTrash2 className={styles.deleteModalIcon} />
+              <h3>Delete List?</h3>
+            </div>
+            <p className={styles.deleteModalMessage}>
+              Are you sure you want to delete <strong>{listToDelete?.name}</strong>? All games in this list will be removed from it. This action cannot be undone.
+            </p>
+            <div className={styles.deleteModalActions}>
+              <button 
+                className={styles.cancelDeleteButton}
+                onClick={handleCancelDeleteList}
+              >
+                Cancel
+              </button>
+              <button 
+                className={styles.confirmDeleteButton}
+                onClick={handleConfirmDeleteList}
+              >
+                <FiTrash2 />
+                Delete List
+              </button>
+            </div>
           </div>
         </div>
       )}
