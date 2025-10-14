@@ -123,7 +123,33 @@
   display: flex;
   gap: 0.75rem;
   margin-bottom: 1.5rem;
-  flex-wrap: wrap;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin; /* Firefox - thin scrollbar */
+  scrollbar-color: rgba(124, 58, 237, 0.5) rgba(255, 255, 255, 0.05); /* Firefox */
+  padding-bottom: 0.75rem;
+}
+
+/* Custom scrollbar for Chrome, Safari and Opera */
+.statsBar::-webkit-scrollbar {
+  height: 6px;
+}
+
+.statsBar::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+}
+
+.statsBar::-webkit-scrollbar-thumb {
+  background: rgba(124, 58, 237, 0.5);
+  border-radius: 10px;
+  transition: background 0.3s ease;
+}
+
+.statsBar::-webkit-scrollbar-thumb:hover {
+  background: rgba(124, 58, 237, 0.7);
 }
 
 .statItem {
@@ -884,20 +910,54 @@
     font-size: 2rem;
   }
   
-  /* Remove viewControls responsive styles */
-  /* .viewControls {
-    justify-content: flex-end;
-    width: 100%;
-  } */
-  
+  /* Stats bar horizontal scroll on mobile */
   .statsBar {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: .75rem;
+    display: flex;
+    gap: 0.75rem;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(124, 58, 237, 0.6) rgba(255, 255, 255, 0.08);
+    padding-bottom: 0.75rem;
+    margin-bottom: 1.25rem;
+  }
+  
+  .statsBar::-webkit-scrollbar {
+    height: 5px;
+  }
+  
+  .statsBar::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+  }
+  
+  .statsBar::-webkit-scrollbar-thumb {
+    background: rgba(124, 58, 237, 0.6);
+    border-radius: 10px;
   }
   
   .statItem {
-    min-width: unset;
+    min-width: 110px;
+    flex-shrink: 0;
+    scroll-snap-align: start;
+    padding: 0.75rem 0.5rem;
+  }
+  
+  .statIcon {
+    font-size: 1.2rem;
+    margin-bottom: 0.4rem;
+  }
+  
+  .statName {
+    font-size: 0.8rem;
+    margin-bottom: 0.4rem;
+    text-align: center;
+  }
+  
+  .statCount {
+    font-size: 1.2rem;
   }
   
   /* Optimisation de la grille pour mobile - 2 colonnes avec images complètes */
@@ -1226,31 +1286,56 @@
     font-size: 1.75rem;
   }
   
-  /* Stats en une seule colonne sur très petit écran */
+  /* Keep horizontal scroll on very small screens */
   .statsBar {
-    grid-template-columns: 1fr;
+    display: flex;
+    gap: 0.5rem;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(124, 58, 237, 0.6) rgba(255, 255, 255, 0.08);
+    padding-bottom: 0.75rem;
+  }
+  
+  .statsBar::-webkit-scrollbar {
+    height: 4px;
+  }
+  
+  .statsBar::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+  }
+  
+  .statsBar::-webkit-scrollbar-thumb {
+    background: rgba(124, 58, 237, 0.6);
+    border-radius: 10px;
   }
   
   .statItem {
-    flex-direction: row;
-    justify-content: flex-start;
-    gap: 1rem;
-    padding: .75rem 1rem;
+    min-width: 95px;
+    flex-shrink: 0;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 0;
+    padding: 0.65rem 0.4rem;
+    scroll-snap-align: start;
   }
   
   .statIcon {
-    margin-bottom: 0;
-    font-size: 1.25rem;
+    margin-bottom: 0.35rem;
+    font-size: 1.1rem;
   }
   
   .statName {
-    text-align: left;
-    flex: 1;
-    margin-bottom: 0;
+    text-align: center;
+    margin-bottom: 0.35rem;
+    font-size: 0.75rem;
+    line-height: 1.2;
   }
   
   .statCount {
-    font-size: 1.25rem;
+    font-size: 1.1rem;
   }
   
   /* Grille 2 colonnes pour les jeux sur très petit écran */
