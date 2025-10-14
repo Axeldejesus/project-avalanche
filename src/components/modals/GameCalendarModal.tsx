@@ -311,6 +311,7 @@ const GameCalendarModal: React.FC<GameCalendarModalProps> = ({ isOpen, onClose }
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
   const [showScrollTop, setShowScrollTop] = useState(false);
+  const [lastFetchKey, setLastFetchKey] = useState<string>('');
   
   // Minimum swipe distance (in px)
   const minSwipeDistance = 50;
@@ -336,14 +337,26 @@ const GameCalendarModal: React.FC<GameCalendarModalProps> = ({ isOpen, onClose }
       setSearchResults({});
       setActiveQuarter(currentQuarter);
       setSelectedMonth(null);
+      setCalendarGames({}); // Clear previous data
     }
   }, [isOpen]);
   
-  // Fetch games when dependencies change
+  // Fetch games when dependencies change - avec protection contre les rechargements multiples
   useEffect(() => {
-    if (isOpen) {
-      fetchCalendarGames();
+    if (!isOpen) return;
+    
+    // Créer une clé unique basée sur l'année et les plateformes
+    const fetchKey = `${year}-${selectedPlatforms.join(',')}`;
+    
+    // Ne fetch que si la clé a changé
+    if (fetchKey === lastFetchKey) {
+      console.log('Fetch skipped - same key:', fetchKey);
+      return;
     }
+    
+    console.log('Fetching calendar games for:', fetchKey);
+    setLastFetchKey(fetchKey);
+    fetchCalendarGames();
   }, [isOpen, selectedPlatforms, year]);
   
   // Debounce search
@@ -390,13 +403,17 @@ const GameCalendarModal: React.FC<GameCalendarModalProps> = ({ isOpen, onClose }
         ? `platforms=${selectedPlatforms.join(',')}` 
         : '';
       
-      const response = await fetch(`/api/calendar-games?year=${year}${platformParams ? `&${platformParams}` : ''}`);
+      const fetchUrl = `/api/calendar-games?year=${year}${platformParams ? `&${platformParams}` : ''}`;
+      console.log('Fetching from:', fetchUrl);
+      
+      const response = await fetch(fetchUrl);
       
       if (!response.ok) {
         throw new Error('Failed to fetch calendar data');
       }
       
       const data = await response.json();
+      console.log('Received calendar data for year:', year, 'Games count:', Object.values(data).flat().length);
       setCalendarGames(data);
     } catch (err) {
       console.error('Error loading calendar data:', err);
@@ -410,7 +427,9 @@ const GameCalendarModal: React.FC<GameCalendarModalProps> = ({ isOpen, onClose }
     if (selectedPlatforms.includes(platformId)) {
       return;
     }
+    console.log('Platform changed to:', platformId);
     setSelectedPlatforms([platformId]);
+    setCalendarGames({}); // Clear games immediately
   };
   
   const handleGameClick = (gameId: number) => {
@@ -432,17 +451,40 @@ const GameCalendarModal: React.FC<GameCalendarModalProps> = ({ isOpen, onClose }
   };
   
   const changeYear = (increment: number) => {
-    setYear(prevYear => prevYear + increment);
+    const newYear = year + increment;
+    console.log('Changing year from', year, 'to', newYear);
+    
+    // Clear current games BEFORE changing year
+    setCalendarGames({});
+    setYear(newYear);
+    
+    // Reset to Q1 when changing year
+    setActiveQuarter(1);
+    setSelectedMonth(null);
+    
+    // Clear search when changing year
+    setSearchTerm('');
+    setDebouncedSearchTerm('');
+    setSearchResults({});
+    
+    // Scroll to top when changing year
+    if (contentRef.current) {
+      contentRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   };
   
   const scrollToMonth = (month: string) => {
     setSelectedMonth(month);
-    if (monthRefs.current[month]) {
-      monthRefs.current[month]?.scrollIntoView({ 
-        behavior: 'smooth',
-        block: 'start'
-      });
-    }
+    
+    // Small delay to ensure the DOM is updated
+    setTimeout(() => {
+      if (monthRefs.current[month]) {
+        monthRefs.current[month]?.scrollIntoView({ 
+          behavior: 'smooth',
+          block: 'start'
+        });
+      }
+    }, 100);
   };
   
   const onTouchStart = (e: React.TouchEvent) => {
@@ -580,7 +622,7 @@ const GameCalendarModal: React.FC<GameCalendarModalProps> = ({ isOpen, onClose }
               
               return (
                 <MonthSection 
-                  key={month}
+                  key={`${year}-${month}`}
                   month={month}
                   year={year}
                   games={filteredGames[month]}
