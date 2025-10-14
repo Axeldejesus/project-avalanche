@@ -34,6 +34,30 @@ const CreateListForm = ({ onClose, onSuccess }: { onClose: () => void, onSuccess
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Palette de couleurs étendue (sans doublons)
+  const colorPalette = [
+    '#7c3aed', // Purple
+    '#6366f1', // Indigo
+    '#3b82f6', // Blue
+    '#06b6d4', // Cyan
+    '#10b981', // Green
+    '#84cc16', // Lime
+    '#eab308', // Yellow
+    '#f59e0b', // Amber
+    '#f97316', // Orange
+    '#ef4444', // Red
+    '#ec4899', // Pink
+    '#8b5cf6', // Violet
+    '#d946ef', // Fuchsia
+    '#f43f5e', // Rose
+    '#14b8a6', // Teal
+    '#0ea5e9', // Sky
+    '#a855f7', // Purple Light
+    '#fb923c', // Orange Light
+    '#e11d48', // Crimson
+    '#059669'  // Emerald
+  ];
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -112,13 +136,14 @@ const CreateListForm = ({ onClose, onSuccess }: { onClose: () => void, onSuccess
         <div className={styles.formGroup}>
           <label>Color</label>
           <div className={styles.colorSelector}>
-            {['#7c3aed', '#ef4444', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#6366f1'].map((color) => (
+            {colorPalette.map((color) => (
               <button
                 key={color}
                 type="button"
                 className={`${styles.colorOption} ${selectedColor === color ? styles.selectedColor : ''}`}
                 style={{ backgroundColor: color }}
                 onClick={() => setSelectedColor(color)}
+                title={color}
               />
             ))}
           </div>
@@ -636,25 +661,34 @@ export default function CollectionsPage() {
     
     if (window.confirm(`Are you sure you want to delete this list? All games in the list will be removed from it.`)) {
       try {
+        // Déterminer la prochaine liste active AVANT la suppression
+        const remainingLists = customLists.filter(list => list.id !== listId);
+        
+        // Si la liste supprimée est active, changer la liste active AVANT de supprimer
+        if (activeListId === listId) {
+          if (remainingLists.length > 0) {
+            setActiveListId(remainingLists[0].id || null);
+            setListGames([]); // Vider les jeux pour éviter d'afficher l'ancienne liste
+          } else {
+            // Aucune autre liste, passer à la collection
+            setActiveTab('collection');
+            setActiveListId(null);
+            setListGames([]);
+          }
+        }
+        
+        // Maintenant supprimer la liste
         const result = await deleteList(listId);
         
         if (result.success) {
           setSuccessMessage(`List deleted successfully!`);
           
-          // Refresh lists data
-          loadCustomLists();
+          // Recharger les listes
+          await loadCustomLists();
           
-          // If the deleted list was active, switch to another list or collection
-          if (activeListId === listId) {
-            const remainingLists = customLists.filter(list => list.id !== listId);
-            if (remainingLists.length > 0) {
-              setActiveListId(remainingLists[0].id || null);
-              loadListGames(true);
-            } else {
-              // No more lists, switch to collection
-              setActiveTab('collection');
-              setActiveListId(null);
-            }
+          // Charger les jeux de la nouvelle liste active si on est toujours dans l'onglet lists
+          if (activeTab === 'lists' && activeListId && activeListId !== listId) {
+            loadListGames(true);
           }
           
           // Clear success message after a delay
