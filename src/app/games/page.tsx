@@ -547,15 +547,10 @@ export default function GamesPage() {
                     </div>
                     <div className={styles.gameInfo}>
                       <h3 className={styles.gameTitle}>{game.name}</h3>
-                      <div className={styles.gameGenres}>{game.genres}</div>
-                      <div className={styles.gameMeta}>
-                        {game.rating > 0 && (
-                          <div className={styles.gameRating}>
-                            <Star size={14} fill="#6c5ce7" color="#6c5ce7" />
-                            {game.rating.toFixed(1)}
-                          </div>
-                        )}
-                      </div>
+                      {game.genres && (
+                        <p className={styles.gameGenres}>{game.genres}</p>
+                      )}
+                      {/* Remove the gameMeta div and rating display */}
                     </div>
                   </div>
                 ))}

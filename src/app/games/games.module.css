@@ -311,6 +311,8 @@
   overflow: hidden;
 }
 
+/* Remove or comment out .gameRating styles */
+/*
 .gameRating {
   padding: 4px 8px;
   background: rgba(108, 92, 231, 0.2);
@@ -321,6 +323,7 @@
   align-items: center;
   gap: 4px;
 }
+*/
 
 .gameListItem {
   display: flex;
