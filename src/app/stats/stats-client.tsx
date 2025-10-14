@@ -271,25 +271,84 @@ const StatsClient: React.FC<StatsClientProps> = ({ userId }) => {
   };
   
   // Options communes pour les graphiques
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+  const isSmallMobile = typeof window !== 'undefined' && window.innerWidth < 480;
+
   const chartOptions = {
     responsive: true,
     maintainAspectRatio: false,
+    layout: {
+      padding: {
+        top: isSmallMobile ? 5 : 10,
+        bottom: isSmallMobile ? 5 : 10,
+        left: isSmallMobile ? 5 : 10,
+        right: isSmallMobile ? 5 : 10
+      }
+    },
     plugins: {
       legend: {
         position: 'bottom' as const,
+        align: 'center' as const,
         labels: {
           color: 'rgba(255, 255, 255, 0.8)',
           font: {
-            size: 12
-          }
+            size: isSmallMobile ? 9 : (isMobile ? 10 : 12)
+          },
+          padding: isSmallMobile ? 6 : (isMobile ? 8 : 10),
+          boxWidth: isSmallMobile ? 10 : (isMobile ? 12 : 15),
+          boxHeight: isSmallMobile ? 10 : (isMobile ? 12 : 15),
+          usePointStyle: true
         }
       },
       tooltip: {
-        backgroundColor: 'rgba(30, 30, 45, 0.9)',
+        backgroundColor: 'rgba(30, 30, 45, 0.95)',
         titleColor: 'white',
         bodyColor: 'white',
         borderColor: 'rgba(255, 255, 255, 0.1)',
-        borderWidth: 1
+        borderWidth: 1,
+        padding: isSmallMobile ? 6 : (isMobile ? 8 : 12),
+        titleFont: {
+          size: isSmallMobile ? 11 : (isMobile ? 12 : 14)
+        },
+        bodyFont: {
+          size: isSmallMobile ? 10 : (isMobile ? 11 : 13)
+        }
+      }
+    }
+  };
+
+  // Options spécifiques pour les graphiques en camembert (pie/doughnut)
+  const pieChartOptions = {
+    ...chartOptions,
+    plugins: {
+      ...chartOptions.plugins,
+      legend: {
+        ...chartOptions.plugins.legend,
+        position: 'bottom' as const,
+        align: 'center' as const,
+        labels: {
+          ...chartOptions.plugins.legend.labels,
+          generateLabels: (chart: any) => {
+            const datasets = chart.data.datasets;
+            if (datasets.length === 0) return [];
+            
+            const data = datasets[0].data;
+            const labels = chart.data.labels;
+            const total = data.reduce((acc: number, val: number) => acc + val, 0);
+            
+            return labels.map((label: string, i: number) => {
+              const value = data[i];
+              const percentage = total > 0 ? ((value / total) * 100).toFixed(0) : 0;
+              
+              return {
+                text: isSmallMobile ? `${label} (${percentage}%)` : `${label}: ${value} (${percentage}%)`,
+                fillStyle: datasets[0].backgroundColor[i],
+                hidden: false,
+                index: i
+              };
+            });
+          }
+        }
       }
     }
   };
