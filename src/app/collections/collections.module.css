@@ -1,13 +1,22 @@
 .pageContainer {
-  min-height: 100vh;
+  min-height: 100%;
   background: linear-gradient(to bottom, #12141d, #1a1b2e);
   color: #e5e7eb;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  overflow-x: hidden;
+  overflow-y: visible;
 }
 
 .main {
   max-width: 1300px;
   margin: 0 auto;
   padding: 2rem 1.5rem;
+  width: 100%;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 
 .pageHeader {
@@ -629,10 +638,9 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 2rem;
+  padding: 3rem 2rem;
   gap: 1rem;
   color: #9ca3af;
-  min-height: 300px;
   animation: fadeIn 0.5s ease;
 }
 
@@ -725,11 +733,11 @@
 /* Not logged in state */
 .notLoggedIn {
   text-align: center;
-  padding: 4rem 2rem;
+  padding: 3rem 2rem;
   background: rgba(30, 30, 45, 0.6);
   border-radius: 16px;
   max-width: 600px;
-  margin: 4rem auto;
+  margin: 2rem auto;
   border: 1px solid rgba(255, 255, 255, 0.05);
   animation: fadeIn 0.5s ease;
 }
@@ -742,6 +750,8 @@
 
 .notLoggedIn p {
   color: #9ca3af;
+  max-width: 400px;
+  margin: 0 auto;
 }
 
 /* Modal for creating lists */
@@ -929,38 +939,50 @@
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
-  .listsContainer {
-    grid-template-columns: 1fr;
+  .main {
+    padding: 1.5rem 1rem;
   }
   
-  .listsSidebar {
-    margin-bottom: 1rem;
+  .notLoggedIn {
+    margin: 1.5rem 1rem;
+    padding: 2.5rem 1.5rem;
   }
   
-  .userLists {
-    max-height: 200px;
+  .notLoggedIn h2 {
+    font-size: 1.5rem;
+  }
+  
+  .loadingContainer {
+    padding: 2.5rem 1.5rem;
   }
 }
 
 @media (max-width: 480px) {
-  .statsBar {
-    flex-direction: column;
-    gap: 0.5rem;
+  .main {
+    padding: 1rem 0.75rem;
   }
   
-  .statItem {
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0.75rem;
+  .notLoggedIn {
+    margin: 1rem;
+    padding: 2rem 1rem;
+    border-radius: 12px;
   }
   
-  .statIcon {
-    margin-bottom: 0;
-    margin-right: 0.5rem;
+  .notLoggedIn h2 {
+    font-size: 1.3rem;
   }
   
-  .statName, .statCount {
-    margin: 0;
+  .notLoggedIn p {
+    font-size: 0.9rem;
+  }
+  
+  .loadingContainer {
+    padding: 2rem 1rem;
+  }
+}
+
+@supports (min-height: 100dvh) {
+  .pageContainer {
+    min-height: 100dvh;
   }
 }
