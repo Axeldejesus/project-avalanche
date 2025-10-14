@@ -30,26 +30,41 @@
 
 .logo {
   font-family: var(--font-oxanium), sans-serif;
-  font-size: 1.5rem;
-  font-weight: 700;
-  letter-spacing: 1px;
-  background: linear-gradient(90deg, #7c3aed, #6c5ce7);
+  font-size: 1.8rem;
+  font-weight: 800;
+  letter-spacing: 2px;
+  background: linear-gradient(135deg, #7c3aed 0%, #a78bfa 50%, #6c5ce7 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   text-decoration: none;
   position: relative;
   margin-right: 2rem;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  padding: 0.2rem 0;
 }
 
 .logo::after {
   content: '';
   position: absolute;
-  bottom: -3px;
+  bottom: 0;
   left: 0;
   width: 100%;
-  height: 2px;
-  background: linear-gradient(90deg, #7c3aed, transparent);
+  height: 3px;
+  background: linear-gradient(90deg, #7c3aed 0%, #a78bfa 50%, transparent 100%);
   border-radius: 2px;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.3s ease;
+}
+
+.logo:hover::after {
+  transform: scaleX(1);
+}
+
+.logo:hover {
+  transform: translateY(-1px);
 }
 
 .nav {
@@ -1196,8 +1211,9 @@
   }
   
   .logo {
-    font-size: 1.2rem;
+    font-size: 1.4rem;
     margin-right: auto;
+    letter-spacing: 1.5px;
   }
   
   /* Hide desktop navigation */
@@ -1306,17 +1322,7 @@
   }
   
   .logo {
-    font-size: 1rem;
-  }
-  
-  .mobileNavProfileButton {
-    width: 55px;
-    height: 55px;
-    font-size: 1.3rem;
-  }
-  
-  .mobileNavUsername {
-    font-size: 0.9rem;
-    max-width: 160px;
+    font-size: 1.2rem;
+    letter-spacing: 1px;
   }
 }
