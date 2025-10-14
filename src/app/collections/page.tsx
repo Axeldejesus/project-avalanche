@@ -339,30 +339,7 @@ export default function CollectionsPage() {
       setAuthChecked(true);
       setAuthLoading(false);
       
-      // Utiliser le CacheManager
-      const cachedData = CacheManager.get<{
-        stats: CollectionStats;
-        lists: Array<List & { gameCount: number }>;
-        games: CollectionItem[];
-        hasMoreCollection: boolean;
-        activeStatus?: string | null;
-      }>(`collection_${user.uid}`);
-      
-      if (cachedData) {
-        setStats(cachedData.stats);
-        setCustomLists(cachedData.lists);
-        setCollectionGames(cachedData.games);
-        setHasMoreCollection(cachedData.hasMoreCollection || false);
-        // Restaurer aussi le statut actif si présent
-        if (cachedData.activeStatus !== undefined) {
-          setActiveStatus(cachedData.activeStatus);
-        }
-        setLoading(false);
-        console.log('Using cached collection data', { hasMore: cachedData.hasMoreCollection });
-        return; // Important : ne pas charger les données si on a le cache
-      }
-      
-      // Seulement charger si pas de cache
+      // Toujours charger les données fraîches au montage du composant
       loadAllData();
     }
     
@@ -555,7 +532,7 @@ export default function CollectionsPage() {
         setHasMoreCollection(gamesResult.hasMore);
       }
       
-      // Utiliser CacheManager avec localStorage pour persistance
+      // Mettre en cache les données
       if (user) {
         CacheManager.set(
           `collection_${user.uid}`,
@@ -566,9 +543,8 @@ export default function CollectionsPage() {
             hasMoreCollection: gamesResult?.hasMore || false,
             activeStatus: activeStatus
           },
-          true // Utiliser aussi localStorage
+          false // Ne pas utiliser localStorage pour éviter les problèmes de synchronisation
         );
-        console.log('Collection data cached with hasMore:', gamesResult?.hasMore);
       }
       
     } catch (error) {
@@ -707,9 +683,16 @@ export default function CollectionsPage() {
     : listGames;
   
   // Handle successful list creation
-  const handleListCreated = () => {
-    invalidateCache();
-    loadCustomLists();
+  const handleListCreated = async () => {
+    // Invalider complètement le cache
+    if (user) {
+      CacheManager.remove(`collection_${user.uid}`);
+    }
+    
+    // Forcer le rechargement des listes depuis Firestore
+    await loadCustomLists();
+    
+    // Afficher le message de succès
     setSuccessMessage('New list created successfully!');
     setTimeout(() => {
       setSuccessMessage(null);
