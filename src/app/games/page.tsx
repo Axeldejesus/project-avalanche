@@ -94,6 +94,7 @@ export default function GamesPage() {
   const [filtersInitialized, setFiltersInitialized] = useState(false);
   const [showBackToTop, setShowBackToTop] = useState(false);
   const [selectedChip, setSelectedChip] = useState<number | null>(0);
+  const [isMobile, setIsMobile] = useState(false);
   const observer = useRef<IntersectionObserver | null>(null);
   const loadingRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
@@ -101,7 +102,7 @@ export default function GamesPage() {
   // Scroll handler for back to top button
   useEffect(() => {
     const handleScroll = () => {
-      if (window.scrollY > 500) {
+      if (window.scrollY > 300) {
         setShowBackToTop(true);
       } else {
         setShowBackToTop(false);
@@ -226,6 +227,20 @@ export default function GamesPage() {
   useEffect(() => {
     localStorage.setItem('gamesViewMode', viewMode);
   }, [viewMode]);
+
+  // Detect mobile device
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    
+    return () => {
+      window.removeEventListener('resize', checkMobile);
+    };
+  }, []);
 
   // Fetch genres
   const fetchGenres = async () => {
@@ -382,10 +397,15 @@ export default function GamesPage() {
     });
   };
 
-  // Handle filter chip selection
+  // Handle filter chip selection with haptic feedback on mobile
   const handleChipSelect = (index: number) => {
     const chip = FILTER_CHIPS[index];
     setSelectedChip(index);
+    
+    // Haptic feedback for mobile
+    if (isMobile && 'vibrate' in navigator) {
+      navigator.vibrate(10);
+    }
     
     const newFilters = {
       ...filters,
@@ -441,34 +461,36 @@ export default function GamesPage() {
               <div className={styles.searchContainer}>
                 <input
                   type="text"
-                  placeholder="Search games by name..."
+                  placeholder={isMobile ? "Search games..." : "Search games by name..."}
                   defaultValue={filters.searchQuery}
                   onChange={handleSearchChange}
                   className={styles.searchInput}
                 />
-                <button className={styles.searchButton}>
+                <button className={styles.searchButton} aria-label="Search">
                   <Search size={18} />
                 </button>
               </div>
               
-              <div className={styles.viewToggle}>
-                <button 
-                  className={`${styles.viewToggleButton} ${viewMode === 'grid' ? styles.active : ''}`}
-                  onClick={() => toggleViewMode('grid')}
-                  aria-label="Grid view"
-                >
-                  <Grid size={16} />
-                  <span>Grid</span>
-                </button>
-                <button 
-                  className={`${styles.viewToggleButton} ${viewMode === 'list' ? styles.active : ''}`}
-                  onClick={() => toggleViewMode('list')}
-                  aria-label="List view"
-                >
-                  <List size={16} />
-                  <span>List</span>
-                </button>
-              </div>
+              {!isMobile && (
+                <div className={styles.viewToggle}>
+                  <button 
+                    className={`${styles.viewToggleButton} ${viewMode === 'grid' ? styles.active : ''}`}
+                    onClick={() => toggleViewMode('grid')}
+                    aria-label="Grid view"
+                  >
+                    <Grid size={16} />
+                    <span>Grid</span>
+                  </button>
+                  <button 
+                    className={`${styles.viewToggleButton} ${viewMode === 'list' ? styles.active : ''}`}
+                    onClick={() => toggleViewMode('list')}
+                    aria-label="List view"
+                  >
+                    <List size={16} />
+                    <span>List</span>
+                  </button>
+                </div>
+              )}
             </div>
             
             <div className={styles.filterChips}>
@@ -507,7 +529,7 @@ export default function GamesPage() {
           </div>
         ) : (
           <>
-            {viewMode === 'grid' ? (
+            {(viewMode === 'grid' || isMobile) ? (
               <div className={styles.gameGrid}>
                 {games.map(game => (
                   <div 
@@ -699,13 +721,13 @@ export default function GamesPage() {
           </div>
         </div>
         
-        {/* Back to top button */}
+        {/* Back to top button - MUST BE INSIDE main but OUTSIDE other elements */}
         <button 
           className={`${styles.backToTop} ${showBackToTop ? styles.visible : ''}`}
           onClick={scrollToTop}
           aria-label="Back to top"
         >
-          <ChevronUp size={24} />
+          <ChevronUp size={20} />
         </button>
       </main>
     </div>
