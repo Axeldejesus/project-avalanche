@@ -272,6 +272,47 @@ const UserReviews: React.FC<UserReviewsProps> = ({ userId }) => {
         </div>
       ) : (
         <>
+          {/* Pagination moved to top */}
+          {totalPages > 1 && (
+            (currentPage === totalPages && reviews.length > 0) ||
+            (currentPage < totalPages && reviews.length === pageSize)
+          ) && (
+            <div className={styles.userReviewsPagination}>
+              <button 
+                className={`${styles.paginationButton} ${styles.navButton}`}
+                onClick={() => currentPage > 1 && changePage(currentPage - 1)}
+                disabled={currentPage === 1 || loading}
+              >
+                Prev
+              </button>
+              
+              <div className={styles.paginationNumbers}>
+                {generatePaginationNumbers().map((page, index) => (
+                  page === 'ellipsis1' || page === 'ellipsis2' ? (
+                    <span key={`ellipsis-${index}`} className={styles.paginationEllipsis}>...</span>
+                  ) : (
+                    <button
+                      key={page}
+                      className={`${styles.paginationNumber} ${currentPage === page ? styles.activePage : ''}`}
+                      onClick={() => changePage(Number(page))}
+                      disabled={loading}
+                    >
+                      {page}
+                    </button>
+                  )
+                ))}
+              </div>
+              
+              <button 
+                className={`${styles.paginationButton} ${styles.navButton}`}
+                onClick={() => currentPage < totalPages && changePage(currentPage + 1)}
+                disabled={currentPage >= totalPages || loading}
+              >
+                Next
+              </button>
+            </div>
+          )}
+          
           <div className={`${styles.userReviewsList} ${loading ? styles.fadedContent : ''}`}>
             {reviews.length > 0 ? (
               reviews.map((review, idx) => (
@@ -319,49 +360,6 @@ const UserReviews: React.FC<UserReviewsProps> = ({ userId }) => {
               </div>
             )}
           </div>
-          
-          {/* N'afficher la pagination que si:
-              1. totalPages > 1 (il y a plus d'une page)
-              2. ET il y a réellement des données au-delà de la première page */}
-          {totalPages > 1 && (
-            (currentPage === totalPages && reviews.length > 0) || // We're on the last page and it has content
-            (currentPage < totalPages && reviews.length === pageSize) // We're not on the last page and current page is full
-          ) && (
-            <div className={styles.userReviewsPagination}>
-              <button 
-                className={`${styles.paginationButton} ${styles.navButton}`}
-                onClick={() => currentPage > 1 && changePage(currentPage - 1)}
-                disabled={currentPage === 1 || loading}
-              >
-                Prev
-              </button>
-              
-              <div className={styles.paginationNumbers}>
-                {generatePaginationNumbers().map((page, index) => (
-                  page === 'ellipsis1' || page === 'ellipsis2' ? (
-                    <span key={`ellipsis-${index}`} className={styles.paginationEllipsis}>...</span>
-                  ) : (
-                    <button
-                      key={page}
-                      className={`${styles.paginationNumber} ${currentPage === page ? styles.activePage : ''}`}
-                      onClick={() => changePage(Number(page))}
-                      disabled={loading}
-                    >
-                      {page}
-                    </button>
-                  )
-                ))}
-              </div>
-              
-              <button 
-                className={`${styles.paginationButton} ${styles.navButton}`}
-                onClick={() => currentPage < totalPages && changePage(currentPage + 1)}
-                disabled={currentPage >= totalPages || loading}
-              >
-                Next
-              </button>
-            </div>
-          )}
         </>
       )}
     </div>

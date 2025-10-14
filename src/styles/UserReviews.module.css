@@ -264,10 +264,9 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-top: 2rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-  gap: 15px;
+  gap: 0.5rem;
+  margin: 1.5rem 0; /* Ajouter de l'espace en haut et en bas */
+  padding: 1rem 0; /* Padding supplémentaire */
 }
 
 .paginationButton {
