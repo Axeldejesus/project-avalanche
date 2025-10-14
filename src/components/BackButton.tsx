@@ -2,7 +2,6 @@
 
 import { useRouter } from 'next/navigation';
 import { FiArrowLeft } from 'react-icons/fi';
-import styles from '../styles/GameDetail.module.css';
 import { useEffect, useState } from 'react';
 
 const BackButton: React.FC = () => {
@@ -20,14 +19,10 @@ const BackButton: React.FC = () => {
     if (cameFromGames === 'true') {
       setDestination('/games');
     } else if (cameFromHome === 'true' || cameFromCalendar === 'true') {
-      // Si l'utilisateur vient de la page d'accueil ou de la modal du calendrier,
-      // rediriger vers la page d'accueil
       setDestination('/');
     } else if (cameFromProfile === 'true') {
-      // Si l'utilisateur vient de la page de profil, rediriger vers la page de profil
       setDestination('/profile');
     } else if (cameFromCollection === 'true') {
-      // Si l'utilisateur vient de la page de collection, rediriger vers la page de collection
       setDestination('/collections');
     } else {
       setDestination('/');
@@ -35,15 +30,10 @@ const BackButton: React.FC = () => {
   }, []);
   
   const handleBack = () => {
-    // Ne pas supprimer les flags 'cameFromCalendar' pour permettre
-    // à la page d'accueil de détecter que l'utilisateur revient de la modal du calendrier
-    
-    // Nettoyer le flag 'cameFromProfile' après utilisation
     if (destination === '/profile') {
       sessionStorage.removeItem('cameFromProfile');
     }
     
-    // Nettoyer le flag 'cameFromCollection' après utilisation
     if (destination === '/collections') {
       sessionStorage.removeItem('cameFromCollection');
     }
@@ -51,13 +41,46 @@ const BackButton: React.FC = () => {
     router.push(destination);
   };
   
+  // Utiliser un style inline pour correspondre aux autres boutons mobiles
+  const buttonStyle: React.CSSProperties = {
+    background: 'rgba(30, 30, 45, 0.7)',
+    backdropFilter: 'blur(10px)',
+    border: '1px solid rgba(255, 255, 255, 0.1)',
+    color: 'white',
+    padding: '0 1rem',
+    height: '40px',
+    borderRadius: '10px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    cursor: 'pointer',
+    transition: 'all 0.3s ease',
+    fontSize: '0.95rem',
+    fontWeight: '500',
+    gap: '0.5rem'
+  };
+  
   return (
     <button 
-      className={styles.backButton} 
+      style={buttonStyle}
       onClick={handleBack}
       aria-label="Back to previous page"
+      onMouseEnter={(e) => {
+        e.currentTarget.style.background = 'rgba(40, 40, 55, 0.8)';
+        e.currentTarget.style.borderColor = 'rgba(108, 92, 231, 0.4)';
+        e.currentTarget.style.transform = 'translateY(-2px)';
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.background = 'rgba(30, 30, 45, 0.7)';
+        e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+        e.currentTarget.style.transform = 'translateY(0)';
+      }}
+      onMouseDown={(e) => {
+        e.currentTarget.style.transform = 'translateY(0)';
+      }}
     >
-      <FiArrowLeft /> Back
+      <FiArrowLeft size={20} />
+      <span>Back</span>
     </button>
   );
 };

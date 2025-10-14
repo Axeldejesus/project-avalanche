@@ -1,9 +1,11 @@
 'use client';
 
-import React, { useRef } from 'react';
-import { useState, useEffect } from 'react';
+import React, { useRef, useState } from 'react';
+import { useEffect } from 'react';
 import Link from 'next/link';
-import { FiCalendar, FiUsers, FiArrowLeft, FiMessageSquare, FiBookmark } from 'react-icons/fi';
+import { FiCalendar, FiUsers, FiArrowLeft, FiMessageSquare, FiBookmark, FiSearch, FiMenu, FiX, FiHome, FiBarChart2 } from 'react-icons/fi';
+import { RiGamepadFill } from 'react-icons/ri';
+import { BsCollectionPlay } from 'react-icons/bs';
 import { motion } from 'framer-motion';
 import styles from './gameDetail.module.css';
 import { Button } from '@/components/ui/button';
@@ -12,6 +14,7 @@ import ScreenshotGallery from '@/components/ScreenshotGallery';
 import BackButton from '@/components/BackButton';
 import SearchBar from '@/components/SearchBar';
 import { useAuth } from '@/context/AuthContext';
+import { usePathname, useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import AddToCollectionModal from '@/components/modals/AddToCollectionModal';
 import { getUserGameInCollection } from '@/services/collectionService';
@@ -99,7 +102,9 @@ export default function GameDetailPage({ params }: { params: Promise<{ id: strin
   const [refreshReviews, setRefreshReviews] = useState<number>(0);
   const [isCollectionModalOpen, setIsCollectionModalOpen] = useState(false);
   const [collectionStatus, setCollectionStatus] = useState<string | null>(null);
-  const { user } = useAuth();
+  const { user, userProfile } = useAuth();
+  const pathname = usePathname();
+  const routerNav = useRouter();
   
   // Add ref for scrolling to reviews section
   const reviewsRef = useRef<HTMLDivElement>(null);
@@ -108,6 +113,9 @@ export default function GameDetailPage({ params }: { params: Promise<{ id: strin
   const scrollToReviews = () => {
     reviewsRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
+
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     const fetchGameDetail = async () => {
@@ -169,6 +177,84 @@ export default function GameDetailPage({ params }: { params: Promise<{ id: strin
         setCollectionStatus(null);
       }
     }
+  };
+  
+  // Close search when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (isSearchOpen && !target.closest(`.${styles.mobileSearchContainer}`)) {
+        setIsSearchOpen(false);
+      }
+      if (isMobileMenuOpen && !target.closest(`.${styles.mobileNav}`) && !target.closest(`.${styles.mobileMenuToggle}`)) {
+        setIsMobileMenuOpen(false);
+      }
+    };
+    
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isSearchOpen, isMobileMenuOpen]);
+  
+  // Toggle search on mobile
+  const toggleSearch = () => {
+    setIsSearchOpen(!isSearchOpen);
+  };
+  
+  // Toggle mobile menu
+  const toggleMobileMenu = () => {
+    setIsMobileMenuOpen(!isMobileMenuOpen);
+  };
+  
+  // Close menus
+  const closeMobileMenu = () => {
+    setIsMobileMenuOpen(false);
+  };
+  
+  // Handle navigation
+  const handleNavigation = (path: string, event: React.MouseEvent) => {
+    event.preventDefault();
+    if (pathname === path) {
+      closeMobileMenu();
+      return;
+    }
+    closeMobileMenu();
+    routerNav.push(path);
+  };
+  
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map(word => word[0])
+      .join('')
+      .toUpperCase()
+      .substring(0, 2);
+  };
+  
+  const handleProfileClick = () => {
+    if (pathname === '/profile') {
+      closeMobileMenu();
+      return;
+    }
+    closeMobileMenu();
+    routerNav.push('/profile');
+  };
+  
+  const handleLoginClick = () => {
+    closeMobileMenu();
+    const event = new CustomEvent('openLoginModal');
+    window.dispatchEvent(event);
+  };
+  
+  const handleRegisterClick = () => {
+    closeMobileMenu();
+    const event = new CustomEvent('openRegisterModal');
+    window.dispatchEvent(event);
+  };
+  
+  const isActive = (path: string) => {
+    if (path === '/' && pathname === '/') return true;
+    if (path !== '/' && pathname?.startsWith(path)) return true;
+    return false;
   };
 
   if (isLoading) {
@@ -240,11 +326,139 @@ export default function GameDetailPage({ params }: { params: Promise<{ id: strin
       >
         <div className={styles.heroOverlay}>
           <div className={styles.topBar}>
-            <BackButton />
-            <div className={styles.searchBarContainer}>
+            <div className={styles.backButtonWrapper}>
+              <BackButton />
+            </div>
+            
+            {/* Desktop search bar */}
+            <div className={styles.desktopSearchContainer}>
               <SearchBar />
             </div>
+            
+            {/* Mobile controls */}
+            <div className={styles.mobileControls}>
+              <button 
+                className={styles.mobileSearchToggle}
+                onClick={toggleSearch}
+                aria-label="Toggle search"
+              >
+                <FiSearch size={20} />
+              </button>
+              <button 
+                className={styles.mobileMenuToggle}
+                onClick={toggleMobileMenu}
+                aria-label="Toggle menu"
+              >
+                {isMobileMenuOpen ? <FiX size={24} /> : <FiMenu size={24} />}
+              </button>
+            </div>
           </div>
+          
+          {/* Mobile search dropdown */}
+          {isSearchOpen && (
+            <div className={styles.mobileSearchContainer}>
+              <SearchBar />
+            </div>
+          )}
+          
+          {/* Mobile navigation menu - styled like Home.module.css */}
+          {isMobileMenuOpen && (
+            <>
+              <div 
+                className={styles.mobileMenuOverlay}
+                onClick={closeMobileMenu}
+              />
+              <div className={styles.mobileNav}>
+                <div className={styles.mobileNavHeader}>
+                  <div className={styles.mobileNavHeaderTop}>
+                    <button 
+                      className={styles.mobileCloseButton}
+                      onClick={closeMobileMenu}
+                      aria-label="Close menu"
+                    >
+                      <FiX />
+                    </button>
+                  </div>
+                  
+                  {/* Profile section in mobile menu */}
+                  <div className={styles.mobileNavProfile}>
+                    {user && userProfile ? (
+                      <>
+                        <button 
+                          className={styles.mobileNavProfileButton}
+                          onClick={handleProfileClick}
+                          aria-label="Go to profile"
+                        >
+                          {userProfile.profileImageUrl ? (
+                            <img 
+                              src={userProfile.profileImageUrl} 
+                              alt={userProfile.username} 
+                              className={styles.mobileNavProfileAvatar}
+                            />
+                          ) : (
+                            getInitials(userProfile.username || user.email || 'User')
+                          )}
+                        </button>
+                        <div className={styles.mobileNavUsername}>
+                          {userProfile.username || user.email?.split('@')[0] || 'User'}
+                        </div>
+                      </>
+                    ) : (
+                      <div className={styles.mobileNavAuthButtons}>
+                        <button 
+                          className={styles.mobileLoginBtn}
+                          onClick={handleLoginClick}
+                        >
+                          Log In
+                        </button>
+                        <button 
+                          className={styles.mobileRegisterBtn}
+                          onClick={handleRegisterClick}
+                        >
+                          Sign Up
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                
+                <div className={styles.mobileNavItems}>
+                  <a 
+                    href="/" 
+                    className={`${styles.mobileNavItem} ${isActive('/') ? styles.active : ''}`}
+                    onClick={(e) => handleNavigation('/', e)}
+                  >
+                    <FiHome className={styles.navIcon} />
+                    <span>Home</span>
+                  </a>
+                  <a 
+                    href="/games" 
+                    className={`${styles.mobileNavItem} ${isActive('/games') ? styles.active : ''}`}
+                    onClick={(e) => handleNavigation('/games', e)}
+                  >
+                    <RiGamepadFill className={styles.navIcon} />
+                    <span>Games</span>
+                  </a>
+                  <a 
+                    href="/collections" 
+                    className={`${styles.mobileNavItem} ${isActive('/collections') ? styles.active : ''}`}
+                    onClick={(e) => handleNavigation('/collections', e)}
+                  >
+                    <BsCollectionPlay className={styles.navIcon} />
+                    <span>Collections</span>
+                  </a>
+                  <a 
+                    href="/stats" 
+                    className={`${styles.mobileNavItem} ${isActive('/stats') ? styles.active : ''}`}
+                    onClick={(e) => handleNavigation('/stats', e)}
+                  >
+                    <FiBarChart2 className={styles.navIcon} />
+                    <span>Stats</span>
+                  </a>
+                </div>
+              </div>
+            </>
+          )}
           
           <div className={styles.heroContent}>
             <motion.div 
