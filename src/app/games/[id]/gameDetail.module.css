@@ -93,12 +93,14 @@
   font-size: 3.5rem;
   font-weight: 800;
   margin-bottom: 1rem;
-  background: linear-gradient(120deg, #fff 0%, #e0e0e0 100%);
+  color: #ffffff; /* Couleur de base blanche */
+  /* Retirer le gradient qui cause le problème */
+  /* background: linear-gradient(120deg, #fff 0%, #e0e0e0 100%);
   -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  -webkit-text-fill-color: transparent; */
   letter-spacing: -1px;
   line-height: 1.1;
-  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5), 0 4px 20px rgba(0, 0, 0, 0.3);
 }
 
 .gameGenres {
@@ -136,6 +138,11 @@
   color: rgba(108, 92, 231, 0.8);
 }
 
+/* Mobile actions wrapper - hidden on desktop */
+.mobileActionsWrapper {
+  display: none;
+}
+
 .gameActions {
   display: flex;
   gap: 1rem;
@@ -152,7 +159,7 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  cursor: pointer; /* Added cursor pointer */
+  cursor: pointer;
 }
 
 .primaryButton:hover {
@@ -185,7 +192,7 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  cursor: pointer; /* Added cursor pointer */
+  cursor: pointer;
 }
 
 .reviewButton:hover {
@@ -194,13 +201,12 @@
   border-color: rgba(108, 92, 231, 0.6);
 }
 
-/* Add this to your existing styles */
 .inCollectionButton {
-  background-color: #1e8c5e;
+  background: linear-gradient(135deg, #1e8c5e 0%, #166f4a 100%);
 }
 
 .inCollectionButton:hover {
-  background-color: #166f4a;
+  background: linear-gradient(135deg, #166f4a 0%, #0f5637 100%);
 }
 
 /* Main Content */
@@ -271,8 +277,8 @@
   margin-top: 2rem;
   padding-top: 2rem;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
-  will-change: transform; /* Added for better scrolling performance */
-  contain: content; /* Improve rendering performance */
+  will-change: transform;
+  contain: content;
 }
 
 .reviewsTitle {
@@ -298,11 +304,10 @@
 .reviewsContainer {
   background: rgba(20, 20, 30, 0.3);
   border-radius: 16px;
-  /* Removed backdrop-filter for better performance */
   border: 1px solid rgba(255, 255, 255, 0.1);
   overflow: hidden;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-  transform: translateZ(0); /* Force GPU acceleration */
+  transform: translateZ(0);
 }
 
 .reviewLoading {
@@ -495,93 +500,298 @@
     grid-template-columns: 1fr;
   }
   
-  .heroContent {
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-    padding-bottom: 2rem;
+  .gameSidebar {
+    order: -1;
   }
   
-  .gameInfo {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+  .heroContent {
+    gap: 1.5rem;
   }
   
   .gameTitle {
     font-size: 2.8rem;
   }
   
-  .releasePlatforms {
-    justify-content: center;
-  }
-  
-  .gameActions {
-    justify-content: center;
+  .gameContent {
+    padding: 2rem 1.5rem;
   }
 }
 
 @media (max-width: 768px) {
+  /* Hero adjustments */
   .heroHeader {
     height: auto;
-    min-height: auto;
+    min-height: 60vh; /* Augmenter la hauteur minimale pour voir plus l'image */
+  }
+  
+  .heroOverlay {
+    position: relative;
+    /* Rendre le gradient moins opaque pour voir plus l'image */
+    background: linear-gradient(180deg, rgba(15, 15, 19, 0.4) 0%, rgba(15, 15, 19, 0.7) 50%, #0f0f13 100%);
+  }
+  
+  .topBar {
+    padding: 1rem;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+  
+  .searchBarContainer {
+    width: 100%;
+    order: 2;
   }
   
   .heroContent {
-    padding-top: 2rem;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 2rem 1rem 0; /* Augmenter le padding top pour plus d'espace */
+    gap: 1rem;
   }
   
   .coverWrapper {
     width: 200px;
     height: 280px;
+    /* Ajouter une ombre plus prononcée pour contraster avec le fond */
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5);
+  }
+  
+  .gameInfo {
+    width: 100%;
+    max-width: 100%;
   }
   
   .gameTitle {
-    font-size: 2.2rem;
+    font-size: 1.8rem;
+    margin-bottom: 0.75rem;
+    line-height: 1.2;
+    color: #ffffff; /* S'assurer que c'est blanc */
+    /* Ajouter une ombre au texte pour meilleure lisibilité sur mobile */
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8), 0 4px 20px rgba(0, 0, 0, 0.6);
   }
   
+  .gameGenres {
+    justify-content: center;
+    margin-bottom: 1rem;
+  }
+  
+  .genrePill {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.6rem;
+    /* Rendre les pills plus visibles sur le fond */
+    background: rgba(108, 92, 231, 0.3);
+    backdrop-filter: blur(8px);
+  }
+  
+  .releasePlatforms {
+    flex-direction: column;
+    gap: 0.75rem;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 0;
+    font-size: 0.85rem;
+  }
+  
+  .infoItem {
+    justify-content: center;
+    /* Améliorer le contraste */
+    background: rgba(15, 15, 19, 0.6);
+    backdrop-filter: blur(8px);
+    padding: 0.4rem 0.8rem;
+    border-radius: 8px;
+  }
+  
+  /* Hide desktop actions */
+  .gameInfo .gameActions {
+    display: none;
+  }
+  
+  /* Show mobile actions */
+  .mobileActionsWrapper {
+    display: block;
+    padding: 1.5rem 1rem 2rem;
+    /* Rendre le gradient de transition plus subtil */
+    background: linear-gradient(0deg, #0f0f13 30%, rgba(15, 15, 19, 0.9) 100%);
+  }
+  
+  .mobileActionsWrapper .gameActions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    max-width: 100%;
+  }
+  
+  .mobileActionsWrapper .primaryButton,
+  .mobileActionsWrapper .reviewButton {
+    width: 100%;
+    justify-content: center;
+    padding: 0.85rem 1.5rem;
+    font-size: 0.95rem;
+  }
+  
+  /* Content adjustments */
   .gameContent {
-    padding: 2rem 1rem;
+    padding: 1.5rem 1rem;
   }
   
-  .reviewsContainer {
-    padding: 1rem;
+  .gameMainContent {
+    gap: 2rem;
   }
   
+  .gameSummary h2,
+  .screenshotsSection h2,
   .reviewsTitle {
-    font-size: 1.5rem;
+    font-size: 1.4rem;
+    margin-bottom: 1rem;
   }
   
-  .gameActions {
+  .gameSummary h3 {
+    font-size: 1.2rem;
+    margin: 1.2rem 0 0.6rem;
+  }
+  
+  .gameSummary p {
+    font-size: 0.95rem;
+    line-height: 1.6;
+  }
+  
+  /* Sidebar as horizontal cards */
+  .gameSidebar {
+    order: -1;
+    flex-direction: row;
     flex-wrap: wrap;
     gap: 1rem;
   }
   
-  .primaryButton, .reviewButton {
+  .sidebarCard {
     flex: 1;
-    min-width: 120px;
-    padding: 0.7rem 1rem;
+    min-width: calc(50% - 0.5rem);
+    padding: 1rem;
+  }
+  
+  .sidebarCard h3 {
+    font-size: 0.95rem;
+    margin-bottom: 0.75rem;
+  }
+  
+  .platformList {
+    gap: 0.4rem;
+  }
+  
+  .platformBadge {
+    font-size: 0.75rem;
+    padding: 0.3rem 0.6rem;
+  }
+  
+  .simpleList li {
+    font-size: 0.85rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .releaseDatesList li {
+    font-size: 0.85rem;
+    flex-direction: column;
+    gap: 0.25rem;
+    align-items: flex-start;
+  }
+  
+  /* Reviews section mobile */
+  .reviewsContainer {
+    border-radius: 12px;
+  }
+  
+  .reviewLoading {
+    padding: 1rem;
     font-size: 0.9rem;
   }
 }
 
 @media (max-width: 480px) {
+  .topBar {
+    padding: 0.75rem;
+  }
+  
+  .heroHeader {
+    min-height: 55vh; /* Ajuster aussi pour les très petits écrans */
+  }
+  
+  .heroContent {
+    padding: 1.5rem 0.75rem 0; /* Ajuster le padding */
+  }
+  
   .coverWrapper {
-    width: 180px;
-    height: 250px;
+    width: 160px;
+    height: 220px;
+    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.5);
   }
   
   .gameTitle {
-    font-size: 1.8rem;
+    font-size: 1.5rem;
+    color: #ffffff; /* S'assurer que c'est blanc */
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8), 0 4px 16px rgba(0, 0, 0, 0.6);
+  }
+}
+
+/* Landscape mobile optimization */
+@media (max-width: 768px) and (orientation: landscape) {
+  .heroHeader {
+    height: auto;
+    min-height: 80vh; /* En paysage, augmenter encore plus pour voir l'image */
   }
   
-  .gameActions {
-    flex-direction: column;
-    width: 100%;
-    max-width: 300px;
+  .heroOverlay {
+    /* Gradient encore plus léger en mode paysage */
+    background: linear-gradient(180deg, rgba(15, 15, 19, 0.3) 0%, rgba(15, 15, 19, 0.6) 60%, #0f0f13 100%);
   }
   
-  .gameActions button {
-    width: 100%;
+  .heroContent {
+    flex-direction: row;
+    text-align: left;
+    padding: 2rem 1rem; /* Plus d'espace en haut */
+  }
+  
+  .coverWrapper {
+    width: 150px;
+    height: 210px;
+  }
+  
+  .gameTitle {
+    font-size: 1.6rem;
+    color: #ffffff; /* S'assurer que c'est blanc */
+  }
+  
+  .gameGenres {
+    justify-content: flex-start;
+  }
+  
+  .releasePlatforms {
+    flex-direction: row;
+    gap: 1rem;
+    align-items: center;
+  }
+  
+  .mobileActionsWrapper .gameActions {
+    flex-direction: row;
+  }
+}
+
+/* Desktop improvements */
+@media (min-width: 1400px) {
+  .gameContent {
+    padding: 3rem 4rem;
+  }
+  
+  .twoColumnLayout {
+    grid-template-columns: 1fr 350px;
+    gap: 3rem;
+  }
+  
+  .gameTitle {
+    font-size: 4rem;
+  }
+  
+  .gameSummary h2,
+  .screenshotsSection h2 {
+    font-size: 2rem;
   }
 }

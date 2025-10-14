@@ -289,22 +289,25 @@ export default function GameDetailPage({ params }: { params: Promise<{ id: strin
                   </div>
                 )}
               </div>
-              
-              <div className={styles.gameActions}>
-                <Button 
-                  className={`${styles.primaryButton} ${collectionStatus ? styles.inCollectionButton : ''}`}
-                  onClick={openCollectionModal}
-                >
-                  <FiBookmark /> {collectionStatus ? 'In Collection' : 'Add to Collection'}
-                </Button>
-                <Button 
-                  className={styles.reviewButton} 
-                  onClick={scrollToReviews}
-                >
-                  <FiMessageSquare /> Write a Review
-                </Button>
-              </div>
             </motion.div>
+          </div>
+          
+          {/* Move action buttons below hero on mobile */}
+          <div className={styles.mobileActionsWrapper}>
+            <div className={styles.gameActions}>
+              <Button 
+                className={`${styles.primaryButton} ${collectionStatus ? styles.inCollectionButton : ''}`}
+                onClick={openCollectionModal}
+              >
+                <FiBookmark /> {collectionStatus ? 'In Collection' : 'Add to Collection'}
+              </Button>
+              <Button 
+                className={styles.reviewButton} 
+                onClick={scrollToReviews}
+              >
+                <FiMessageSquare /> Write a Review
+              </Button>
+            </div>
           </div>
         </div>
       </div>
@@ -341,7 +344,7 @@ export default function GameDetailPage({ params }: { params: Promise<{ id: strin
               <GameVideosWrapper gameId={parseInt(id)} />
             </motion.section>
             
-            {/* Screenshots Section - Keep this before reviews */}
+            {/* Screenshots Section */}
             {gameDetail.screenshots.length > 0 && (
               <motion.section 
                 className={styles.screenshotsSection}
@@ -355,7 +358,7 @@ export default function GameDetailPage({ params }: { params: Promise<{ id: strin
               </motion.section>
             )}
             
-            {/* Reviews Section - Now comes after screenshots with a reference */}
+            {/* Reviews Section */}
             <motion.section
               ref={reviewsRef}
               variants={itemVariants}
@@ -394,6 +397,20 @@ export default function GameDetailPage({ params }: { params: Promise<{ id: strin
                     </span>
                   ))}
                 </div>
+              </motion.div>
+            )}
+            
+            {gameDetail.developers.length > 0 && (
+              <motion.div 
+                className={styles.sidebarCard}
+                variants={itemVariants}
+              >
+                <h3>Developers</h3>
+                <ul className={styles.simpleList}>
+                  {gameDetail.developers.map((developer, index) => (
+                    <li key={`${developer}-${index}`}>{developer}</li>
+                  ))}
+                </ul>
               </motion.div>
             )}
             
