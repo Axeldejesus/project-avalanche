@@ -14,8 +14,10 @@
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  /* Ajoutez une couleur de fond par défaut pour éviter le flash blanc */
-  background-color: #12141d;
+  /* Couleur de fond sombre cohérente */
+  background-color: #0f0f13;
+  /* Assure que le background-color reste visible */
+  isolation: isolate;
 }
 
 .heroOverlay {
@@ -27,11 +29,82 @@
   background: linear-gradient(0deg, #0f0f13 5%, rgba(15, 15, 19, 0.5) 40%, rgba(15, 15, 19, 0.3) 100%);
   display: flex;
   flex-direction: column;
-  /* Assure un fond cohérent dès le début */
   backdrop-filter: blur(0px);
   transition: backdrop-filter 0.3s ease;
+  /* Assure que l'overlay reste au-dessus du background */
+  z-index: 1;
 }
 
+/* Skeleton loader pour le hero header */
+.heroHeaderSkeleton {
+  position: relative;
+  height: 70vh;
+  min-height: 500px;
+  background: linear-gradient(135deg, #0f0f13 0%, #1a1b2e 100%);
+  overflow: hidden;
+}
+
+.heroHeaderSkeleton::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.03) 50%,
+    transparent 100%
+  );
+  animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+
+/* Wrapper pour le loader dans le skeleton */
+.skeletonLoaderWrapper {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  color: #ffffff;
+  z-index: 2;
+  position: relative;
+}
+
+.skeletonLoaderWrapper .gameLoader {
+  width: 200px;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 1rem;
+}
+
+.skeletonLoaderWrapper .loaderBar {
+  height: 100%;
+  width: 0;
+  background: linear-gradient(90deg, #6c5ce7, #8e44ad);
+  animation: loading 1.5s infinite;
+  border-radius: 3px;
+}
+
+.skeletonLoaderWrapper p {
+  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.8);
+  margin: 0;
+}
+
+/* Top bar */
 .topBar {
   display: flex;
   justify-content: space-between;
@@ -1643,22 +1716,6 @@
   .reviewLoading {
     padding: 0.75rem 0.5rem;
     font-size: 0.8rem;
-  }
-  
-  .mobileNav {
-    width: 90%;
-    max-width: 260px;
-    padding: 1.25rem 1rem;
-  }
-  
-  .mobileNavItem {
-    padding: 0.7rem 0.625rem;
-    font-size: 0.875rem;
-  }
-  
-  .mobileNavItem .navIcon {
-    font-size: 1rem;
-    margin-right: 0.75rem;
   }
 }
 

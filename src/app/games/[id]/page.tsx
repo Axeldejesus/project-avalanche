@@ -104,7 +104,9 @@ export default function GameDetailPage({ params }: { params: Promise<{ id: strin
   const [refreshReviews, setRefreshReviews] = useState<number>(0);
   const [isCollectionModalOpen, setIsCollectionModalOpen] = useState(false);
   const [collectionStatus, setCollectionStatus] = useState<string | null>(null);
-  const [imageLoaded, setImageLoaded] = useState(false); // Ajoutez cet état
+  const [imageLoaded, setImageLoaded] = useState(false);
+  const [backgroundImageUrl, setBackgroundImageUrl] = useState<string>('');
+  
   const { user, userProfile } = useAuth();
   const pathname = usePathname();
   const routerNav = useRouter();
@@ -133,21 +135,31 @@ export default function GameDetailPage({ params }: { params: Promise<{ id: strin
         }
         
         const data = await res.json();
-        setGameDetail(data);
         
-        // Préchargez l'image de fond
-        if (data.screenshots && data.screenshots.length > 0) {
-          const img = new Image();
-          img.onload = () => setImageLoaded(true);
-          img.src = data.screenshots[0];
-        } else if (data.cover) {
-          const img = new Image();
-          img.onload = () => setImageLoaded(true);
-          img.src = data.cover;
-        }
+        // Déterminez l'URL de l'image de fond avant de définir gameDetail
+        const bgImage = data.screenshots && data.screenshots.length > 0 
+          ? data.screenshots[0] 
+          : data.cover;
+        
+        // Préchargez l'image avant de tout afficher
+        const img = new Image();
+        img.onload = () => {
+          setBackgroundImageUrl(bgImage);
+          setImageLoaded(true);
+          setGameDetail(data);
+        };
+        img.onerror = () => {
+          // En cas d'erreur de chargement, affichez quand même les données
+          setBackgroundImageUrl('');
+          setImageLoaded(true);
+          setGameDetail(data);
+        };
+        img.src = bgImage;
+        
       } catch (error) {
         console.error('Error fetching game details:', error);
         setError('Could not load game details');
+        setImageLoaded(true);
       } finally {
         setIsLoading(false);
       }
@@ -319,7 +331,7 @@ export default function GameDetailPage({ params }: { params: Promise<{ id: strin
     return false;
   };
 
-  if (isLoading) {
+  if (isLoading || !imageLoaded) {
     return (
       <div className={styles.loaderContainer}>
         <div className={styles.gameLoader}>
@@ -377,14 +389,10 @@ export default function GameDetailPage({ params }: { params: Promise<{ id: strin
       animate="visible"
       variants={containerVariants}
     >
-      {/* Hero Header with Game Screenshot as Background */}
       <div 
         className={styles.heroHeader}
         style={{ 
-          backgroundImage: imageLoaded ? `url(${gameDetail.screenshots && gameDetail.screenshots.length > 0 
-            ? gameDetail.screenshots[0] 
-            : gameDetail.cover})` : 'none',
-          transition: 'background-image 0.3s ease-in-out'
+          backgroundImage: backgroundImageUrl ? `url(${backgroundImageUrl})` : 'none'
         }}
       >
         <div className={styles.heroOverlay}>
