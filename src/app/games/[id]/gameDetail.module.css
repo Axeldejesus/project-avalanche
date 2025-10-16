@@ -14,6 +14,8 @@
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
+  /* Ajoutez une couleur de fond par défaut pour éviter le flash blanc */
+  background-color: #12141d;
 }
 
 .heroOverlay {
@@ -25,6 +27,9 @@
   background: linear-gradient(0deg, #0f0f13 5%, rgba(15, 15, 19, 0.5) 40%, rgba(15, 15, 19, 0.3) 100%);
   display: flex;
   flex-direction: column;
+  /* Assure un fond cohérent dès le début */
+  backdrop-filter: blur(0px);
+  transition: backdrop-filter 0.3s ease;
 }
 
 .topBar {
