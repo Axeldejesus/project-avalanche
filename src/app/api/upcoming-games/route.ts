@@ -62,20 +62,28 @@ export async function GET(): Promise<NextResponse<UpcomingGame[]>> {
       
       console.log(`Renvoi de ${finalGames.length} jeux à venir validés`);
       
-      // Si nous n'avons pas assez de jeux, utiliser des données de secours
       if (finalGames.length < 5) {
-        return NextResponse.json(getRealisticUpcomingGames(currentTimestamp));
+        const response = NextResponse.json(getRealisticUpcomingGames(currentTimestamp));
+        response.headers.set('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=86400');
+        return response;
       }
       
-      return NextResponse.json(finalGames);
+      const response = NextResponse.json(finalGames);
+      // Cache for 1 hour, allow stale content for 24 hours while revalidating
+      response.headers.set('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=86400');
+      return response;
     } else {
       console.log("Aucun jeu à venir trouvé, utilisation de données de secours");
-      return NextResponse.json(getRealisticUpcomingGames(currentTimestamp));
+      const response = NextResponse.json(getRealisticUpcomingGames(currentTimestamp));
+      response.headers.set('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=86400');
+      return response;
     }
   } catch (error) {
     console.error('Error fetching upcoming games:', error);
     const currentTimestamp = Math.floor(Date.now() / 1000);
-    return NextResponse.json(getRealisticUpcomingGames(currentTimestamp));
+    const response = NextResponse.json(getRealisticUpcomingGames(currentTimestamp));
+    response.headers.set('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=86400');
+    return response;
   }
 }
 

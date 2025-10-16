@@ -19,7 +19,6 @@ interface NewReleaseGame {
 
 export async function GET(): Promise<NextResponse<NewReleaseGame[]>> {
   try {
-    // Get games released in the last 60 days
     const currentTimestamp = Math.floor(Date.now() / 1000);
     const sixtyDaysAgo = currentTimestamp - (60 * 86400);
     
@@ -39,7 +38,9 @@ export async function GET(): Promise<NextResponse<NewReleaseGame[]>> {
         rating: (game.total_rating ? game.total_rating / 20 : 4.0)
       }));
       
-      return NextResponse.json(formattedGames);
+      const response = NextResponse.json(formattedGames);
+      response.headers.set('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=86400');
+      return response;
     } else {
       // Return fallback data if no results
       const fallbackGames: NewReleaseGame[] = [
@@ -66,7 +67,9 @@ export async function GET(): Promise<NextResponse<NewReleaseGame[]>> {
         }
       ];
       
-      return NextResponse.json(fallbackGames);
+      const response = NextResponse.json(fallbackGames);
+      response.headers.set('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=86400');
+      return response;
     }
   } catch (error) {
     console.error('Error fetching new release games:', error);
@@ -97,6 +100,8 @@ export async function GET(): Promise<NextResponse<NewReleaseGame[]>> {
       }
     ];
     
-    return NextResponse.json(fallbackGames);
+    const response = NextResponse.json(fallbackGames);
+    response.headers.set('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=86400');
+    return response;
   }
 }

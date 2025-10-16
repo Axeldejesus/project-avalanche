@@ -1,6 +1,9 @@
 import HomePage from './page-client';
 import { igdbRequest, getImageUrl } from '../utils/igdb';
 
+// Revalidate every 24 hours (86400 seconds)
+export const revalidate = 86400;
+
 // Import the types
 interface Game {
   id: number;
