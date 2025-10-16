@@ -274,13 +274,14 @@
   bottom: 0;
   left: 0;
   right: 0;
-  background: linear-gradient(to bottom, #1a1b2e, #12141d);
+  background: linear-gradient(to bottom, #1e1f30, #14151f);
   border-radius: 20px 20px 0 0;
-  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.6);
   z-index: 101;
-  max-height: 85vh;
+  max-height: 80vh; /* Réduit de 90vh à 80vh */
   transform: translateY(100%);
-  transition: transform 0.3s cubic-bezier(0.21, 0.6, 0.35, 1);
+  transition: transform 0.4s cubic-bezier(0.21, 0.6, 0.35, 1);
+  border-top: 2px solid rgba(108, 92, 231, 0.2);
 }
 
 .mobileFilterSheet.open {
@@ -290,60 +291,247 @@
 .filterSheetHandle {
   width: 40px;
   height: 4px;
-  background: rgba(255, 255, 255, 0.3);
-  border-radius: 2px;
-  margin: 1rem auto 0;
+  background: rgba(255, 255, 255, 0.25);
+  border-radius: 3px;
+  margin: 0.75rem auto 0.5rem; /* Réduit le margin */
+  transition: all 0.3s ease;
+}
+
+.mobileFilterSheet.open .filterSheetHandle {
+  background: rgba(108, 92, 231, 0.5);
 }
 
 .filterSheetHeader {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1rem 1.5rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 1rem 1.25rem; /* Réduit le padding */
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(30, 30, 40, 0.3);
+  backdrop-filter: blur(10px);
 }
 
 .filterSheetHeader h2 {
-  font-size: 1.3rem;
+  font-size: 1.2rem; /* Réduit de 1.4rem */
   margin: 0;
+  font-weight: 700;
+  background: linear-gradient(120deg, #fff 0%, #d0c5ff 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .filterSheetContent {
-  padding: 1.5rem;
+  padding: 1.25rem 1.25rem; /* Réduit le padding */
   overflow-y: auto;
-  max-height: calc(85vh - 180px);
+  max-height: calc(80vh - 180px); /* Ajusté avec la nouvelle hauteur */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(108, 92, 231, 0.3) transparent;
+}
+
+.filterSheetContent::-webkit-scrollbar {
+  width: 6px;
+}
+
+.filterSheetContent::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.filterSheetContent::-webkit-scrollbar-thumb {
+  background: rgba(108, 92, 231, 0.3);
+  border-radius: 3px;
 }
 
 .filterSheetSection {
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.5rem; /* Réduit de 2rem */
+  animation: fadeInUp 0.3s ease;
+}
+
+.filterSheetSection:last-child {
+  margin-bottom: 0;
 }
 
 .filterSheetSection h3 {
-  font-size: 1rem;
-  margin: 0 0 0.75rem 0;
-  color: rgba(255, 255, 255, 0.9);
-  font-weight: 600;
+  font-size: 0.95rem; /* Réduit de 1.05rem */
+  margin: 0 0 0.75rem 0; /* Réduit le margin bottom */
+  color: rgba(255, 255, 255, 0.95);
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  position: relative;
+  padding-bottom: 0.4rem;
+}
+
+.filterSheetSection h3:after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 35px;
+  height: 2px;
+  background: linear-gradient(90deg, #6c5ce7, transparent);
+  border-radius: 2px;
 }
 
 .checkboxGrid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 0.5rem;
+  gap: 0.6rem; /* Réduit de 0.75rem */
 }
 
 .radioGroup {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.6rem; /* Réduit de 0.75rem */
 }
 
 .filterSheetActions {
   display: flex;
-  gap: 0.75rem;
-  padding: 1rem 1.5rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(15, 15, 19, 0.9);
+  gap: 0.75rem; /* Réduit de 1rem */
+  padding: 1rem 1.25rem; /* Réduit le padding */
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  background: linear-gradient(to bottom, rgba(20, 20, 30, 0.8), rgba(15, 15, 19, 0.95));
+  backdrop-filter: blur(10px);
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.2);
 }
+
+.resetButton {
+  flex: 1;
+  background: rgba(239, 68, 68, 0.12);
+  border: 1.5px solid rgba(239, 68, 68, 0.4);
+  color: #ef4444;
+  padding: 0.75rem 1rem; /* Réduit de 1rem 1.25rem */
+  border-radius: 10px; /* Réduit de 12px */
+  font-size: 0.9rem; /* Réduit de 1rem */
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem; /* Réduit de 0.625rem */
+  letter-spacing: 0.3px;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.15);
+}
+
+.resetButton:active {
+  transform: scale(0.97);
+  background: rgba(239, 68, 68, 0.2);
+  box-shadow: 0 1px 4px rgba(239, 68, 68, 0.2);
+}
+
+.applyButton {
+  flex: 1;
+  background: linear-gradient(135deg, #6c5ce7 0%, #5b50cc 100%);
+  border: none;
+  color: white;
+  padding: 0.75rem 1rem; /* Réduit de 1rem 1.25rem */
+  border-radius: 10px; /* Réduit de 12px */
+  font-size: 0.9rem; /* Réduit de 1rem */
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem; /* Réduit de 0.625rem */
+  letter-spacing: 0.3px;
+  box-shadow: 0 4px 14px rgba(108, 92, 231, 0.4);
+  position: relative;
+  overflow: hidden;
+}
+
+.applyButton:before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s ease;
+}
+
+.applyButton:active:before {
+  left: 100%;
+}
+
+.applyButton:active {
+  transform: scale(0.97);
+  background: linear-gradient(135deg, #5d4ecd 0%, #4c40b3 100%);
+  box-shadow: 0 2px 8px rgba(108, 92, 231, 0.3);
+}
+
+/* Enhanced checkbox and radio labels for mobile */
+.checkboxLabel,
+.radioLabel {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem; /* Réduit de 0.75rem */
+  padding: 0.75rem 0.875rem; /* Réduit le padding */
+  border-radius: 9px; /* Réduit de 10px */
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.9rem; /* Réduit de 0.95rem */
+  background: rgba(30, 30, 40, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  font-weight: 500;
+}
+
+.checkboxLabel:active,
+.radioLabel:active {
+  transform: scale(0.98);
+  background: rgba(108, 92, 231, 0.15);
+}
+
+.checkboxLabel input[type="checkbox"]:checked + span,
+.radioLabel input[type="radio"]:checked + span {
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.checkboxLabel input[type="checkbox"]:checked,
+.radioLabel input[type="radio"]:checked {
+  accent-color: #6c5ce7;
+}
+
+.filterSelect {
+  width: 100%;
+  background: rgba(30, 30, 40, 0.6);
+  border: 1.5px solid rgba(255, 255, 255, 0.12);
+  color: white;
+  padding: 0.75rem 0.875rem; /* Réduit le padding */
+  border-radius: 9px; /* Réduit de 10px */
+  font-size: 0.9rem; /* Réduit de 0.95rem */
+  font-weight: 500;
+  appearance: none;
+  background-image: url("data:image/svg+xml;utf8,<svg fill='white' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  cursor: pointer;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.filterSelect:focus {
+  outline: none;
+  border-color: rgba(108, 92, 231, 0.6);
+  box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.15);
+  background: rgba(30, 30, 40, 0.8);
+}
+
+/* Supprimer l'effet :active qui cause le tremblement */
+/* .filterSelect:active {
+  transform: scale(0.99);
+} */
 
 /* Remove old floating controls and filter panel styles */
 .floatingControls {
@@ -688,284 +876,31 @@
 .filterSelect {
   width: 100%;
   background: rgba(30, 30, 40, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1.5px solid rgba(255, 255, 255, 0.12);
   color: white;
-  padding: 10px 15px;
-  border-radius: 8px;
+  padding: 0.875rem 1rem;
+  border-radius: 10px;
   font-size: 0.95rem;
+  font-weight: 500;
   appearance: none;
   background-image: url("data:image/svg+xml;utf8,<svg fill='white' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/></svg>");
   background-repeat: no-repeat;
   background-position: right 10px center;
   cursor: pointer;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
 }
 
 .filterSelect:focus {
   outline: none;
   border-color: rgba(108, 92, 231, 0.6);
-  box-shadow: 0 0 0 2px rgba(108, 92, 231, 0.15);
+  box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.15);
+  background: rgba(30, 30, 40, 0.8);
 }
 
-.filterActions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-  margin-top: 20px;
-  padding-top: 20px;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.resetButton {
-  background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: rgba(255, 255, 255, 0.8);
-  padding: 10px 20px;
-  border-radius: 8px;
-  font-size: 0.95rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.resetButton:hover {
-  background: rgba(255, 255, 255, 0.1);
-}
-
-.applyButton {
-  background: linear-gradient(to right, #6c5ce7, #8e44ad);
-  border: none;
-  color: white;
-  padding: 10px 20px;
-  border-radius: 8px;
-  font-size: 0.95rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.applyButton:hover {
-  background: linear-gradient(to right, #5d4ecd, #7e3c9d);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(108, 92, 231, 0.3);
-}
-
-/* Loading skeleton animations */
-.skeletonGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 25px;
-  margin-top: 1.5rem;
-}
-
-.skeletonCard {
-  background: rgba(30, 30, 40, 0.4);
-  border-radius: 14px;
-  overflow: hidden;
-  position: relative;
-  height: 380px;
-}
-
-.skeletonImage {
-  width: 100%;
-  height: 65%;
-  background: linear-gradient(to right, rgba(40, 40, 50, 0.4) 0%, rgba(50, 50, 60, 0.7) 50%, rgba(40, 40, 50, 0.4) 100%);
-  background-size: 200% 100%;
-  animation: shimmer 1.5s infinite;
-}
-
-.skeletonContent {
-  padding: 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.skeletonTitle {
-  height: 16px;
-  width: 80%;
-  background: linear-gradient(to right, rgba(40, 40, 50, 0.4) 0%, rgba(50, 50, 60, 0.7) 50%, rgba(40, 40, 50, 0.4) 100%);
-  background-size: 200% 100%;
-  animation: shimmer 1.5s infinite;
-  border-radius: 4px;
-}
-
-.skeletonGenre {
-  height: 12px;
-  width: 60%;
-  background: linear-gradient(to right, rgba(40, 40, 50, 0.4) 0%, rgba(50, 50, 60, 0.7) 50%, rgba(40, 40, 50, 0.4) 100%);
-  background-size: 200% 100%;
-  animation: shimmer 1.5s infinite;
-  border-radius: 4px;
-}
-
-.skeletonRating {
-  height: 12px;
-  width: 40%;
-  background: linear-gradient(to right, rgba(40, 40, 50, 0.4) 0%, rgba(50, 50, 60, 0.7) 50%, rgba(40, 40, 50, 0.4) 100%);
-  background-size: 200% 100%;
-  animation: shimmer 1.5s infinite;
-  border-radius: 4px;
-  margin-top: auto;
-}
-
-/* Infinite scroll loader */
-.loadMore {
-  margin: 2rem auto;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 10px;
-  flex-direction: column;
-}
-
-.loadMoreSpinner {
-  width: 40px;
-  height: 40px;
-  border: 3px solid rgba(255, 255, 255, 0.1);
-  border-top: 3px solid rgba(108, 92, 231, 0.8);
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-.noResults {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 5rem 2rem;
-  text-align: center;
-}
-
-.noResultsIcon {
-  font-size: 4rem;
-  color: rgba(108, 92, 231, 0.5);
-  margin-bottom: 1.5rem;
-}
-
-.noResultsTitle {
-  font-size: 1.5rem;
-  font-weight: 600;
-  margin-bottom: 0.5rem;
-  color: white;
-}
-
-.noResultsMessage {
-  font-size: 1rem;
-  color: rgba(255, 255, 255, 0.6);
-  max-width: 500px;
-  margin-bottom: 1.5rem;
-}
-
-.resetFiltersButton {
-  background: rgba(108, 92, 231, 0.2);
-  border: 1px solid rgba(108, 92, 231, 0.4);
-  color: white;
-  padding: 10px 20px;
-  border-radius: 8px;
-  font-size: 0.95rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.resetFiltersButton:hover {
-  background: rgba(108, 92, 231, 0.3);
-  transform: translateY(-2px);
-}
-
-/* Back to top button - matching calendar style */
-.backToTop {
-  position: fixed;
-  bottom: 30px;
-  right: 30px;
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
-  background: rgba(30, 30, 45, 0.85);
-  backdrop-filter: blur(10px);
-  color: rgba(255, 255, 255, 0.7);
-  border: 1px solid rgba(108, 92, 231, 0.2);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.1rem;
-  transition: all 0.3s ease;
-  z-index: 50;
-  opacity: 0;
-  visibility: hidden;
-  transform: translateY(10px);
-  pointer-events: none;
-}
-
-.backToTop.visible {
-  opacity: 1;
-  visibility: visible;
-  transform: translateY(0);
-  pointer-events: auto;
-}
-
-.backToTop:hover {
-  background: rgba(108, 92, 231, 0.2);
-  color: #ffffff;
-  border-color: rgba(108, 92, 231, 0.4);
-  transform: translateY(-3px);
-  box-shadow: 0 6px 16px rgba(108, 92, 231, 0.3);
-}
-
-.backToTop:active {
-  transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(108, 92, 231, 0.2);
-}
-
-/* Animations */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(-15px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translateY(15px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes shimmer {
-  0% {
-    background-position: -200% 0;
-  }
-  100% {
-    background-position: 200% 0;
-  }
-}
-
-@keyframes spin {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
-}
+/* Supprimer l'effet :active qui cause le tremblement */
+/* .filterSelect:active {
+  transform: scale(0.99);
+} */
 
 /* Mobile responsiveness */
 @media (max-width: 1024px) {
@@ -1016,6 +951,13 @@
     padding: 1rem;
   }
   
+  .pageHeader {
+    flex-direction: column;
+    align-items: center; /* Changed from flex-start to center */
+    gap: 1rem;
+    text-align: center; /* Added to center text */
+  }
+  
   .title {
     font-size: 2rem;
     margin-bottom: 0.3rem;
@@ -1024,217 +966,27 @@
   .subtitle {
     font-size: 0.95rem;
     margin-bottom: 1.5rem;
+    justify-content: center; /* Ensure icon and text are centered */
   }
   
   .subtitle svg {
     display: none; /* Hide icon on mobile */
   }
   
-  /* Floating controls mobile optimization */
-  .floatingControls {
-    padding: 0.75rem 0;
-    margin-bottom: 1rem;
-  }
-  
-  .filterSearchContainer {
-    flex-direction: column;
-    gap: 10px;
-  }
-  
-  .searchContainer {
-    width: 100%;
-    max-width: 100%;
-  }
-  
-  .searchInput {
-    padding: 12px 15px 12px 40px; /* Ensure left padding on mobile too */
-  }
-  
-  .searchIcon {
-    left: 12px; /* Consistent positioning */
-  }
-  
-  .filterButton {
+  .clearAllFilters {
     width: 100%;
     justify-content: center;
-  }
-  
-  .mobileTopBar {
-    flex-direction: column;
-    gap: 0.75rem;
-  }
-  
-  /* Remove filter chips mobile styles */
-  
-  /* Filter chips mobile optimization */
-  .filterChips {
-    display: flex;
-    overflow-x: auto;
-    overflow-y: hidden;
-    flex-wrap: nowrap;
-    gap: 8px;
-    margin: 0.75rem 0;
-    padding-bottom: 10px;
-    scrollbar-width: thin;
-    scrollbar-color: rgba(108, 92, 231, 0.3) transparent;
-    -webkit-overflow-scrolling: touch;
-  }
-  
-  .filterChips::-webkit-scrollbar {
-    height: 4px;
-  }
-  
-  .filterChips::-webkit-scrollbar-track {
-    background: transparent;
-  }
-  
-  .filterChips::-webkit-scrollbar-thumb {
-    background: rgba(108, 92, 231, 0.3);
-    border-radius: 2px;
-  }
-  
-  .filterChip {
-    flex-shrink: 0;
-    padding: 8px 14px;
-    font-size: 0.85rem;
-    white-space: nowrap;
-  }
-  
-  /* Game grid mobile optimization */
-  .gameGrid {
-    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-    gap: 12px;
-  }
-  
-  .gameGridCard {
-    border-radius: 12px;
-  }
-  
-  .gameInfo {
-    padding: 12px;
-  }
-  
-  .gameTitle {
-    font-size: 0.95rem;
-    -webkit-line-clamp: 2;
-    line-height: 1.3;
-  }
-  
-  .gameGenres {
-    font-size: 0.75rem;
-    margin-bottom: 6px;
-  }
-  
-  .gameRating {
-    padding: 3px 6px;
-    font-size: 0.75rem;
-  }
-  
-  /* List view mobile optimization */
-  .gameListItem {
-    height: 100px;
-  }
-  
-  .gameListImage {
-    width: 75px;
-    height: 100px;
-  }
-  
-  .gameListInfo {
-    padding: 10px;
-  }
-  
-  .gameListTitle {
-    font-size: 0.95rem;
-  }
-  
-  /* Filter panel mobile optimization */
-  .filterPanel {
-    width: 95%;
-    max-height: 85vh;
-    padding: 20px;
-  }
-  
-  .filterHeader h2 {
-    font-size: 1.3rem;
-  }
-  
-  .filterContent {
-    grid-template-columns: 1fr;
-    gap: 15px;
-  }
-  
-  .filterSection {
-    margin-bottom: 15px;
-  }
-  
-  .filterActions {
-    flex-direction: column;
-    gap: 10px;
-  }
-  
-  .resetButton,
-  .applyButton {
-    width: 100%;
-    justify-content: center;
-  }
-  
-  /* View toggle - hide on mobile */
-  .viewToggle {
-    display: none;
-  }
-  
-  /* Back to top mobile */
-  .backToTop {
-    bottom: 20px;
-    right: 20px;
-    width: 40px;
-    height: 40px;
-    font-size: 1rem;
-    border-radius: 10px;
-  }
-  
-  /* Skeleton mobile */
-  .skeletonGrid {
-    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-    gap: 12px;
-  }
-  
-  .skeletonCard {
-    height: 280px;
-  }
-  
-  /* No results mobile */
-  .noResults {
-    padding: 3rem 1rem;
-  }
-  
-  .noResultsIcon {
-    font-size: 3rem;
-  }
-  
-  .noResultsTitle {
-    font-size: 1.3rem;
-  }
-  
-  .noResultsMessage {
-    font-size: 0.9rem;
-  }
-  
-  /* Loading spinner mobile */
-  .loadMore {
-    margin: 1.5rem auto;
-  }
-  
-  .loadMoreSpinner {
-    width: 35px;
-    height: 35px;
   }
 }
 
 @media (max-width: 480px) {
   .main {
     padding: 0.75rem 0.5rem;
+  }
+  
+  .pageHeader {
+    align-items: center;
+    text-align: center;
   }
   
   .title {
@@ -1245,6 +997,7 @@
   .subtitle {
     font-size: 0.85rem;
     margin-bottom: 1rem;
+    justify-content: center;
   }
   
   /* Ultra compact grid for very small screens */
@@ -1370,6 +1123,10 @@
   .filterSelect {
     padding: 8px 12px;
     font-size: 0.9rem;
+    /* Renforcer la stabilité sur très petits écrans */
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+    will-change: auto;
   }
 }
 
@@ -1426,5 +1183,221 @@
   
   .gameGrid {
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  }
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-15px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Responsive improvements for very small screens */
+@media (max-width: 480px) {
+  .mobileFilterSheet {
+    max-height: 85vh; /* Réduit légèrement */
+    border-radius: 18px 18px 0 0;
+  }
+  
+  .filterSheetHandle {
+    width: 36px;
+    height: 4px;
+    margin: 0.7rem auto 0.4rem;
+  }
+  
+  .filterSheetHeader {
+    padding: 0.875rem 1rem;
+  }
+  
+  .filterSheetHeader h2 {
+    font-size: 1.1rem;
+  }
+  
+  .closeButton {
+    width: 30px;
+    height: 30px;
+  }
+  
+  .filterSheetContent {
+    padding: 1rem;
+    max-height: calc(85vh - 170px);
+  }
+  
+  .filterSheetSection {
+    margin-bottom: 1.25rem;
+  }
+  
+  .filterSheetSection h3 {
+    font-size: 0.9rem;
+    margin-bottom: 0.65rem;
+  }
+  
+  .checkboxGrid {
+    gap: 0.5rem;
+  }
+  
+  .radioGroup {
+    gap: 0.5rem;
+  }
+  
+  .checkboxLabel,
+  .radioLabel {
+    padding: 0.65rem 0.75rem;
+    font-size: 0.85rem;
+    border-radius: 8px;
+  }
+  
+  .filterSelect {
+    padding: 0.65rem 0.75rem;
+    font-size: 0.85rem;
+    border-radius: 8px;
+  }
+  
+  .filterSheetActions {
+    gap: 0.65rem;
+    padding: 0.875rem 1rem;
+  }
+  
+  .resetButton,
+  .applyButton {
+    padding: 0.7rem 0.875rem;
+    font-size: 0.85rem;
+    border-radius: 9px;
+  }
+}
+
+@media (max-width: 375px) {
+  .mobileFilterSheet {
+    border-radius: 16px 16px 0 0;
+  }
+  
+  .filterSheetHeader {
+    padding: 0.75rem 0.875rem;
+  }
+  
+  .filterSheetHeader h2 {
+    font-size: 1.05rem;
+  }
+  
+  .closeButton {
+    width: 28px;
+    height: 28px;
+  }
+  
+  .filterSheetContent {
+    padding: 0.875rem;
+  }
+  
+  .filterSheetSection {
+    margin-bottom: 1.1rem;
+  }
+  
+  .filterSheetSection h3 {
+    font-size: 0.875rem;
+    margin-bottom: 0.6rem;
+  }
+  
+  .checkboxGrid {
+    gap: 0.45rem;
+  }
+  
+  .radioGroup {
+    gap: 0.45rem;
+  }
+  
+  .checkboxLabel,
+  .radioLabel {
+    padding: 0.6rem 0.7rem;
+    font-size: 0.825rem;
+    border-radius: 7px;
+  }
+  
+  .filterSelect {
+    padding: 0.6rem 0.7rem;
+    font-size: 0.825rem;
+    border-radius: 7px;
+  }
+  
+  .filterSheetActions {
+    gap: 0.6rem;
+    padding: 0.8rem 0.875rem;
+  }
+  
+  .resetButton,
+  .applyButton {
+    padding: 0.65rem 0.8rem;
+    font-size: 0.825rem;
+    border-radius: 8px;
+    gap: 0.4rem;
+  }
+}
+
+@media (max-width: 320px) {
+  .filterSheetHeader {
+    padding: 0.65rem 0.75rem;
+  }
+  
+  .filterSheetHeader h2 {
+    font-size: 1rem;
+  }
+  
+  .filterSheetContent {
+    padding: 0.75rem;
+  }
+  
+  .checkboxLabel,
+  .radioLabel {
+    padding: 0.55rem 0.65rem;
+    font-size: 0.8rem;
+  }
+  
+  .filterSelect {
+    padding: 0.55rem 0.65rem;
+    font-size: 0.8rem;
+  }
+  
+  .filterSheetActions {
+    padding: 0.75rem;
+  }
+  
+  .resetButton,
+  .applyButton {
+    padding: 0.6rem 0.7rem;
+    font-size: 0.8rem;
   }
 }

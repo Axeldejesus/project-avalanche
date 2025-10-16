@@ -84,15 +84,16 @@ export default function GamesPage() {
   const [activeFiltersCount, setActiveFiltersCount] = useState(0);
   const [genres, setGenres] = useState<{ id: number, name: string }[]>([]);
   const [filtersInitialized, setFiltersInitialized] = useState(false);
+  const [scrollRestored, setScrollRestored] = useState(false);
   const [showBackToTop, setShowBackToTop] = useState(false);
   const [selectedChip, setSelectedChip] = useState<number | null>(0);
   const [isMobile, setIsMobile] = useState(false);
   const [expandedSections, setExpandedSections] = useState<{[key: string]: boolean}>({
-    platforms: true,
-    genres: true,
-    year: true,
-    status: true,
-    sort: true
+    platforms: false,
+    genres: false,
+    year: false,
+    status: false,
+    sort: false
   });
   const observer = useRef<IntersectionObserver | null>(null);
   const loadingRef = useRef<HTMLDivElement>(null);
@@ -318,6 +319,8 @@ export default function GamesPage() {
 
   // Handle game card click
   const handleGameClick = (gameId: number) => {
+    // Save current scroll position
+    sessionStorage.setItem('gamesScrollPosition', window.scrollY.toString());
     sessionStorage.setItem('gameFilters', JSON.stringify(filters));
     sessionStorage.setItem('cameFromGames', 'true');
     router.push(`/games/${gameId}`);
@@ -479,6 +482,42 @@ export default function GamesPage() {
       </div>
     ));
   };
+
+  // SIMPLIFIED: Restore scroll immediately when games are loaded
+  useEffect(() => {
+    if (!scrollRestored && games.length > 0 && !loading) {
+      const savedScrollPosition = sessionStorage.getItem('gamesScrollPosition');
+      if (savedScrollPosition) {
+        const position = parseInt(savedScrollPosition);
+        console.log('Restoring scroll to:', position);
+        
+        // Immediate scroll - no delay
+        window.scrollTo({
+          top: position,
+          behavior: 'instant' as ScrollBehavior
+        });
+        
+        // Verify and retry if needed
+        setTimeout(() => {
+          const currentPos = window.scrollY;
+          console.log('Current position:', currentPos);
+          
+          if (Math.abs(currentPos - position) > 50) {
+            console.log('Retrying scroll...');
+            window.scrollTo({
+              top: position,
+              behavior: 'instant' as ScrollBehavior
+            });
+          }
+          
+          sessionStorage.removeItem('gamesScrollPosition');
+          setScrollRestored(true);
+        }, 100);
+      } else {
+        setScrollRestored(true);
+      }
+    }
+  }, [games.length, loading, scrollRestored]);
 
   return (
     <div className={styles.container}>
@@ -769,7 +808,7 @@ export default function GamesPage() {
                             src={game.cover} 
                             alt={game.name} 
                             className={styles.gameImage}
-                            loading="lazy"
+                            loading="eager"
                           />
                         </div>
                         <div className={styles.gameInfo}>

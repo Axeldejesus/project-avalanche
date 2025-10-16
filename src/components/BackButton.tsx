@@ -52,6 +52,9 @@ const BackButton: React.FC = () => {
       sessionStorage.removeItem('cameFromCustomList');
     }
     
+    // Keep scroll position and game filters in sessionStorage
+    // They will be used by the games page to restore state
+    
     router.push(destination);
   };
   
