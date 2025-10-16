@@ -27,10 +27,11 @@ html, body {
   width: 100%;
   height: 100%;
   overflow-x: hidden;
+  background-color: #0f0f13 !important; /* Fond sombre PERMANENT */
 }
 
 body {
-  background: var(--background);
+  background: #0f0f13 !important; /* Forcer le fond sombre */
   color: var(--foreground);
   font-family: var(--font-body), system-ui, sans-serif;
   font-weight: 400;

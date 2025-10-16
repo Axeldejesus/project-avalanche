@@ -14,9 +14,8 @@
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  /* Couleur de fond sombre cohérente */
-  background-color: #0f0f13;
-  /* Assure que le background-color reste visible */
+  /* Fond sombre PERMANENT - ne jamais afficher de blanc */
+  background-color: #0f0f13 !important;
   isolation: isolate;
 }
 
@@ -742,7 +741,7 @@
   justify-content: center;
   align-items: center;
   height: 100vh;
-  background-color: #0f0f13;
+  background-color: #0f0f13 !important; /* Important pour forcer */
   color: #ffffff;
 }
 
