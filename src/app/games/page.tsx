@@ -6,7 +6,8 @@ import Header from '@/components/Header';
 import GameCard from '@/components/GameCard';
 import { 
   ArrowLeft, ArrowRight, GamepadIcon, Filter, X, Search, Grid, List, 
-  Star, Calendar, ArrowUp, RefreshCw, Check, ChevronUp, Tag, Package, Clock 
+  Star, Calendar, ArrowUp, RefreshCw, Check, ChevronUp, Tag, Package, Clock,
+  ChevronDown, ChevronRight, Sliders
 } from 'lucide-react';
 import styles from './games.module.css';
 import debounce from 'lodash/debounce';
@@ -48,15 +49,6 @@ const RELEASE_STATUS = [
   { value: 'upcoming', label: 'Upcoming Games' }
 ];
 
-// Sort options
-const SORT_OPTIONS = [
-  { value: 'default', label: 'Default Sorting' },
-  { value: 'rating', label: 'Highest Rated' },
-  { value: 'release_desc', label: 'Recently Released' },
-  { value: 'release_asc', label: 'Oldest First' },
-  { value: 'name', label: 'Name (A-Z)' }
-];
-
 // Filter chips configuration
 const FILTER_CHIPS = [
   { label: 'All Games', value: null, icon: <Tag size={16} /> },
@@ -95,6 +87,13 @@ export default function GamesPage() {
   const [showBackToTop, setShowBackToTop] = useState(false);
   const [selectedChip, setSelectedChip] = useState<number | null>(0);
   const [isMobile, setIsMobile] = useState(false);
+  const [expandedSections, setExpandedSections] = useState<{[key: string]: boolean}>({
+    platforms: true,
+    genres: true,
+    year: true,
+    status: true,
+    sort: true
+  });
   const observer = useRef<IntersectionObserver | null>(null);
   const loadingRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
@@ -178,9 +177,10 @@ export default function GamesPage() {
     if (filters.platforms.length > 0) count++;
     if (filters.genres.length > 0) count++;
     if (filters.releaseYear !== null) count++;
-    if (filters.searchQuery.trim() !== '') count++;
+    // Remove search query from count
+    // if (filters.searchQuery.trim() !== '') count++;
     if (filters.releaseStatus !== 'all') count++;
-    if (filters.sort !== 'default') count++;
+    // Don't count sort anymore
     setActiveFiltersCount(count);
   }, [filters]);
 
@@ -285,10 +285,6 @@ export default function GamesPage() {
         url += `&releaseStatus=${filters.releaseStatus}`;
       }
       
-      if (filters.sort !== 'default') {
-        url += `&sort=${filters.sort}`;
-      }
-      
       const response = await fetch(url);
       if (!response.ok) {
         throw new Error('Failed to fetch games');
@@ -335,6 +331,51 @@ export default function GamesPage() {
     setIsFilterOpen(!isFilterOpen);
   };
 
+  // Toggle section in filter sidebar
+  const toggleSection = (section: string) => {
+    setExpandedSections(prev => ({
+      ...prev,
+      [section]: !prev[section]
+    }));
+  };
+
+  // Apply filters immediately when changed (auto-apply)
+  const handleFilterChange = (filterType: keyof FilterOptions, value: any) => {
+    const newFilters = {
+      ...filters,
+      [filterType]: value
+    };
+    setFilters(newFilters);
+    setTempFilters(newFilters);
+    sessionStorage.setItem('gameFilters', JSON.stringify(newFilters));
+    setSelectedChip(null); // Deselect chip when manual filter applied
+  };
+
+  // Reset specific filter section
+  const resetFilterSection = (section: string) => {
+    let updatedFilters = { ...filters };
+    
+    switch(section) {
+      case 'platforms':
+        updatedFilters.platforms = [];
+        break;
+      case 'genres':
+        updatedFilters.genres = [];
+        break;
+      case 'year':
+        updatedFilters.releaseYear = null;
+        break;
+      case 'status':
+        updatedFilters.releaseStatus = 'all';
+        break;
+      // Remove sort case
+    }
+    
+    setFilters(updatedFilters);
+    setTempFilters(updatedFilters);
+    sessionStorage.setItem('gameFilters', JSON.stringify(updatedFilters));
+  };
+
   // Reset all filters
   const resetFilters = () => {
     const defaultFilters: FilterOptions = {
@@ -346,15 +387,11 @@ export default function GamesPage() {
       sort: 'default'
     };
     
+    setFilters(defaultFilters);
     setTempFilters(defaultFilters);
-    
-    if (!isFilterOpen) {
-      setFilters(defaultFilters);
-      sessionStorage.setItem('gameFilters', JSON.stringify(defaultFilters));
-    }
-    
-    // Reset selected chip to "All Games"
+    sessionStorage.setItem('gameFilters', JSON.stringify(defaultFilters));
     setSelectedChip(0);
+    setIsFilterOpen(false);
   };
 
   // Apply the temp filters
@@ -362,6 +399,7 @@ export default function GamesPage() {
     setFilters(tempFilters);
     sessionStorage.setItem('gameFilters', JSON.stringify(tempFilters));
     setIsFilterOpen(false);
+    setSelectedChip(null);
   };
 
   // Handle search input changes with debounce
@@ -381,7 +419,14 @@ export default function GamesPage() {
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
-    debouncedSearch(value);
+    setFilters(prev => ({
+      ...prev,
+      searchQuery: value
+    }));
+    sessionStorage.setItem('gameFilters', JSON.stringify({
+      ...filters,
+      searchQuery: value
+    }));
   };
 
   // Toggle view mode between grid and list
@@ -409,6 +454,9 @@ export default function GamesPage() {
     
     const newFilters = {
       ...filters,
+      platforms: [],
+      genres: [],
+      releaseYear: null,
       sort: chip.sort || 'default',
       releaseStatus: (chip.status || 'all') as 'all' | 'released' | 'upcoming'
     };
@@ -437,286 +485,462 @@ export default function GamesPage() {
       <Header />
       
       <main className={styles.main}>
-        <h1 className={styles.title}>Game Library</h1>
-        <p className={styles.subtitle}>
-          <GamepadIcon size={18} />
-          Discover and explore thousands of games
-        </p>
-        
-        <div className={styles.floatingControls}>
-          <div className={styles.controlsContent}>
-            <div className={styles.filterSearchContainer}>
-              <button 
-                className={`${styles.filterButton} ${isFilterOpen ? styles.active : ''} ${activeFiltersCount > 0 ? styles.hasFilters : ''}`}
-                onClick={toggleFilter}
-                aria-label="Toggle filters"
-              >
-                <Filter size={18} />
-                <span>Filters</span>
-                {activeFiltersCount > 0 && (
-                  <span className={styles.filterCount}>{activeFiltersCount}</span>
-                )}
-              </button>
-              
-              <div className={styles.searchContainer}>
-                <input
-                  type="text"
-                  placeholder={isMobile ? "Search games..." : "Search games by name..."}
-                  defaultValue={filters.searchQuery}
-                  onChange={handleSearchChange}
-                  className={styles.searchInput}
-                />
-                <button className={styles.searchButton} aria-label="Search">
-                  <Search size={18} />
-                </button>
-              </div>
-              
-              {!isMobile && (
-                <div className={styles.viewToggle}>
-                  <button 
-                    className={`${styles.viewToggleButton} ${viewMode === 'grid' ? styles.active : ''}`}
-                    onClick={() => toggleViewMode('grid')}
-                    aria-label="Grid view"
-                  >
-                    <Grid size={16} />
-                    <span>Grid</span>
-                  </button>
-                  <button 
-                    className={`${styles.viewToggleButton} ${viewMode === 'list' ? styles.active : ''}`}
-                    onClick={() => toggleViewMode('list')}
-                    aria-label="List view"
-                  >
-                    <List size={16} />
-                    <span>List</span>
-                  </button>
-                </div>
-              )}
-            </div>
-            
-            <div className={styles.filterChips}>
-              {FILTER_CHIPS.map((chip, index) => (
-                <button
-                  key={index}
-                  className={`${styles.filterChip} ${selectedChip === index ? styles.active : ''}`}
-                  onClick={() => handleChipSelect(index)}
-                >
-                  {chip.icon}
-                  {chip.label}
-                </button>
-              ))}
-            </div>
+        <div className={styles.pageHeader}>
+          <div>
+            <h1 className={styles.title}>Game Library</h1>
+            <p className={styles.subtitle}>
+              <GamepadIcon size={18} />
+              Discover and explore thousands of games
+            </p>
           </div>
+          
+          {/* Desktop: Show active filters count */}
+          {!isMobile && activeFiltersCount > 0 && (
+            <button className={styles.clearAllFilters} onClick={resetFilters}>
+              <RefreshCw size={16} />
+              Clear all filters ({activeFiltersCount})
+            </button>
+          )}
         </div>
         
-        {/* Main content - games grid or list */}
-        {loading && games.length === 0 ? (
-          <div className={styles.skeletonGrid}>
-            {renderSkeletons()}
-          </div>
-        ) : error ? (
-          <div className={styles.error}>{error}</div>
-        ) : games.length === 0 ? (
-          <div className={styles.noResults}>
-            <Search className={styles.noResultsIcon} />
-            <h2 className={styles.noResultsTitle}>No games found</h2>
-            <p className={styles.noResultsMessage}>
-              Try adjusting your filters or search terms to find what you're looking for.
-            </p>
-            <button className={styles.resetFiltersButton} onClick={resetFilters}>
-              <RefreshCw size={16} />
-              Reset all filters
-            </button>
-          </div>
-        ) : (
-          <>
-            {(viewMode === 'grid' || isMobile) ? (
-              <div className={styles.gameGrid}>
-                {games.map(game => (
-                  <div 
-                    key={game.id} 
-                    className={styles.gameGridCard}
-                    onClick={() => handleGameClick(game.id)}
-                  >
-                    <div className={styles.gameImageContainer}>
-                      <img 
-                        src={game.cover} 
-                        alt={game.name} 
-                        className={styles.gameImage}
-                        loading="lazy"
-                      />
-                    </div>
-                    <div className={styles.gameInfo}>
-                      <h3 className={styles.gameTitle}>{game.name}</h3>
-                      {game.genres && (
-                        <p className={styles.gameGenres}>{game.genres}</p>
-                      )}
-                      {/* Remove the gameMeta div and rating display */}
-                    </div>
-                  </div>
-                ))}
+        <div className={styles.contentLayout}>
+          {/* Desktop Sidebar Filters */}
+          {!isMobile && (
+            <aside className={styles.filterSidebar}>
+              <div className={styles.sidebarHeader}>
+                <div className={styles.sidebarTitle}>
+                  <Sliders size={18} />
+                  Filters
+                </div>
+                {activeFiltersCount > 0 && (
+                  <button className={styles.sidebarReset} onClick={resetFilters}>
+                    <RefreshCw size={14} />
+                  </button>
+                )}
               </div>
-            ) : (
-              <div className={styles.gameList}>
-                {games.map((game, idx) => (
-                  <div 
-                    key={`${game.id}-${idx}`} 
-                    className={styles.gameListItem}
-                    onClick={() => handleGameClick(game.id)}
-                  >
-                    <img 
-                      src={game.cover} 
-                      alt={game.name} 
-                      className={styles.gameListImage}
-                      loading="lazy"
-                    />
-                    <div className={styles.gameListInfo}>
-                      <h3 className={styles.gameListTitle}>{game.name}</h3>
-                      <div className={styles.gameListMeta}>
-                        <div className={styles.gameGenres}>{game.genres}</div>
-                        {game.rating > 0 && (
-                          <div className={styles.gameRating}>
-                            <Star size={14} fill="#6c5ce7" color="#6c5ce7" />
-                            {game.rating.toFixed(1)}
-                          </div>
-                        )}
-                      </div>
-                    </div>
+              
+              {/* Search in sidebar */}
+              <div className={styles.sidebarSection}>
+                <div className={styles.searchContainer}>
+                  <input
+                    type="text"
+                    placeholder="Search games..."
+                    value={filters.searchQuery}
+                    onChange={handleSearchChange}
+                    className={styles.searchInput}
+                  />
+                  <Search size={16} className={styles.searchIcon} />
+                </div>
+              </div>
+              
+              {/* Platform Filter */}
+              <div className={styles.sidebarSection}>
+                <button 
+                  className={styles.sectionHeader}
+                  onClick={() => toggleSection('platforms')}
+                >
+                  <span>Platform</span>
+                  <div className={styles.sectionHeaderRight}>
+                    {filters.platforms.length > 0 && (
+                      <span className={styles.sectionCount}>{filters.platforms.length}</span>
+                    )}
+                    {expandedSections.platforms ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
                   </div>
-                ))}
+                </button>
+                {expandedSections.platforms && (
+                  <div className={styles.sectionContent}>
+                    {PLATFORMS.map(platform => (
+                      <label key={platform.id} className={styles.checkboxLabel}>
+                        <input
+                          type="checkbox"
+                          checked={filters.platforms.includes(platform.id)}
+                          onChange={(e) => {
+                            const newPlatforms = e.target.checked
+                              ? [...filters.platforms, platform.id]
+                              : filters.platforms.filter(p => p !== platform.id);
+                            handleFilterChange('platforms', newPlatforms);
+                          }}
+                        />
+                        <span>{platform.name}</span>
+                      </label>
+                    ))}
+                    {filters.platforms.length > 0 && (
+                      <button 
+                        className={styles.sectionReset}
+                        onClick={() => resetFilterSection('platforms')}
+                      >
+                        Clear
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+              
+              {/* Genre Filter */}
+              <div className={styles.sidebarSection}>
+                <button 
+                  className={styles.sectionHeader}
+                  onClick={() => toggleSection('genres')}
+                >
+                  <span>Genre</span>
+                  <div className={styles.sectionHeaderRight}>
+                    {filters.genres.length > 0 && (
+                      <span className={styles.sectionCount}>{filters.genres.length}</span>
+                    )}
+                    {expandedSections.genres ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                  </div>
+                </button>
+                {expandedSections.genres && (
+                  <div className={styles.sectionContent}>
+                    {genres.map(genre => (
+                      <label key={genre.id} className={styles.checkboxLabel}>
+                        <input
+                          type="checkbox"
+                          checked={filters.genres.includes(genre.id)}
+                          onChange={(e) => {
+                            const newGenres = e.target.checked
+                              ? [...filters.genres, genre.id]
+                              : filters.genres.filter(g => g !== genre.id);
+                            handleFilterChange('genres', newGenres);
+                          }}
+                        />
+                        <span>{genre.name}</span>
+                      </label>
+                    ))}
+                    {filters.genres.length > 0 && (
+                      <button 
+                        className={styles.sectionReset}
+                        onClick={() => resetFilterSection('genres')}
+                      >
+                        Clear
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+              
+              {/* Release Year Filter */}
+              <div className={styles.sidebarSection}>
+                <button 
+                  className={styles.sectionHeader}
+                  onClick={() => toggleSection('year')}
+                >
+                  <span>Release Year</span>
+                  <div className={styles.sectionHeaderRight}>
+                    {filters.releaseYear && (
+                      <span className={styles.sectionBadge}>{filters.releaseYear}</span>
+                    )}
+                    {expandedSections.year ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                  </div>
+                </button>
+                {expandedSections.year && (
+                  <div className={styles.sectionContent}>
+                    <select
+                      value={filters.releaseYear === null ? '' : filters.releaseYear}
+                      onChange={(e) => handleFilterChange('releaseYear', e.target.value === '' ? null : Number(e.target.value))}
+                      className={styles.filterSelect}
+                    >
+                      <option value="">All Years</option>
+                      {YEARS.map(year => (
+                        <option key={year} value={year}>{year}</option>
+                      ))}
+                    </select>
+                    {filters.releaseYear !== null && (
+                      <button 
+                        className={styles.sectionReset}
+                        onClick={() => resetFilterSection('year')}
+                      >
+                        Clear
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+              
+              {/* Release Status Filter */}
+              <div className={styles.sidebarSection}>
+                <button 
+                  className={styles.sectionHeader}
+                  onClick={() => toggleSection('status')}
+                >
+                  <span>Release Status</span>
+                  <div className={styles.sectionHeaderRight}>
+                    {filters.releaseStatus !== 'all' && (
+                      <span className={styles.sectionBadge}>
+                        {RELEASE_STATUS.find(s => s.value === filters.releaseStatus)?.label}
+                      </span>
+                    )}
+                    {expandedSections.status ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                  </div>
+                </button>
+                {expandedSections.status && (
+                  <div className={styles.sectionContent}>
+                    {RELEASE_STATUS.map(status => (
+                      <label key={status.value} className={styles.radioLabel}>
+                        <input
+                          type="radio"
+                          name="releaseStatus"
+                          checked={filters.releaseStatus === status.value}
+                          onChange={() => handleFilterChange('releaseStatus', status.value as 'all' | 'released' | 'upcoming')}
+                        />
+                        <span>{status.label}</span>
+                      </label>
+                    ))}
+                    {filters.releaseStatus !== 'all' && (
+                      <button 
+                        className={styles.sectionReset}
+                        onClick={() => resetFilterSection('status')}
+                      >
+                        Clear
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+              
+              {/* Remove Sort Filter section completely */}
+            </aside>
+          )}
+          
+          {/* Main Content Area */}
+          <div className={styles.mainContent}>
+            {/* Mobile Controls */}
+            {isMobile && (
+              <div className={styles.mobileControls}>
+                <div className={styles.mobileTopBar}>
+                  <button 
+                    className={`${styles.filterButton} ${activeFiltersCount > 0 ? styles.hasFilters : ''}`}
+                    onClick={toggleFilter}
+                  >
+                    <Filter size={18} />
+                    <span>Filters</span>
+                    {activeFiltersCount > 0 && (
+                      <span className={styles.filterCount}>{activeFiltersCount}</span>
+                    )}
+                  </button>
+                  
+                  <div className={styles.searchContainer}>
+                    <input
+                      type="text"
+                      placeholder="Search games..."
+                      value={filters.searchQuery}
+                      onChange={handleSearchChange}
+                      className={styles.searchInput}
+                    />
+                    <Search size={18} className={styles.searchIcon} />
+                  </div>
+                </div>
+                
+                {/* Remove filter chips completely on mobile */}
               </div>
             )}
             
-            {/* Infinite scroll loading reference */}
-            <div ref={loadingRef} className={styles.loadMore}>
-              {loading && hasMore && (
-                <>
-                  <div className={styles.loadMoreSpinner}></div>
-                  <p>Loading more games...</p>
-                </>
-              )}
+            {/* Games Grid/List */}
+            {loading && games.length === 0 ? (
+              <div className={styles.skeletonGrid}>
+                {renderSkeletons()}
+              </div>
+            ) : error ? (
+              <div className={styles.error}>{error}</div>
+            ) : games.length === 0 ? (
+              <div className={styles.noResults}>
+                <Search className={styles.noResultsIcon} />
+                <h2 className={styles.noResultsTitle}>No games found</h2>
+                <p className={styles.noResultsMessage}>
+                  Try adjusting your filters or search terms to find what you're looking for.
+                </p>
+                <button className={styles.resetFiltersButton} onClick={resetFilters}>
+                  <RefreshCw size={16} />
+                  Reset all filters
+                </button>
+              </div>
+            ) : (
+              <>
+                {(viewMode === 'grid' || isMobile) ? (
+                  <div className={styles.gameGrid}>
+                    {games.map(game => (
+                      <div 
+                        key={game.id} 
+                        className={styles.gameGridCard}
+                        onClick={() => handleGameClick(game.id)}
+                      >
+                        <div className={styles.gameImageContainer}>
+                          <img 
+                            src={game.cover} 
+                            alt={game.name} 
+                            className={styles.gameImage}
+                            loading="lazy"
+                          />
+                        </div>
+                        <div className={styles.gameInfo}>
+                          <h3 className={styles.gameTitle}>{game.name}</h3>
+                          {game.genres && (
+                            <p className={styles.gameGenres}>{game.genres}</p>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className={styles.gameList}>
+                    {games.map((game, idx) => (
+                      <div 
+                        key={`${game.id}-${idx}`} 
+                        className={styles.gameListItem}
+                        onClick={() => handleGameClick(game.id)}
+                      >
+                        <img 
+                          src={game.cover} 
+                          alt={game.name} 
+                          className={styles.gameListImage}
+                          loading="lazy"
+                        />
+                        <div className={styles.gameListInfo}>
+                          <h3 className={styles.gameListTitle}>{game.name}</h3>
+                          <div className={styles.gameListMeta}>
+                            <div className={styles.gameGenres}>{game.genres}</div>
+                            {game.rating > 0 && (
+                              <div className={styles.gameRating}>
+                                <Star size={14} fill="#6c5ce7" color="#6c5ce7" />
+                                {game.rating.toFixed(1)}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                
+                <div ref={loadingRef} className={styles.loadMore}>
+                  {loading && hasMore && (
+                    <>
+                      <div className={styles.loadMoreSpinner}></div>
+                      <p>Loading more games...</p>
+                    </>
+                  )}
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+        
+        {/* Mobile Bottom Sheet Filter */}
+        {isMobile && (
+          <>
+            <div 
+              className={`${styles.filterOverlay} ${isFilterOpen ? styles.open : ''}`}
+              onClick={toggleFilter}
+            />
+            <div className={`${styles.mobileFilterSheet} ${isFilterOpen ? styles.open : ''}`}>
+              <div className={styles.filterSheetHandle} />
+              <div className={styles.filterSheetHeader}>
+                <h2>Filters</h2>
+                <button onClick={toggleFilter} className={styles.closeButton}>
+                  <X size={20} />
+                </button>
+              </div>
+              
+              <div className={styles.filterSheetContent}>
+                {/* Platform */}
+                <div className={styles.filterSheetSection}>
+                  <h3>Platform</h3>
+                  <div className={styles.checkboxGrid}>
+                    {PLATFORMS.map(platform => (
+                      <label key={platform.id} className={styles.checkboxLabel}>
+                        <input
+                          type="checkbox"
+                          checked={tempFilters.platforms.includes(platform.id)}
+                          onChange={(e) => {
+                            const newPlatforms = e.target.checked
+                              ? [...tempFilters.platforms, platform.id]
+                              : tempFilters.platforms.filter(p => p !== platform.id);
+                            setTempFilters(prev => ({ ...prev, platforms: newPlatforms }));
+                          }}
+                        />
+                        <span>{platform.name}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+                
+                {/* Genre */}
+                <div className={styles.filterSheetSection}>
+                  <h3>Genre</h3>
+                  <div className={styles.checkboxGrid}>
+                    {genres.map(genre => (
+                      <label key={genre.id} className={styles.checkboxLabel}>
+                        <input
+                          type="checkbox"
+                          checked={tempFilters.genres.includes(genre.id)}
+                          onChange={(e) => {
+                            const newGenres = e.target.checked
+                              ? [...tempFilters.genres, genre.id]
+                              : tempFilters.genres.filter(g => g !== genre.id);
+                            setTempFilters(prev => ({ ...prev, genres: newGenres }));
+                          }}
+                        />
+                        <span>{genre.name}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+                
+                {/* Year & Status */}
+                <div className={styles.filterSheetSection}>
+                  <h3>Release Year</h3>
+                  <select
+                    value={tempFilters.releaseYear === null ? '' : tempFilters.releaseYear}
+                    onChange={(e) => setTempFilters(prev => ({
+                      ...prev,
+                      releaseYear: e.target.value === '' ? null : Number(e.target.value)
+                    }))}
+                    className={styles.filterSelect}
+                  >
+                    <option value="">All Years</option>
+                    {YEARS.map(year => (
+                      <option key={year} value={year}>{year}</option>
+                    ))}
+                  </select>
+                </div>
+                
+                <div className={styles.filterSheetSection}>
+                  <h3>Release Status</h3>
+                  <div className={styles.radioGroup}>
+                    {RELEASE_STATUS.map(status => (
+                      <label key={status.value} className={styles.radioLabel}>
+                        <input
+                          type="radio"
+                          name="tempReleaseStatus"
+                          checked={tempFilters.releaseStatus === status.value}
+                          onChange={() => setTempFilters(prev => ({
+                            ...prev,
+                            releaseStatus: status.value as 'all' | 'released' | 'upcoming'
+                          }))}
+                        />
+                        <span>{status.label}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+                
+                {/* Remove Sort By section */}
+              </div>
+              
+              <div className={styles.filterSheetActions}>
+                <button className={styles.resetButton} onClick={resetFilters}>
+                  <RefreshCw size={16} />
+                  Reset
+                </button>
+                <button className={styles.applyButton} onClick={applyFilters}>
+                  <Check size={16} />
+                  Apply Filters
+                </button>
+              </div>
             </div>
           </>
         )}
         
-        {/* Filter panel */}
-        <div className={`${styles.filterOverlay} ${isFilterOpen ? styles.open : ''}`}>
-          <div className={styles.filterPanel}>
-            <div className={styles.filterHeader}>
-              <h2>Filter Games</h2>
-              <button className={styles.closeButton} onClick={toggleFilter}>
-                <X size={20} />
-              </button>
-            </div>
-            
-            <div className={styles.filterContent}>
-              <div className={styles.filterSection}>
-                <h3>Platform</h3>
-                <select
-                  value={tempFilters.platforms.length > 0 ? tempFilters.platforms[0].toString() : ''}
-                  onChange={(e) => setTempFilters(prev => ({
-                    ...prev,
-                    platforms: e.target.value === '' ? [] : [Number(e.target.value)]
-                  }))}
-                  className={styles.filterSelect}
-                >
-                  <option value="">All Platforms</option>
-                  {PLATFORMS.map(platform => (
-                    <option key={platform.id} value={platform.id}>
-                      {platform.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              
-              <div className={styles.filterSection}>
-                <h3>Genre</h3>
-                <select
-                  value={tempFilters.genres.length > 0 ? tempFilters.genres[0].toString() : ''}
-                  onChange={(e) => setTempFilters(prev => ({
-                    ...prev,
-                    genres: e.target.value === '' ? [] : [Number(e.target.value)]
-                  }))}
-                  className={styles.filterSelect}
-                >
-                  <option value="">All Genres</option>
-                  {genres.map(genre => (
-                    <option key={genre.id} value={genre.id}>
-                      {genre.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              
-              <div className={styles.filterSection}>
-                <h3>Release Year</h3>
-                <select
-                  value={tempFilters.releaseYear === null ? '' : tempFilters.releaseYear}
-                  onChange={(e) => setTempFilters(prev => ({
-                    ...prev,
-                    releaseYear: e.target.value === '' ? null : Number(e.target.value)
-                  }))}
-                  className={styles.filterSelect}
-                >
-                  <option value="">All Years</option>
-                  {YEARS.map(year => (
-                    <option key={year} value={year}>
-                      {year}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              
-              <div className={styles.filterSection}>
-                <h3>Release Status</h3>
-                <select
-                  value={tempFilters.releaseStatus}
-                  onChange={(e) => setTempFilters(prev => ({
-                    ...prev,
-                    releaseStatus: e.target.value as 'all' | 'released' | 'upcoming'
-                  }))}
-                  className={styles.filterSelect}
-                >
-                  {RELEASE_STATUS.map(status => (
-                    <option key={status.value} value={status.value}>
-                      {status.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              
-              <div className={styles.filterSection}>
-                <h3>Sort By</h3>
-                <select
-                  value={tempFilters.sort}
-                  onChange={(e) => setTempFilters(prev => ({
-                    ...prev,
-                    sort: e.target.value
-                  }))}
-                  className={styles.filterSelect}
-                >
-                  {SORT_OPTIONS.map(option => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-            
-            <div className={styles.filterActions}>
-              <button className={styles.resetButton} onClick={resetFilters}>
-                <RefreshCw size={16} />
-                Reset Filters
-              </button>
-              <button className={styles.applyButton} onClick={applyFilters}>
-                <Check size={16} />
-                Apply Filters
-              </button>
-            </div>
-          </div>
-        </div>
-        
-        {/* Back to top button - MUST BE INSIDE main but OUTSIDE other elements */}
         <button 
           className={`${styles.backToTop} ${showBackToTop ? styles.visible : ''}`}
           onClick={scrollToTop}
