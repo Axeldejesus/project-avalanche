@@ -27,6 +27,9 @@ export default function GameCard({ game, onClick }: GameCardProps) {
       // Default behavior when onClick is not provided
       // Clear previous navigation flags
       sessionStorage.removeItem('cameFromGames');
+      sessionStorage.removeItem('cameFromCollection');
+      sessionStorage.removeItem('cameFromCustomList');
+      sessionStorage.removeItem('cameFromProfile');
       
       // If we're on the home page, set the home flag
       if (pathname === '/') {

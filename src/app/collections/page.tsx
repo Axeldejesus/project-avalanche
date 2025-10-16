@@ -235,19 +235,37 @@ const GameList = ({
   onDeleteGame, 
   viewMode, 
   deletingId, 
-  setDeletingId 
+  setDeletingId,
+  activeTab,
+  activeListId
 }: { 
   games: (CollectionItem | ListGame)[], 
   onDeleteGame: (gameId: number) => void,
   viewMode: 'grid' | 'list',
   deletingId: number | null,
-  setDeletingId: (id: number | null) => void
+  setDeletingId: (id: number | null) => void,
+  activeTab: 'collection' | 'lists',
+  activeListId: string | null
 }): JSX.Element => {
   const router = useRouter();
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [gameToDelete, setGameToDelete] = useState<{ id: number, name: string } | null>(null);
   
   const navigateToGame = (gameId: number) => {
+    // Clear previous navigation flags
+    sessionStorage.removeItem('cameFromGames');
+    sessionStorage.removeItem('cameFromHome');
+    sessionStorage.removeItem('cameFromProfile');
+    
+    // Set appropriate flag based on active tab
+    if (activeTab === 'collection') {
+      sessionStorage.setItem('cameFromCollection', 'true');
+      sessionStorage.removeItem('cameFromCustomList');
+    } else if (activeTab === 'lists' && activeListId) {
+      sessionStorage.setItem('cameFromCustomList', activeListId);
+      sessionStorage.removeItem('cameFromCollection');
+    }
+    
     router.push(`/games/${gameId}`);
   };
   
@@ -423,6 +441,20 @@ export default function CollectionsPage() {
       
       // Toujours charger les données fraîches au montage du composant
       loadAllData();
+      
+      // Vérifier s'il faut restaurer une liste active
+      const restoreListId = sessionStorage.getItem('restoreListId');
+      const restoreListTab = sessionStorage.getItem('restoreListTab');
+      
+      if (restoreListId && restoreListTab === 'lists') {
+        // Restaurer l'onglet lists et la liste active
+        setActiveTab('lists');
+        setActiveListId(restoreListId);
+        
+        // Nettoyer les flags de restauration
+        sessionStorage.removeItem('restoreListId');
+        sessionStorage.removeItem('restoreListTab');
+      }
     }
     
     return () => clearTimeout(authTimeout);
@@ -1070,6 +1102,8 @@ export default function CollectionsPage() {
                             viewMode="grid"
                             deletingId={deletingId}
                             setDeletingId={setDeletingId}
+                            activeTab={activeTab}
+                            activeListId={activeListId}
                           />
                           
                           {hasMoreListGames && !loading && (
@@ -1145,6 +1179,8 @@ export default function CollectionsPage() {
                   viewMode="grid"
                   deletingId={deletingId}
                   setDeletingId={setDeletingId}
+                  activeTab={activeTab}
+                  activeListId={activeListId}
                 />
                 
                 {hasMoreCollection && !loading && (

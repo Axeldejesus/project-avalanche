@@ -175,10 +175,10 @@ const AddToCollectionModal: React.FC<AddToCollectionModalProps> = ({
           onCollectionUpdated();
         }
         
-        // Close modal after a short delay
-        setTimeout(() => {
-          onClose();
-        }, 1500);
+        // Remove automatic modal close - let user close it manually
+        // setTimeout(() => {
+        //   onClose();
+        // }, 1500);
       } else {
         setError(result.error || 'Failed to update collection');
       }
@@ -215,10 +215,11 @@ const AddToCollectionModal: React.FC<AddToCollectionModalProps> = ({
             onCollectionUpdated();
           }
           
-          // Close modal after a short delay
-          setTimeout(() => {
-            onClose();
-          }, 1500);
+          // Keep the modal open after removing - show success message
+          // User can close manually
+          // setTimeout(() => {
+          //   onClose();
+          // }, 1500);
         } else {
           setError(result.error || 'Failed to remove from collection');
         }
@@ -255,10 +256,10 @@ const AddToCollectionModal: React.FC<AddToCollectionModalProps> = ({
           setListsContainingGame(prev => prev.filter(list => list.id !== listId));
           setSuccess('Game removed from list');
           
-          // Clear success message after a delay
+          // Clear success message after a delay but don't close modal
           setTimeout(() => {
             setSuccess(null);
-          }, 1500);
+          }, 2000);
         } else {
           setError(result.error || 'Failed to remove game from list');
         }
@@ -280,10 +281,10 @@ const AddToCollectionModal: React.FC<AddToCollectionModalProps> = ({
           
           setSuccess('Game added to list');
           
-          // Clear success message after a delay
+          // Clear success message after a delay but don't close modal
           setTimeout(() => {
             setSuccess(null);
-          }, 1500);
+          }, 2000);
         } else {
           setError(result.error || 'Failed to add game to list');
         }

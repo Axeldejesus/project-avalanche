@@ -645,6 +645,22 @@ export default function GameDetailPage({ params }: { params: Promise<{ id: strin
                   </div>
                 )}
               </div>
+              
+              {/* Desktop action buttons - visible on desktop only */}
+              <div className={styles.gameActions}>
+                <Button 
+                  className={`${styles.primaryButton} ${collectionStatus ? styles.inCollectionButton : ''}`}
+                  onClick={openCollectionModal}
+                >
+                  <FiBookmark /> {collectionStatus ? 'In Collection' : 'Add to Collection'}
+                </Button>
+                <Button 
+                  className={styles.reviewButton} 
+                  onClick={scrollToReviews}
+                >
+                  <FiMessageSquare /> Write a Review
+                </Button>
+              </div>
             </motion.div>
           </div>
           

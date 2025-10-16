@@ -15,27 +15,41 @@ const BackButton: React.FC = () => {
     const cameFromCalendar = sessionStorage.getItem('cameFromCalendar');
     const cameFromProfile = sessionStorage.getItem('cameFromProfile');
     const cameFromCollection = sessionStorage.getItem('cameFromCollection');
+    const cameFromCustomList = sessionStorage.getItem('cameFromCustomList');
     
     if (cameFromGames === 'true') {
       setDestination('/games');
+    } else if (cameFromCustomList) {
+      // Si on vient d'une custom list, on retourne à /collections
+      // et on garde l'ID de la liste pour la restaurer
+      setDestination('/collections');
+    } else if (cameFromCollection === 'true') {
+      setDestination('/collections');
     } else if (cameFromHome === 'true' || cameFromCalendar === 'true') {
       setDestination('/');
     } else if (cameFromProfile === 'true') {
       setDestination('/profile');
-    } else if (cameFromCollection === 'true') {
-      setDestination('/collections');
     } else {
       setDestination('/');
     }
   }, []);
   
   const handleBack = () => {
+    const cameFromCustomList = sessionStorage.getItem('cameFromCustomList');
+    
     if (destination === '/profile') {
       sessionStorage.removeItem('cameFromProfile');
     }
     
     if (destination === '/collections') {
+      // Si on vient d'une custom list, on garde le flag pour restaurer la liste
+      if (cameFromCustomList) {
+        // Créer un flag pour indiquer qu'on doit restaurer la liste active
+        sessionStorage.setItem('restoreListId', cameFromCustomList);
+        sessionStorage.setItem('restoreListTab', 'lists');
+      }
       sessionStorage.removeItem('cameFromCollection');
+      sessionStorage.removeItem('cameFromCustomList');
     }
     
     router.push(destination);

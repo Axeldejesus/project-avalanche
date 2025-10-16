@@ -13,7 +13,11 @@ import { FiEdit2, FiCheck, FiX, FiUser, FiMail, FiCalendar, FiLogOut, FiTrash2 }
 import UserReviews from './UserReviews';
 import PageLoader from './PageLoader';
 
-const ProfileContent: React.FC = () => {
+interface ProfileContentProps {
+  onShowToast: (message: string, type: 'success' | 'error') => void;
+}
+
+const ProfileContent = ({ onShowToast }: ProfileContentProps) => {
   const [userProfile, setUserProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -21,8 +25,6 @@ const ProfileContent: React.FC = () => {
   const [uploadSuccess, setUploadSuccess] = useState('');
   const [isEditingUsername, setIsEditingUsername] = useState(false);
   const [newUsername, setNewUsername] = useState('');
-  const [usernameError, setUsernameError] = useState('');
-  const [usernameSuccess, setUsernameSuccess] = useState('');
   const [isNavigating, setIsNavigating] = useState(false);
   const router = useRouter();
 
@@ -103,28 +105,22 @@ const ProfileContent: React.FC = () => {
 
   const startEditingUsername = () => {
     setNewUsername(userProfile.username || '');
-    setUsernameError('');
-    setUsernameSuccess('');
     setIsEditingUsername(true);
   };
 
   const cancelEditingUsername = () => {
     setIsEditingUsername(false);
-    setUsernameError('');
   };
 
   const saveUsername = async () => {
-    setUsernameError('');
-    setUsernameSuccess('');
-    
     // Validate username
     if (!newUsername || newUsername.trim().length < 3) {
-      setUsernameError('Username must be at least 3 characters');
+      onShowToast('Username must be at least 3 characters', 'error');
       return;
     }
     
     if (!auth?.currentUser?.uid) {
-      setUsernameError('User not authenticated');
+      onShowToast('User not authenticated', 'error');
       return;
     }
     
@@ -139,16 +135,16 @@ const ProfileContent: React.FC = () => {
           ...userProfile,
           username: newUsername.trim()
         });
-        setUsernameSuccess('Username updated successfully');
+        onShowToast('Username updated successfully', 'success');
         setIsEditingUsername(false);
         
         // Update localStorage to notify other components
         localStorage.setItem('profileUsernameUpdated', Date.now().toString());
       } else {
-        setUsernameError(result.error || 'Failed to update username');
+        onShowToast(result.error || 'Failed to update username', 'error');
       }
     } catch (error: any) {
-      setUsernameError(error.message || 'An unexpected error occurred');
+      onShowToast(error.message || 'An unexpected error occurred', 'error');
     }
   };
 
@@ -205,7 +201,6 @@ const ProfileContent: React.FC = () => {
                       <FiX />
                     </button>
                   </div>
-                  {usernameError && <div className={styles.usernameErrorMessage}>{usernameError}</div>}
                 </div>
               ) : (
                 <div className={styles.usernameContainer}>
@@ -216,7 +211,6 @@ const ProfileContent: React.FC = () => {
                   <button onClick={startEditingUsername} className={styles.editButton} aria-label="Edit username">
                     <FiEdit2 />
                   </button>
-                  {usernameSuccess && <div className={styles.usernameSuccessMessage}>{usernameSuccess}</div>}
                 </div>
               )}
               
@@ -229,8 +223,6 @@ const ProfileContent: React.FC = () => {
                 <FiCalendar />
                 <span>Member since: {new Date(userProfile.createdAt).toLocaleDateString()}</span>
               </div>
-              
-              
             </div>
           </div>
           
