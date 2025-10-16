@@ -159,7 +159,7 @@
   display: flex;
   align-items: center;
   margin-left: auto;
-  min-width: 200px; /* min-width au lieu de width */
+  /* Remove min-width constraint */
   justify-content: flex-end;
 }
 
@@ -172,8 +172,9 @@
   flex-direction: row;
   gap: 15px;
   align-items: center;
-  min-width: 200px; /* min-width au lieu de width */
+  /* Remove min-width constraint */
   justify-content: flex-end;
+  margin-left: auto; /* Ensure it stays to the right */
 }
 
 .loginBtn, .registerBtn {

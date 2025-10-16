@@ -20,7 +20,7 @@ const oxanium = Oxanium({
 });
 
 export const metadata: Metadata = {
-  title: 'Avalanche - Discover Your Next Gaming Adventure',
+  title: 'Avalanche',
   description: 'Find, track, and discover the best video games with Avalanche, your ultimate gaming platform',
 };
 
