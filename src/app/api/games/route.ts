@@ -5,7 +5,7 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page') || '1');
-    const limit = 20;
+    const limit = 40; // Augmenté de 20 à 40 pour plus de résultats
     const offset = (page - 1) * limit;
     
     // Récupérer les paramètres de filtre
@@ -14,19 +14,18 @@ export async function GET(request: Request) {
     const search = searchParams.get('search');
     const releaseYear = searchParams.get('releaseYear');
     const releaseStatus = searchParams.get('releaseStatus');
-    const sort = searchParams.get('sort') || 'default'; // Nouveau paramètre de tri
+    const sort = searchParams.get('sort') || 'default';
     
     console.log(`Paramètres de recherche: page=${page}, platforms=${platforms}, genres=${genres}, search=${search}, releaseYear=${releaseYear}, releaseStatus=${releaseStatus}, sort=${sort}`);
     
     // Construire les conditions de filtre
-    let whereConditions = 'where cover.image_id != null';
+    let whereConditions = 'where cover.image_id != null & version_parent = null';
     
     // Déterminer le type de tri
     let sortCondition = 'sort rating desc';
     
     // Si le statut est "released", changer le tri pour montrer les jeux récents en premier
     if (releaseStatus === 'released') {
-      // Utiliser first_release_date desc pour les jeux déjà sortis
       sortCondition = 'sort first_release_date desc';
       console.log('Tri modifié: par date de sortie décroissante (plus récent en premier)');
     }
@@ -42,17 +41,16 @@ export async function GET(request: Request) {
       sortCondition = 'sort name asc';
     }
     
-    // Amélioration du filtre pour les jeux sortis
+    // Amélioration du filtre pour les jeux sortis - plus permissif
     if (releaseStatus) {
       const currentTimestamp = Math.floor(Date.now() / 1000);
       console.log(`Current timestamp: ${currentTimestamp}, date actuelle: ${new Date(currentTimestamp * 1000).toISOString()}`);
       
       if (releaseStatus === 'released') {
-        // Games that have already been released - USING IMPROVED APPROACH
-        whereConditions += ` & first_release_date < ${currentTimestamp}`;
-        console.log(`Filtre pour jeux sortis ajouté: first_release_date < ${currentTimestamp}`);
+        // Inclure les jeux sortis OU sans date (certains jeux anciens n'ont pas de date)
+        whereConditions += ` & (first_release_date < ${currentTimestamp} | first_release_date = null)`;
+        console.log(`Filtre pour jeux sortis ajouté: first_release_date < ${currentTimestamp} OU sans date`);
       } else if (releaseStatus === 'upcoming') {
-        // Games that have not been released yet
         whereConditions += ` & first_release_date > ${currentTimestamp} & first_release_date != null`;
         console.log(`Filtre pour jeux à venir ajouté: first_release_date > ${currentTimestamp}`);
       }
@@ -63,30 +61,27 @@ export async function GET(request: Request) {
       whereConditions += ` & platforms = (${platformIds.join(',')})`;
     }
     
-    // Nouvelle approche pour le filtre des genres
+    // Approche plus permissive pour les genres - utiliser ANY au lieu de tous
     if (genres) {
       const genreIds = genres.split(',').map(p => parseInt(p));
-      
-      // Pour IGDB, la syntaxe "où au moins un des genres est présent" est:
-      // where genres = [id1] | genres = [id2] | ...
-      const genreConditions = genreIds.map(id => `genres = ${id}`).join(' | ');
-      
-      if (genreConditions) {
-        whereConditions += ` & (${genreConditions})`;
-        console.log(`Condition de genres: (${genreConditions})`);
-      }
+      // Cette syntaxe signifie "au moins un de ces genres"
+      const genreConditions = genreIds.map(id => `genres = [${id}]`).join(' | ');
+      whereConditions += ` & (${genreConditions})`;
+      console.log(`Condition de genres: (${genreConditions})`);
     }
     
     if (search && search.trim() !== '') {
-      // Recherche par nom insensible à la casse
       whereConditions += ` & name ~ *"${search.trim()}"*`;
     }
     
+    // Filtre d'année strict - seulement first_release_date
     if (releaseYear) {
-      // Convertir l'année en timestamps UNIX (1er janvier et 31 décembre de l'année)
       const startTimestamp = Math.floor(new Date(`${releaseYear}-01-01`).getTime() / 1000);
       const endTimestamp = Math.floor(new Date(`${releaseYear}-12-31T23:59:59`).getTime() / 1000);
+      
+      // Filtrer strictement par first_release_date dans l'année sélectionnée
       whereConditions += ` & first_release_date >= ${startTimestamp} & first_release_date <= ${endTimestamp}`;
+      console.log(`Filtre année: ${releaseYear} (${startTimestamp} - ${endTimestamp})`);
     }
     
     console.log(`Requête IGDB complète: ${whereConditions}`);
@@ -116,13 +111,26 @@ export async function GET(request: Request) {
       return NextResponse.json({ games: [] });
     }
     
-    const formattedGames = games.map((game: any) => ({
+    // Validation supplémentaire côté serveur pour s'assurer que l'année est correcte
+    let formattedGames = games.map((game: any) => ({
       id: game.id,
       name: game.name,
       cover: getImageUrl(game.cover?.image_id),
       rating: game.rating ? Math.round(game.rating) / 20 : 0,
       genres: game.genres ? game.genres.map((g: any) => g.name).join(', ') : ''
     }));
+    
+    // Double vérification : si un filtre d'année est appliqué, filtrer à nouveau côté serveur
+    if (releaseYear) {
+      const year = parseInt(releaseYear);
+      formattedGames = formattedGames.filter((game: any) => {
+        const originalGame = games.find((g: any) => g.id === game.id);
+        if (!originalGame?.first_release_date) return false;
+        const gameYear = new Date(originalGame.first_release_date * 1000).getFullYear();
+        return gameYear === year;
+      });
+      console.log(`Après filtrage côté serveur: ${formattedGames.length} jeux pour l'année ${year}`);
+    }
     
     return NextResponse.json({ games: formattedGames });
   } catch (error) {

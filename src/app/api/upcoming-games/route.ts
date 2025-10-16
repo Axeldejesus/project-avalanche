@@ -23,39 +23,38 @@ export async function GET(): Promise<NextResponse<UpcomingGame[]>> {
   try {
     const currentTimestamp = Math.floor(Date.now() / 1000);
     
-    // Premier filtre : dans la requête IGDB, on ne demande que les jeux avec une date future
     const games = await igdbRequest<IGame>('games', `
-      fields name, cover.image_id, first_release_date, genres.name, release_dates.date;
+      fields name, cover.image_id, first_release_date, genres.name;
       where 
         first_release_date > ${currentTimestamp} & 
         first_release_date != null & 
         cover.image_id != null & 
-        version_parent = null;
+        version_parent = null &
+        category = 0;
       sort first_release_date asc;
-      limit 20;
+      limit 30;
     `);
     
     console.log(`Résultats IGDB pour les jeux à venir: ${games?.length || 0} jeux trouvés`);
     
     if (games && games.length > 0) {
-      // Deuxième filtre : validation supplémentaire des dates
+      // Triple validation pour s'assurer qu'on n'a que des jeux futurs
       const upcomingGames = games.filter(game => {
         const releaseDate = game.first_release_date || 0;
-        return releaseDate > currentTimestamp;
+        const isFuture = releaseDate > currentTimestamp;
+        const hasValidDate = releaseDate > 0;
+        return isFuture && hasValidDate;
       });
       
-      const formattedGames: UpcomingGame[] = upcomingGames.map(game => {
-        // Utiliser directement first_release_date au lieu de chercher parmi les release_dates
-        return {
-          id: game.id,
-          name: game.name,
-          cover: getImageUrl(game.cover?.image_id),
-          release_date: game.first_release_date || (currentTimestamp + (30 * 86400)), // Fallback à un mois dans le futur
-          genres: game.genres?.map(g => g.name).join(', ') || 'Game'
-        };
-      });
+      const formattedGames: UpcomingGame[] = upcomingGames.map(game => ({
+        id: game.id,
+        name: game.name,
+        cover: getImageUrl(game.cover?.image_id),
+        release_date: game.first_release_date || (currentTimestamp + (30 * 86400)),
+        genres: game.genres?.map(g => g.name).join(', ') || 'Game'
+      }));
       
-      // Troisième filtre : dernière vérification avant renvoi
+      // Dernière vérification et limitation à 5 jeux
       const finalGames = formattedGames
         .filter(game => game.release_date > currentTimestamp)
         .slice(0, 5);

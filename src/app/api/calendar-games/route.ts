@@ -55,7 +55,7 @@ export async function GET(request: Request): Promise<NextResponse> {
       const batch = await igdbRequest<IGame>('games', `
         fields name, cover.image_id, first_release_date, platforms.id;
         where first_release_date >= ${startOfYear} & first_release_date <= ${endOfYear} 
-        & cover.image_id != null${platformFilter};
+        & cover.image_id != null & version_parent = null & category = 0${platformFilter};
         sort first_release_date asc;
         limit ${limit};
         offset ${offset};
@@ -63,15 +63,22 @@ export async function GET(request: Request): Promise<NextResponse> {
 
       if (batch && batch.length > 0) {
         allGames = allGames.concat(batch);
+        // Continue si on a reçu le maximum
         if (batch.length < limit) {
           keepFetching = false;
         } else {
           offset += limit;
+          // Limite de sécurité pour éviter trop de requêtes
+          if (offset >= 2000) {
+            keepFetching = false;
+          }
         }
       } else {
         keepFetching = false;
       }
     }
+    
+    console.log(`Total de ${allGames.length} jeux récupérés pour ${year}`);
     
     // Organize games by month
     const calendarGames: CalendarGames = {};
