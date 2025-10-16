@@ -17,19 +17,19 @@ const UserReviews: React.FC<UserReviewsProps> = ({ userId }) => {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [totalPages, setTotalPages] = useState<number>(1);
   const [currentPage, setCurrentPage] = useState<number>(1);
-  const [pageReviews, setPageReviews] = useState<{ [key: number]: Review[] }>({});
-  const [pageLastDocs, setPageLastDocs] = useState<{ [key: number]: DocumentSnapshot | undefined }>({});
+  // Cache optimisé avec Map pour meilleure performance
+  const [pageCache, setPageCache] = useState<Map<number, { reviews: Review[], lastDoc?: DocumentSnapshot, hasMore: boolean }>>(new Map());
   const router = useRouter();
   
-  const pageSize = 3; // Nombre de reviews par page
+  const pageSize = 3;
 
   // Load initial reviews
   useEffect(() => {
     if (userId) {
       loadInitialReviews();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
 
   const loadInitialReviews = async () => {
@@ -41,7 +41,6 @@ const UserReviews: React.FC<UserReviewsProps> = ({ userId }) => {
       
       if (result.indexRequired) {
         setError('Database index is being created. Please wait a moment and try again.');
-        console.log('Please create the required index using the link in the console error message.');
         return;
       }
       
@@ -50,22 +49,17 @@ const UserReviews: React.FC<UserReviewsProps> = ({ userId }) => {
         return;
       }
       
-      // Store the reviews for page 1
-      setPageReviews({ 1: result.reviews });
+      // Initialiser le cache avec la première page
+      const newCache = new Map();
+      newCache.set(1, { 
+        reviews: result.reviews, 
+        lastDoc: result.lastDoc,
+        hasMore: result.hasMore 
+      });
+      
+      setPageCache(newCache);
       setReviews(result.reviews);
-      
-      // Store the last document for pagination if it exists
-      if (result.lastDoc) {
-        setPageLastDocs({ 1: result.lastDoc });
-      }
-      
-      // Only set totalPages > 1 if we have exactly pageSize reviews AND hasMore is true
-      // This means we're certain there are more reviews to fetch
-      if (result.hasMore && result.reviews.length === pageSize) {
-        setTotalPages(2); // Set exactly to 2 as we know there's at least a second page
-      } else {
-        setTotalPages(1); // Otherwise, just one page
-      }
+      setCurrentPage(1);
     } catch (error: any) {
       setError(error.message || 'Failed to load reviews');
     } finally {
@@ -73,111 +67,87 @@ const UserReviews: React.FC<UserReviewsProps> = ({ userId }) => {
     }
   };
 
-  // Pre-fetch the next page of reviews if it doesn't exist in cache
+  // Préchargement optimisé - ne charge que si nécessaire
   const prefetchNextPage = async (pageNumber: number) => {
-    // Don't prefetch if we already have this page's reviews
-    if (pageReviews[pageNumber]) return;
+    if (pageCache.has(pageNumber)) return;
     
-    // Don't prefetch beyond the known total pages
-    if (pageNumber > totalPages) return;
-    
-    // Get the last document from the previous page
-    const lastDoc = pageLastDocs[pageNumber - 1];
-    if (!lastDoc) return;
+    const prevPageData = pageCache.get(pageNumber - 1);
+    if (!prevPageData?.hasMore || !prevPageData.lastDoc) return;
     
     try {
-      const result = await getReviewsByUser(userId, pageSize, lastDoc);
+      const result = await getReviewsByUser(userId, pageSize, prevPageData.lastDoc);
       
-      if (result.error || result.indexRequired) return;
-      
-      // Store the reviews for this page
-      setPageReviews(prev => ({ ...prev, [pageNumber]: result.reviews }));
-      
-      // Store the last document for further pagination
-      if (result.lastDoc) {
-        setPageLastDocs(prev => ({ ...prev, [pageNumber]: result.lastDoc }));
-      }
-      
-      // Only increment total pages if we have a full page AND hasMore is true
-      // This confirms there are actually more pages after this one
-      if (result.hasMore && result.reviews.length === pageSize && pageNumber >= totalPages) {
-        setTotalPages(pageNumber + 1); // Set to exactly next page number
+      if (!result.error && !result.indexRequired) {
+        setPageCache(prev => {
+          const newCache = new Map(prev);
+          newCache.set(pageNumber, {
+            reviews: result.reviews,
+            lastDoc: result.lastDoc,
+            hasMore: result.hasMore
+          });
+          return newCache;
+        });
       }
     } catch (error) {
       console.error('Error prefetching next page:', error);
     }
   };
 
-  // Optimiser changePage pour utiliser le cache
   const changePage = async (pageNumber: number) => {
-    if (pageNumber < 1 || pageNumber > totalPages || pageNumber === currentPage) return;
+    const cachedPage = pageCache.get(pageNumber);
+    const currentPageData = pageCache.get(currentPage);
     
-    // Si les reviews de cette page sont en cache, les utiliser directement
-    if (pageReviews[pageNumber] && pageReviews[pageNumber].length > 0) {
-      setReviews(pageReviews[pageNumber]);
+    // Validation de la navigation
+    if (pageNumber < 1 || pageNumber === currentPage) return;
+    if (pageNumber > currentPage && !currentPageData?.hasMore) return;
+    
+    // Utiliser le cache si disponible
+    if (cachedPage) {
+      setReviews(cachedPage.reviews);
       setCurrentPage(pageNumber);
       
-      // Précharger la page suivante si nécessaire
-      if (pageReviews[pageNumber].length === pageSize && !pageReviews[pageNumber + 1]) {
+      // Précharger la page suivante si possible
+      if (cachedPage.hasMore && !pageCache.has(pageNumber + 1)) {
         prefetchNextPage(pageNumber + 1);
       }
       return;
     }
 
+    // Charger la page si pas en cache
     setLoading(true);
 
     try {
-      const lastDoc = pageLastDocs[pageNumber - 1];
-      if (!lastDoc && pageNumber > 1) {
+      const prevPageData = pageCache.get(pageNumber - 1);
+      if (!prevPageData?.lastDoc && pageNumber > 1) {
         setError('Cannot load this page. Please try going to a previous page first.');
         setLoading(false);
         return;
       }
       
-      const result = await getReviewsByUser(userId, pageSize, lastDoc);
+      const result = await getReviewsByUser(userId, pageSize, prevPageData?.lastDoc);
       
-      if (result.indexRequired) {
-        setError('Database index is being created. Please wait a moment and try again.');
+      if (result.indexRequired || result.error) {
+        setError(result.error || 'Database index is being created.');
         setLoading(false);
         return;
       }
       
-      if (result.error) {
-        setError(result.error);
-        setLoading(false);
-        return;
-      }
+      // Mettre à jour le cache et l'affichage
+      setPageCache(prev => {
+        const newCache = new Map(prev);
+        newCache.set(pageNumber, {
+          reviews: result.reviews,
+          lastDoc: result.lastDoc,
+          hasMore: result.hasMore
+        });
+        return newCache;
+      });
       
-      // Si page vide, ajuster totalPages
-      if (result.reviews.length === 0 && pageNumber > 1) {
-        setPageReviews(prev => ({ ...prev, [pageNumber]: [] }));
-        setTotalPages(pageNumber - 1);
-        changePage(pageNumber - 1);
-        return;
-      }
-      
-      // Mettre à jour l'affichage
       setReviews(result.reviews);
-      
-      // Mettre en cache
-      setPageReviews(prev => ({ ...prev, [pageNumber]: result.reviews }));
-      
-      if (result.lastDoc) {
-        setPageLastDocs(prev => ({ ...prev, [pageNumber]: result.lastDoc }));
-      }
-      
       setCurrentPage(pageNumber);
       
-      // Vérifier s'il y a plus de pages uniquement si nécessaire
-      if (result.hasMore && result.reviews.length === pageSize && pageNumber >= totalPages) {
-        const nextPageCheckResult = await getReviewsByUser(userId, 1, result.lastDoc);
-        if (nextPageCheckResult.reviews.length > 0) {
-          setTotalPages(pageNumber + 1);
-        }
-      }
-      
-      // Précharger la page suivante si la page actuelle est pleine
-      if (result.reviews.length === pageSize) {
+      // Précharger la page suivante
+      if (result.hasMore) {
         prefetchNextPage(pageNumber + 1);
       }
     } catch (error: any) {
@@ -206,45 +176,54 @@ const UserReviews: React.FC<UserReviewsProps> = ({ userId }) => {
     router.push(`/games/${gameId}`);
   };
 
-  // Generate pagination numbers
+  // Génération optimisée de la pagination
   const generatePaginationNumbers = () => {
-    const pages = [];
+    const pages: (number | string)[] = [];
     const maxVisiblePages = 5;
     
-    if (totalPages <= maxVisiblePages) {
-      // Show all pages if we have fewer than maxVisiblePages
-      for (let i = 1; i <= totalPages; i++) {
+    // Calculer le nombre total de pages basé sur le cache
+    let maxKnownPage = currentPage;
+    const currentPageData = pageCache.get(currentPage);
+    
+    if (currentPageData?.hasMore) {
+      maxKnownPage = currentPage + 1;
+    }
+    
+    // Vérifier les pages en cache
+    for (let i = currentPage + 1; pageCache.has(i); i++) {
+      maxKnownPage = i;
+      if (pageCache.get(i)?.hasMore) {
+        maxKnownPage = i + 1;
+      }
+    }
+    
+    if (maxKnownPage <= maxVisiblePages) {
+      for (let i = 1; i <= maxKnownPage; i++) {
         pages.push(i);
       }
     } else {
-      // Always include page 1
       pages.push(1);
       
       let startPage = Math.max(2, currentPage - 1);
-      let endPage = Math.min(startPage + 2, totalPages - 1);
+      let endPage = Math.min(startPage + 2, maxKnownPage - 1);
       
-      // Adjust if we're near the end
-      if (endPage === totalPages - 1) {
+      if (endPage === maxKnownPage - 1) {
         startPage = Math.max(2, endPage - 2);
       }
       
-      // Add ellipsis after page 1 if needed
       if (startPage > 2) {
         pages.push('ellipsis1');
       }
       
-      // Add middle pages
       for (let i = startPage; i <= endPage; i++) {
         pages.push(i);
       }
       
-      // Add ellipsis before last page if needed
-      if (endPage < totalPages - 1) {
+      if (endPage < maxKnownPage - 1) {
         pages.push('ellipsis2');
       }
       
-      // Always include last page
-      pages.push(totalPages);
+      pages.push(maxKnownPage);
     }
     
     return pages;
@@ -272,15 +251,12 @@ const UserReviews: React.FC<UserReviewsProps> = ({ userId }) => {
         </div>
       ) : (
         <>
-          {/* Pagination moved to top */}
-          {totalPages > 1 && (
-            (currentPage === totalPages && reviews.length > 0) ||
-            (currentPage < totalPages && reviews.length === pageSize)
-          ) && (
+          {/* Pagination moved to top - Afficher seulement s'il y a plus d'une page */}
+          {(currentPage > 1 || pageCache.get(currentPage)?.hasMore) && (
             <div className={styles.userReviewsPagination}>
               <button 
                 className={`${styles.paginationButton} ${styles.navButton}`}
-                onClick={() => currentPage > 1 && changePage(currentPage - 1)}
+                onClick={() => changePage(currentPage - 1)}
                 disabled={currentPage === 1 || loading}
               >
                 Prev
@@ -305,8 +281,8 @@ const UserReviews: React.FC<UserReviewsProps> = ({ userId }) => {
               
               <button 
                 className={`${styles.paginationButton} ${styles.navButton}`}
-                onClick={() => currentPage < totalPages && changePage(currentPage + 1)}
-                disabled={currentPage >= totalPages || loading}
+                onClick={() => changePage(currentPage + 1)}
+                disabled={!pageCache.get(currentPage)?.hasMore || loading}
               >
                 Next
               </button>

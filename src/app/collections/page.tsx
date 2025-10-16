@@ -458,6 +458,7 @@ export default function CollectionsPage() {
     }
     
     return () => clearTimeout(authTimeout);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
   
   // Load collection games when active status changes
@@ -466,14 +467,16 @@ export default function CollectionsPage() {
     if (user && activeTab === 'collection' && collectionGames.length === 0) {
       loadCollectionGames(true);
     }
-  }, [activeStatus, activeTab]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeStatus, activeTab, user]);
   
   // Load list games when active list changes
   useEffect(() => {
     if (user && activeTab === 'lists' && activeListId) {
       loadListGames(true);
     }
-  }, [activeListId, activeTab]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeListId, activeTab, user]);
   
   // Collection stats
   const loadCollectionStats = async () => {
@@ -624,13 +627,36 @@ export default function CollectionsPage() {
   
   // Nouvelle fonction pour charger toutes les données et les mettre en cache
   const loadAllData = async () => {
+    if (!user) return;
+    
     setLoading(true);
     
     try {
+      // Charger seulement si pas déjà en cache ou si stale
+      const cacheKey = `collection_${user.uid}`;
+      const cached = CacheManager.get(cacheKey) as {
+        stats: any;
+        lists: Array<List & { gameCount: number }>;
+        games: CollectionItem[];
+        hasMoreCollection: boolean;
+        activeStatus: string | null;
+        timestamp: number;
+      } | null;
+      
+      if (cached && cached.timestamp && Date.now() - cached.timestamp < 60000) { // Cache valide 1 minute
+        setStats(cached.stats);
+        setCustomLists(cached.lists);
+        setCollectionGames(cached.games);
+        setHasMoreCollection(cached.hasMoreCollection);
+        setLoading(false);
+        return;
+      }
+      
+      // Sinon, charger les données
       const [statsResult, listsResult, gamesResult] = await Promise.all([
-        user ? getUserCollectionStats(user.uid) : Promise.resolve(null),
-        user ? getListsWithCounts(user.uid) : Promise.resolve(null),
-        user ? getUserCollection(user.uid, activeStatus || undefined, 12) : Promise.resolve(null)
+        getUserCollectionStats(user.uid),
+        getListsWithCounts(user.uid),
+        getUserCollection(user.uid, activeStatus || undefined, 12)
       ]);
       
       if (statsResult && !statsResult.error) {
@@ -647,20 +673,19 @@ export default function CollectionsPage() {
         setHasMoreCollection(gamesResult.hasMore);
       }
       
-      // Mettre en cache les données
-      if (user) {
-        CacheManager.set(
-          `collection_${user.uid}`,
-          {
-            stats: statsResult,
-            lists: listsResult?.lists || [],
-            games: gamesResult?.items || [],
-            hasMoreCollection: gamesResult?.hasMore || false,
-            activeStatus: activeStatus
-          },
-          false // Ne pas utiliser localStorage pour éviter les problèmes de synchronisation
-        );
-      }
+      // Mettre en cache avec timestamp
+      CacheManager.set(
+        cacheKey,
+        {
+          stats: statsResult,
+          lists: listsResult?.lists || [],
+          games: gamesResult?.items || [],
+          hasMoreCollection: gamesResult?.hasMore || false,
+          activeStatus: activeStatus,
+          timestamp: Date.now()
+        },
+        false
+      );
       
     } catch (error) {
       console.error('Error loading collection data:', error);
@@ -680,25 +705,34 @@ export default function CollectionsPage() {
   const handleDeleteCollectionGame = async (gameId: number) => {
     if (!user) return;
     
+    // Mise à jour optimiste de l'UI
+    const previousGames = [...collectionGames];
+    setCollectionGames(collectionGames.filter(game => game.gameId !== gameId));
+    
     try {
       const result = await removeFromCollection(gameId);
       
       if (result.success) {
         setSuccessMessage(`Game removed from your collection!`);
-        setCollectionGames(collectionGames.filter(game => game.gameId !== gameId));
         
-        // Invalider le cache
+        // Invalider seulement le cache nécessaire
         CacheManager.remove(`collection_${user.uid}`);
-        CacheManager.invalidatePattern(`statsCache_${user.uid}`);
+        // Invalider tous les caches de stats pour cet utilisateur
+        CacheManager.remove(`statsCache_${user.uid}`);
+        
+        // Recharger seulement les stats (plus léger qu'une requête complète)
         loadCollectionStats();
         
         setTimeout(() => {
           setSuccessMessage(null);
         }, 3000);
       } else {
+        // Restaurer en cas d'erreur
+        setCollectionGames(previousGames);
         setError(result.error || 'Failed to remove game from collection');
       }
     } catch (error: any) {
+      setCollectionGames(previousGames);
       setError(error.message || 'An error occurred');
     }
   };
@@ -707,24 +741,34 @@ export default function CollectionsPage() {
   const handleDeleteListGame = async (gameId: number) => {
     if (!user || !activeListId) return;
     
+    // Mise à jour optimiste de l'UI
+    const previousGames = [...listGames];
+    setListGames(listGames.filter(game => game.gameId !== gameId));
+    
     try {
       const result = await removeGameFromList(activeListId, gameId);
       
       if (result.success) {
         setSuccessMessage(`Game removed from list!`);
-        setListGames(listGames.filter(game => game.gameId !== gameId));
         
         // Invalider le cache
-        invalidateCache();
+        if (user) {
+          CacheManager.remove(`collection_${user.uid}`);
+        }
+        
+        // Recharger les listes pour mettre à jour les compteurs
         loadCustomLists();
         
         setTimeout(() => {
           setSuccessMessage(null);
         }, 3000);
       } else {
+        // Restaurer en cas d'erreur
+        setListGames(previousGames);
         setError(result.error || 'Failed to remove game from list');
       }
     } catch (error: any) {
+      setListGames(previousGames);
       setError(error.message || 'An error occurred');
     }
   };

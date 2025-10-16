@@ -131,42 +131,93 @@ export const deleteReview = async (reviewId: string): Promise<{ success: boolean
   }
 };
 
-// Obtenir les avis pour un jeu spécifique
+// Obtenir les avis d'un utilisateur - OPTIMISÉ
+export const getReviewsByUser = async (userId: string, pageSize: number = 5, lastDoc?: DocumentSnapshot): Promise<{ reviews: Review[]; lastDoc?: DocumentSnapshot; hasMore: boolean; error?: string; indexRequired?: boolean }> => {
+  try {
+    if (!db) {
+      return { reviews: [], hasMore: false, error: 'Database not initialized' };
+    }
+
+    // Accéder directement à la sous-collection de reviews de l'utilisateur
+    let reviewsQuery = query(
+      collection(db, `review/${userId}/reviews`),
+      orderBy('createdAt', 'desc'),
+      limit(pageSize + 1) // +1 pour savoir s'il y a plus de pages
+    );
+
+    if (lastDoc) {
+      reviewsQuery = query(reviewsQuery, startAfter(lastDoc));
+    }
+
+    const reviewsSnapshot = await getDocs(reviewsQuery);
+    const reviews: Review[] = [];
+    let newLastDoc: DocumentSnapshot | undefined;
+    const hasMore = reviewsSnapshot.docs.length > pageSize;
+
+    // Ne prendre que pageSize éléments
+    const docsToProcess = reviewsSnapshot.docs.slice(0, pageSize);
+    
+    docsToProcess.forEach((doc) => {
+      newLastDoc = doc;
+      reviews.push({ 
+        id: doc.id, 
+        ...doc.data(),
+        userId: userId
+      } as Review);
+    });
+
+    return { reviews, lastDoc: newLastDoc, hasMore };
+    
+  } catch (error: any) {
+    console.error('Error getting reviews by user:', error);
+    
+    if (error.message && error.message.includes('index')) {
+      return { 
+        reviews: [], 
+        hasMore: false, 
+        error: 'This query requires an index. Please follow the link in the console to create it.', 
+        indexRequired: true 
+      };
+    }
+    
+    return { reviews: [], hasMore: false, error: error.message };
+  }
+};
+
+// Obtenir les avis pour un jeu spécifique - OPTIMISÉ
 export const getReviewsByGame = async (gameId: number, pageSize: number = 10, lastDoc?: DocumentSnapshot): Promise<{ reviews: Review[]; lastDoc?: DocumentSnapshot; hasMore: boolean; error?: string; indexRequired?: boolean }> => {
   try {
     if (!db) {
       return { reviews: [], hasMore: false, error: 'Database not initialized' };
     }
 
-    // Validate gameId
     const validatedGameId = ReviewSchema.shape.gameId.parse(gameId);
 
-    // Utiliser collectionGroup pour requêter à travers toutes les sous-collections "reviews"
     let reviewsQuery = query(
       collectionGroup(db, 'reviews'),
       where('gameId', '==', validatedGameId),
-      orderBy('createdAt', 'desc')
+      orderBy('createdAt', 'desc'),
+      limit(pageSize + 1) // +1 pour savoir s'il y a plus de pages
     );
 
     if (lastDoc) {
-      reviewsQuery = query(reviewsQuery, startAfter(lastDoc), limit(pageSize));
-    } else {
-      reviewsQuery = query(reviewsQuery, limit(pageSize));
+      reviewsQuery = query(reviewsQuery, startAfter(lastDoc));
     }
 
     const reviewsSnapshot = await getDocs(reviewsQuery);
     const reviews: Review[] = [];
     let newLastDoc: DocumentSnapshot | undefined;
+    const hasMore = reviewsSnapshot.docs.length > pageSize;
 
-    reviewsSnapshot.forEach((doc) => {
+    const docsToProcess = reviewsSnapshot.docs.slice(0, pageSize);
+
+    docsToProcess.forEach((doc) => {
       newLastDoc = doc;
-      // L'ID est maintenant le chemin complet du document
       const paths = doc.ref.path.split('/');
-      const userId = paths[1]; // review/{userId}/reviews/{gameId}
+      const userId = paths[1];
       
       try {
         const rawData = doc.data();
-        // Create safe review data with proper defaults
         const safeReviewData = {
           id: doc.id, 
           userId: userId,
@@ -181,79 +232,23 @@ export const getReviewsByGame = async (gameId: number, pageSize: number = 10, la
           updatedAt: rawData?.updatedAt || new Date().toISOString()
         };
         
-        // Validate review data from Firestore
         const reviewData = ReviewSchema.parse(safeReviewData);
         reviews.push(reviewData);
       } catch (validationError) {
         console.error('Invalid review data in Firestore:', validationError);
-        // Skip invalid reviews rather than failing the entire request
       }
     });
 
-    const hasMore = reviews.length === pageSize;
     return { reviews, lastDoc: newLastDoc, hasMore };
     
   } catch (error: any) {
     console.error('Error getting reviews by game:', error);
     
-    // Handle Zod validation errors
     if (error.name === 'ZodError') {
       return { 
         reviews: [], 
         hasMore: false, 
         error: error.issues.map((issue: any) => issue.message).join(', ')
-      };
-    }
-    
-    return { reviews: [], hasMore: false, error: error.message };
-  }
-};
-
-// Obtenir les avis d'un utilisateur
-export const getReviewsByUser = async (userId: string, pageSize: number = 5, lastDoc?: DocumentSnapshot): Promise<{ reviews: Review[]; lastDoc?: DocumentSnapshot; hasMore: boolean; error?: string; indexRequired?: boolean }> => {
-  try {
-    if (!db) {
-      return { reviews: [], hasMore: false, error: 'Database not initialized' };
-    }
-
-    // Accéder directement à la sous-collection de reviews de l'utilisateur
-    let reviewsQuery = query(
-      collection(db, `review/${userId}/reviews`),
-      orderBy('createdAt', 'desc')
-    );
-
-    if (lastDoc) {
-      reviewsQuery = query(reviewsQuery, startAfter(lastDoc), limit(pageSize));
-    } else {
-      reviewsQuery = query(reviewsQuery, limit(pageSize));
-    }
-
-    const reviewsSnapshot = await getDocs(reviewsQuery);
-    const reviews: Review[] = [];
-    let newLastDoc: DocumentSnapshot | undefined;
-
-    reviewsSnapshot.forEach((doc) => {
-      newLastDoc = doc;
-      reviews.push({ 
-        id: doc.id, 
-        ...doc.data(),
-        userId: userId // Assurez-vous que le userId est correct
-      } as Review);
-    });
-
-    const hasMore = reviews.length === pageSize;
-    return { reviews, lastDoc: newLastDoc, hasMore };
-    
-  } catch (error: any) {
-    console.error('Error getting reviews by user:', error);
-    
-    // Check if it's an index-related error
-    if (error.message && error.message.includes('index')) {
-      return { 
-        reviews: [], 
-        hasMore: false, 
-        error: 'This query requires an index. Please follow the link in the console to create it.', 
-        indexRequired: true 
       };
     }
     
