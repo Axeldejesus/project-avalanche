@@ -13,7 +13,7 @@ import PageLoader from './PageLoader';
 const Navigation: React.FC = () => {
   const pathname = usePathname();
   const router = useRouter();
-  const { user, userProfile } = useAuth();
+  const { user, userProfile, loading } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isNavigating, setIsNavigating] = useState(false);
   
@@ -131,11 +131,12 @@ const Navigation: React.FC = () => {
         </a>
       </nav>
       
-      {/* Mobile menu button */}
+      {/* Mobile menu button - Always visible, no conditional rendering */}
       <button 
         className={styles.mobileMenuButton}
         onClick={toggleMobileMenu}
         aria-label="Toggle menu"
+        style={{ visibility: 'visible' }} /* Force visibility */
       >
         <FiMenu />
       </button>
@@ -161,7 +162,9 @@ const Navigation: React.FC = () => {
           
           {/* Profile section in mobile menu */}
           <div className={styles.mobileNavProfile}>
-            {user && userProfile ? (
+            {loading ? (
+              <div className={styles.authLoading}></div>
+            ) : user && userProfile ? (
               <>
                 <button 
                   className={styles.mobileNavProfileButton}

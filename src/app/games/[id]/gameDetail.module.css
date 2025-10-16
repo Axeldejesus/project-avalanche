@@ -33,6 +33,7 @@
   padding: 1.5rem 2rem;
   z-index: 10;
   align-items: center;
+  min-height: 70px; /* Ensure consistent height */
 }
 
 /* Style le wrapper du bouton back pour correspondre aux autres contrôles mobiles */
@@ -40,6 +41,7 @@
   display: flex;
   align-items: center;
   gap: 0.75rem;
+  flex-shrink: 0; /* Prevent shrinking */
 }
 
 /* Desktop menu toggle button */
@@ -83,6 +85,8 @@
   display: none;
   gap: 0.75rem;
   align-items: center;
+  flex-shrink: 0; /* Prevent shrinking */
+  min-width: 100px; /* Reserve space to prevent layout shift */
 }
 
 .mobileSearchToggle,
@@ -989,6 +993,7 @@
     padding: 0.875rem;
     flex-wrap: nowrap;
     gap: 0.625rem;
+    min-height: 60px; /* Consistent mobile height */
   }
   
   /* Hide desktop search on mobile */
@@ -1394,7 +1399,7 @@
 /* Très petits écrans (iPhone SE, etc.) */
 @media (max-width: 375px) {
   .topBar {
-    padding: 0.625rem 0.5rem;
+    padding: 0.5rem 0.5rem;
   }
   
   .mobileSearchToggle,
@@ -1604,11 +1609,6 @@
   .simpleList li {
     font-size: 0.725rem;
     margin-bottom: 0.35rem;
-  }
-  
-  .simpleList li:before {
-    font-size: 0.9rem;
-    margin-right: 0.5rem;
   }
   
   .releaseDatesList li {

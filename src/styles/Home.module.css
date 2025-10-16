@@ -26,6 +26,7 @@
   z-index: 100;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
   transition: all 0.3s ease;
+  position: relative; /* Important pour le positionnement absolu des enfants */
 }
 
 .logo {
@@ -72,6 +73,7 @@
   gap: 1.2rem;
   margin-right: auto;
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+  position: relative; /* Retiré le positionnement absolu */
 }
 
 .nav a {
@@ -156,7 +158,9 @@
 .userMenu {
   display: flex;
   align-items: center;
-  margin-left: 0.5rem;
+  margin-left: auto;
+  min-width: 200px; /* min-width au lieu de width */
+  justify-content: flex-end;
 }
 
 .userMenuLoggedIn {
@@ -168,6 +172,8 @@
   flex-direction: row;
   gap: 15px;
   align-items: center;
+  min-width: 200px; /* min-width au lieu de width */
+  justify-content: flex-end;
 }
 
 .loginBtn, .registerBtn {
@@ -297,8 +303,26 @@
 }
 
 .authLoading {
-  width: 80px; /* Match approximate width of the buttons to prevent layout shift */
+  min-width: 200px; /* min-width au lieu de width */
   height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 20px;
+}
+
+.authLoading::after {
+  content: '';
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-top-color: rgba(108, 92, 231, 0.8);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 
 .usernameDisplay {
@@ -990,7 +1014,7 @@
   font-size: 1.5rem;
   cursor: pointer;
   padding: 0.5rem;
-  margin-left: auto;
+  z-index: 10;
 }
 
 .mobileMenuOverlay {
@@ -1208,12 +1232,12 @@
 @media (max-width: 768px) {
   .header {
     padding: 0.75rem 1rem;
-    justify-content: space-between;
+    justify-content: space-between; /* Pour espacer logo et burger */
   }
   
   .logo {
     font-size: 1.4rem;
-    margin-right: auto;
+    margin-right: 0;
     letter-spacing: 1.5px;
   }
   
@@ -1225,6 +1249,7 @@
   /* Show mobile menu button */
   .mobileMenuButton {
     display: block;
+    margin-left: auto; /* Pousse le burger à droite */
   }
   
   .mobileNav {
@@ -1238,6 +1263,10 @@
   
   .authButtonsContainer {
     display: none;
+  }
+  
+  .authLoading {
+    display: none; /* Cache le spinner sur mobile */
   }
   
   .mainLayout {
