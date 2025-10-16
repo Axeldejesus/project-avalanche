@@ -91,26 +91,17 @@ async function getRecommendedGames(): Promise<Game[]> {
 async function getUpcomingGames(): Promise<UpcomingGame[]> {
   try {
     const currentTimestamp = Math.floor(Date.now() / 1000);
+    const oneYearFromNow = currentTimestamp + (365 * 86400);
     
     const games = await igdbRequest<any>('games', `
       fields name, cover.image_id, first_release_date, genres.name;
-      where 
-        first_release_date > ${currentTimestamp} & 
-        first_release_date != null & 
-        cover.image_id != null & 
-        version_parent = null &
-        category = 0;
+      where first_release_date > ${currentTimestamp} & first_release_date < ${oneYearFromNow} & cover.image_id != null;
       sort first_release_date asc;
-      limit 10;
+      limit 5;
     `);
     
     if (games && games.length > 0) {
-      // Filtrer pour ne garder que les vrais jeux à venir
-      const validGames = games.filter((game: any) => 
-        game.first_release_date && game.first_release_date > currentTimestamp
-      );
-      
-      return validGames.slice(0, 5).map((game: any) => ({
+      return games.map((game: any) => ({
         id: game.id,
         name: game.name,
         cover: getImageUrl(game.cover?.image_id),

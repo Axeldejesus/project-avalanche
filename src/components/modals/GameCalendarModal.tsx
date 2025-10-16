@@ -30,7 +30,6 @@ const PLATFORMS = {
   PS5: 167,
   XBOX: 169,
   SWITCH: 130,
-  PC: 6,
   MOBILE: 34
 };
 
@@ -233,16 +232,23 @@ const MonthSection: React.FC<MonthSectionProps> = ({
       <h3>{month} {year}</h3>
       <span>{games.length} {games.length === 1 ? 'game' : 'games'}</span>
     </div>
-    <div className={styles.listMonthGames}>
-      {games.map((game, idx) => (
-        <GameItem 
-          key={`${game.id}-${idx}`} 
-          game={game} 
-          formatDate={formatDate} 
-          onGameClick={onGameClick} 
-        />
-      ))}
-    </div>
+    {games.length > 0 ? (
+      <div className={styles.listMonthGames}>
+        {games.map((game, idx) => (
+          <GameItem 
+            key={`${game.id}-${idx}`} 
+            game={game} 
+            formatDate={formatDate} 
+            onGameClick={onGameClick} 
+          />
+        ))}
+      </div>
+    ) : (
+      <div className={styles.emptyMonthMessage}>
+        <p>🎮 No confirmed releases yet for {month} {year}</p>
+        <p style={{ fontSize: '0.9rem', color: '#999' }}>Check back later for updates</p>
+      </div>
+    )}
   </div>
 );
 
@@ -311,7 +317,6 @@ const GameCalendarModal: React.FC<GameCalendarModalProps> = ({ isOpen, onClose }
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
   const [showScrollTop, setShowScrollTop] = useState(false);
-  const [lastFetchKey, setLastFetchKey] = useState<string>('');
   
   // Minimum swipe distance (in px)
   const minSwipeDistance = 50;
@@ -341,23 +346,13 @@ const GameCalendarModal: React.FC<GameCalendarModalProps> = ({ isOpen, onClose }
     }
   }, [isOpen]);
   
-  // Fetch games when dependencies change - avec protection contre les rechargements multiples
+  // Fetch games when dependencies change - NE PAS inclure activeQuarter
   useEffect(() => {
-    if (!isOpen) return;
-    
-    // Créer une clé unique basée sur l'année et les plateformes
-    const fetchKey = `${year}-${selectedPlatforms.join(',')}`;
-    
-    // Ne fetch que si la clé a changé
-    if (fetchKey === lastFetchKey) {
-      console.log('Fetch skipped - same key:', fetchKey);
-      return;
+    if (isOpen) {
+      console.log('Fetching calendar for:', { year, platforms: selectedPlatforms });
+      fetchCalendarGames();
     }
-    
-    console.log('Fetching calendar games for:', fetchKey);
-    setLastFetchKey(fetchKey);
-    fetchCalendarGames();
-  }, [isOpen, selectedPlatforms, year]);
+  }, [isOpen, selectedPlatforms, year]); // Enlever activeQuarter d'ici
   
   // Debounce search
   useEffect(() => {
@@ -404,16 +399,17 @@ const GameCalendarModal: React.FC<GameCalendarModalProps> = ({ isOpen, onClose }
         : '';
       
       const fetchUrl = `/api/calendar-games?year=${year}${platformParams ? `&${platformParams}` : ''}`;
+      
       console.log('Fetching from:', fetchUrl);
       
       const response = await fetch(fetchUrl);
       
       if (!response.ok) {
-        throw new Error('Failed to fetch calendar data');
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
       
       const data = await response.json();
-      console.log('Received calendar data for year:', year, 'Games count:', Object.values(data).flat().length);
+      console.log('Received calendar data:', Object.keys(data).map(month => `${month}: ${data[month].length}`));
       setCalendarGames(data);
     } catch (err) {
       console.error('Error loading calendar data:', err);
