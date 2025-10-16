@@ -85,7 +85,6 @@ export default function GamesPage() {
   const [genres, setGenres] = useState<{ id: number, name: string }[]>([]);
   const [filtersInitialized, setFiltersInitialized] = useState(false);
   const [scrollRestored, setScrollRestored] = useState(false);
-  const [showBackToTop, setShowBackToTop] = useState(false);
   const [selectedChip, setSelectedChip] = useState<number | null>(0);
   const [isMobile, setIsMobile] = useState(false);
   const [expandedSections, setExpandedSections] = useState<{[key: string]: boolean}>({
@@ -98,22 +97,6 @@ export default function GamesPage() {
   const observer = useRef<IntersectionObserver | null>(null);
   const loadingRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
-
-  // Scroll handler for back to top button
-  useEffect(() => {
-    const handleScroll = () => {
-      if (window.scrollY > 300) {
-        setShowBackToTop(true);
-      } else {
-        setShowBackToTop(false);
-      }
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-    };
-  }, []);
 
   // Initialize filters from session storage or default values
   useEffect(() => {
@@ -437,14 +420,6 @@ export default function GamesPage() {
     setViewMode(mode);
   };
 
-  // Scroll to top function
-  const scrollToTop = () => {
-    window.scrollTo({
-      top: 0,
-      behavior: 'smooth'
-    });
-  };
-
   // Handle filter chip selection with haptic feedback on mobile
   const handleChipSelect = (index: number) => {
     const chip = FILTER_CHIPS[index];
@@ -471,13 +446,12 @@ export default function GamesPage() {
 
   // Render loading skeletons
   const renderSkeletons = () => {
-    return Array(8).fill(0).map((_, index) => (
+    return Array(12).fill(0).map((_, index) => ( // Changed from 8 to 12
       <div key={`skeleton-${index}`} className={styles.skeletonCard}>
         <div className={styles.skeletonImage}></div>
         <div className={styles.skeletonContent}>
           <div className={styles.skeletonTitle}></div>
           <div className={styles.skeletonGenre}></div>
-          <div className={styles.skeletonRating}></div>
         </div>
       </div>
     ));
@@ -743,40 +717,36 @@ export default function GamesPage() {
           
           {/* Main Content Area */}
           <div className={styles.mainContent}>
-            {/* Mobile Controls */}
-            {isMobile && (
-              <div className={styles.mobileControls}>
-                <div className={styles.mobileTopBar}>
-                  <button 
-                    className={`${styles.filterButton} ${activeFiltersCount > 0 ? styles.hasFilters : ''}`}
-                    onClick={toggleFilter}
-                  >
-                    <Filter size={18} />
-                    <span>Filters</span>
-                    {activeFiltersCount > 0 && (
-                      <span className={styles.filterCount}>{activeFiltersCount}</span>
-                    )}
-                  </button>
-                  
-                  <div className={styles.searchContainer}>
-                    <input
-                      type="text"
-                      placeholder="Search games..."
-                      value={filters.searchQuery}
-                      onChange={handleSearchChange}
-                      className={styles.searchInput}
-                    />
-                    <Search size={18} className={styles.searchIcon} />
-                  </div>
-                </div>
+            {/* Mobile Controls - Always render on mobile */}
+            <div className={styles.mobileControls}>
+              <div className={styles.mobileTopBar}>
+                <button 
+                  className={`${styles.filterButton} ${activeFiltersCount > 0 ? styles.hasFilters : ''}`}
+                  onClick={toggleFilter}
+                >
+                  <Filter size={18} />
+                  <span>Filters</span>
+                  {activeFiltersCount > 0 && (
+                    <span className={styles.filterCount}>{activeFiltersCount}</span>
+                  )}
+                </button>
                 
-                {/* Remove filter chips completely on mobile */}
+                <div className={styles.searchContainer}>
+                  <input
+                    type="text"
+                    placeholder="Search games..."
+                    value={filters.searchQuery}
+                    onChange={handleSearchChange}
+                    className={styles.searchInput}
+                  />
+                  <Search size={18} className={styles.searchIcon} />
+                </div>
               </div>
-            )}
+            </div>
             
             {/* Games Grid/List */}
             {loading && games.length === 0 ? (
-              <div className={styles.skeletonGrid}>
+              <div className={styles.gameGrid}>
                 {renderSkeletons()}
               </div>
             ) : error ? (
@@ -853,10 +823,9 @@ export default function GamesPage() {
                 
                 <div ref={loadingRef} className={styles.loadMore}>
                   {loading && hasMore && (
-                    <>
+                    <div className={styles.loadMoreIndicator}>
                       <div className={styles.loadMoreSpinner}></div>
-                      <p>Loading more games...</p>
-                    </>
+                    </div>
                   )}
                 </div>
               </>
@@ -979,14 +948,6 @@ export default function GamesPage() {
             </div>
           </>
         )}
-        
-        <button 
-          className={`${styles.backToTop} ${showBackToTop ? styles.visible : ''}`}
-          onClick={scrollToTop}
-          aria-label="Back to top"
-        >
-          <ChevronUp size={20} />
-        </button>
       </main>
     </div>
   );

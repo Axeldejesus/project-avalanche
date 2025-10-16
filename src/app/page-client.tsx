@@ -10,6 +10,7 @@ import Header from '../components/Header';
 import GameCard from '../components/GameCard';
 import PlatformImage from '../components/PlatformImage';
 import GameCalendarModal from '../components/modals/GameCalendarModal';
+import AboutModal from '../components/modals/AboutModal';
 
 // React Icons
 import { FiSearch, FiHome, FiTrendingUp, FiPackage } from 'react-icons/fi';
@@ -81,6 +82,7 @@ const HomePage: React.FC<HomePageProps> = ({
   platforms 
 }) => {
   const [isCalendarModalOpen, setIsCalendarModalOpen] = useState(false);
+  const [isAboutModalOpen, setIsAboutModalOpen] = useState(false);
   const router = useRouter();
   
   // Effet pour vérifier si on doit rouvrir la modal du calendrier
@@ -100,6 +102,14 @@ const HomePage: React.FC<HomePageProps> = ({
   
   const closeCalendarModal = () => {
     setIsCalendarModalOpen(false);
+  };
+
+  const openAboutModal = () => {
+    setIsAboutModalOpen(true);
+  };
+
+  const closeAboutModal = () => {
+    setIsAboutModalOpen(false);
   };
 
   // Nouvelle fonction pour naviguer vers la page de détail du jeu
@@ -161,14 +171,14 @@ const HomePage: React.FC<HomePageProps> = ({
             <div className={styles.promotionalBanner}>
               <div className={styles.bannerContent}>
                 <h1 className={styles.bannerTitle}>
-                  Discover Your Next Gaming Adventure
+                  Your Gaming Universe Awaits
                 </h1>
                 <p className={styles.bannerDescription}>
-                  Avalanche brings you the ultimate gaming platform with personalized recommendations, 
-                  exclusive content, and a community of passionate gamers.
+                  Track your collection, discover new releases, create personalized lists, 
+                  and dive into detailed statistics. Everything you need to manage your gaming journey in one place.
                 </p>
-                <button className={styles.viewDetailsButton}>
-                  Explore Now
+                <button className={styles.viewDetailsButton} onClick={openAboutModal}>
+                  More Info
                 </button>
               </div>
             </div>
@@ -317,6 +327,11 @@ const HomePage: React.FC<HomePageProps> = ({
       <GameCalendarModal 
         isOpen={isCalendarModalOpen} 
         onClose={closeCalendarModal} 
+      />
+      
+      <AboutModal 
+        isOpen={isAboutModalOpen} 
+        onClose={closeAboutModal} 
       />
     </div>
   );
