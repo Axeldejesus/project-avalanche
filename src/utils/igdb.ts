@@ -38,7 +38,6 @@ export async function igdbRequest<T = any>(endpoint: string, query: string, cach
       throw new Error('IGDB client ID is not properly configured in environment variables');
     }
     
-    console.log(`🔍 Fetching IGDB data: ${endpoint}`);
     const response = await fetch(`https://api.igdb.com/v4/${endpoint}`, {
       method: 'POST',
       headers: {
@@ -55,7 +54,6 @@ export async function igdbRequest<T = any>(endpoint: string, query: string, cach
     }
     
     const data = await response.json();
-    
     
     return data;
   } catch (error) {

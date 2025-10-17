@@ -31,7 +31,6 @@ try {
   }
   
   db = admin.firestore();
-  console.log('Firebase Admin SDK initialized successfully');
 } catch (error) {
   console.error('Error initializing Firebase Admin SDK:', error);
 }
@@ -46,7 +45,6 @@ const testConnection = async () => {
     
     // Try to get a collection
     const querySnapshot = await db.collection('utilisateur').limit(1).get();
-    console.log('Successfully connected to Firebase! Found', querySnapshot.size, 'documents');
     return true;
   } catch (error) {
     console.error('Error connecting to Firebase:', error);
@@ -55,13 +53,6 @@ const testConnection = async () => {
     if (error.code === 'permission-denied') {
       console.error('\n---- FIREBASE PERMISSION ERROR ----');
       console.error('Your Firebase Admin credentials may be incorrect or missing.');
-      console.error('Verify that:');
-      console.error('1. You\'ve created and downloaded a service account key from Firebase console');
-      console.error('2. You\'ve added the following environment variables to your .env file:');
-      console.error('   - FIREBASE_PROJECT_ID');
-      console.error('   - FIREBASE_PRIVATE_KEY');
-      console.error('   - FIREBASE_CLIENT_EMAIL');
-      console.error('3. You have Firestore enabled in your Firebase console');
       console.error('------------------------------------\n');
     }
     

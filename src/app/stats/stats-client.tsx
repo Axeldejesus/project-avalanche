@@ -23,6 +23,7 @@ import {
   Title,
   Tooltip,
   Legend,
+  Filler, // Ajouter Filler
 } from 'chart.js';
 import { CacheManager } from '@/utils/cacheManager';
 
@@ -36,7 +37,8 @@ ChartJS.register(
   ArcElement,
   Title,
   Tooltip,
-  Legend
+  Legend,
+  Filler // Ajouter Filler ici
 );
 
 interface StatsClientProps {
@@ -75,7 +77,6 @@ const StatsClient: React.FC<StatsClientProps> = ({ userId }) => {
       setError(null);
       
       try {
-        // Utiliser le CacheManager
         const cachedData = CacheManager.get<{
           stats: CollectionStats;
           items: CollectionItem[];
@@ -90,11 +91,9 @@ const StatsClient: React.FC<StatsClientProps> = ({ userId }) => {
           }
           
           setIsLoading(false);
-          console.log('Using cached stats data');
           return;
         }
         
-        // Pas de cache valide, charger depuis Firestore
         const result = await getUserCollectionForStats(userId);
         
         if (result.error) {
@@ -109,16 +108,14 @@ const StatsClient: React.FC<StatsClientProps> = ({ userId }) => {
             setError("No games found in your collection");
           }
           
-          // Utiliser CacheManager avec localStorage
           CacheManager.set(
             `statsCache_${userId}`,
             {
               stats: result.stats,
               items: result.items
             },
-            true // Persistance avec localStorage
+            true
           );
-          console.log('Stats data cached');
         }
       } catch (error: any) {
         setError(error.message || "Failed to load statistics");

@@ -30,7 +30,7 @@ export class CacheManager {
   static set<T>(key: string, data: T, useLocalStorage: boolean = false): void {
     // Vérification de sécurité
     if (this.isSensitiveKey(key)) {
-      console.warn(`⚠️ Security Warning: Attempted to cache sensitive data with key: ${key}`);
+      console.error(`⚠️ Security Warning: Attempted to cache sensitive data with key: ${key}`);
       return;
     }
 

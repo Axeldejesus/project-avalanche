@@ -46,21 +46,15 @@ const Navigation: React.FC = () => {
   };
   
   const handleLoginClick = () => {
-    console.log('Login button clicked in mobile menu'); // Debug log
     closeMobileMenu();
-    // Déclencher l'ouverture de la modal de connexion
     const event = new CustomEvent('openLoginModal');
     window.dispatchEvent(event);
-    console.log('openLoginModal event dispatched'); // Debug log
   };
   
   const handleRegisterClick = () => {
-    console.log('Register button clicked in mobile menu'); // Debug log
     closeMobileMenu();
-    // Déclencher l'ouverture de la modal d'inscription
     const event = new CustomEvent('openRegisterModal');
     window.dispatchEvent(event);
-    console.log('openRegisterModal event dispatched'); // Debug log
   };
   
   const getInitials = (name: string) => {

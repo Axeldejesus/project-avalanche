@@ -54,7 +54,6 @@ if (isClient) {
       app = initializeApp(firebaseConfig);
       auth = getAuth(app);
       db = getFirestore(app);
-      console.log('Firebase initialized successfully on client side');
     } catch (error) {
       console.error('Error initializing Firebase:', error);
     }
@@ -96,13 +95,12 @@ export const hasSessionExpired = (): boolean => {
   if (!isClient) return false;
   
   const lastLoginStr = localStorage.getItem('lastLoginTimestamp');
-  if (!lastLoginStr) return false; // Pas de timestamp, considérer comme non expiré
+  if (!lastLoginStr) return false;
   
-  const lastLogin = parseInt(lastLoginStr);
+  const lastLogin = parseInt(lastLoginStr, 10);
   const now = Date.now();
-  const sessionDuration = now - lastLogin;
   
-  return sessionDuration > MAX_SESSION_DURATION;
+  return (now - lastLogin) > MAX_SESSION_DURATION;
 }
 
 // Service d'inscription - Add Zod validation
@@ -246,9 +244,6 @@ export const createUserProfile = async (userId: string, data: Omit<UserProfile, 
   }
 
   try {
-    console.log(`Attempting to create user profile for userId: ${userId}`);
-    console.log('With data:', data);
-    
     // Create a clean profile object with only the required fields
     const profileData = {
       userId: data.userId || userId,
@@ -265,7 +260,6 @@ export const createUserProfile = async (userId: string, data: Omit<UserProfile, 
     const userRef = doc(db, "utilisateur", userId);
     await setDoc(userRef, validatedData);
     
-    console.log(`User profile created successfully for userId: ${userId}`);
     return { success: true };
   } catch (error: any) {
     console.error("Erreur lors de la création du profil:", error);

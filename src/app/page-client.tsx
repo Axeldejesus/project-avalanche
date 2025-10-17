@@ -85,23 +85,6 @@ const HomePage: React.FC<HomePageProps> = ({
   const [isAboutModalOpen, setIsAboutModalOpen] = useState(false);
   const router = useRouter();
   
-  // Debug logs
-  useEffect(() => {
-    console.log('HomePage data:', {
-      recommendedGames: recommendedGames.length,
-      upcomingGames: upcomingGames.length,
-      newReleaseGames: newReleaseGames.length,
-      platforms: platforms.length
-    });
-    
-    if (upcomingGames.length > 0) {
-      console.log('Upcoming games:', upcomingGames.map(g => ({
-        name: g.name,
-        date: new Date(g.release_date * 1000).toISOString()
-      })));
-    }
-  }, [recommendedGames, upcomingGames, newReleaseGames, platforms]);
-  
   // Effet pour vérifier si on doit rouvrir la modal du calendrier
   useEffect(() => {
     const cameFromCalendar = sessionStorage.getItem('cameFromCalendar');

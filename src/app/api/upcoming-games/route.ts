@@ -35,10 +35,7 @@ export async function GET(): Promise<NextResponse<UpcomingGame[]>> {
       limit 30;
     `);
     
-    console.log(`Résultats IGDB pour les jeux à venir: ${games?.length || 0} jeux trouvés`);
-    
     if (games && games.length > 0) {
-      // Triple validation pour s'assurer qu'on n'a que des jeux futurs
       const upcomingGames = games.filter(game => {
         const releaseDate = game.first_release_date || 0;
         const isFuture = releaseDate > currentTimestamp;
@@ -54,12 +51,9 @@ export async function GET(): Promise<NextResponse<UpcomingGame[]>> {
         genres: game.genres?.map(g => g.name).join(', ') || 'Game'
       }));
       
-      // Dernière vérification et limitation à 5 jeux
       const finalGames = formattedGames
         .filter(game => game.release_date > currentTimestamp)
         .slice(0, 5);
-      
-      console.log(`Renvoi de ${finalGames.length} jeux à venir validés`);
       
       if (finalGames.length < 5) {
         const response = NextResponse.json(getRealisticUpcomingGames(currentTimestamp));
@@ -68,11 +62,9 @@ export async function GET(): Promise<NextResponse<UpcomingGame[]>> {
       }
       
       const response = NextResponse.json(finalGames);
-      // Cache for 1 hour, allow stale content for 24 hours while revalidating
       response.headers.set('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=86400');
       return response;
     } else {
-      console.log("Aucun jeu à venir trouvé, utilisation de données de secours");
       const response = NextResponse.json(getRealisticUpcomingGames(currentTimestamp));
       response.headers.set('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=86400');
       return response;

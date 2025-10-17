@@ -85,11 +85,7 @@ export async function GET(request: Request): Promise<NextResponse> {
       platformFilter = ` & platforms = (${platforms.join(',')})`;
     }
     
-    console.log(`Fetching games for year ${year}, platforms: ${platforms.join(',')}`);
-    
-    // SIX REQUÊTES EN PARALLÈLE pour récupérer jusqu'à 3000 jeux
     const [gamesFirstBatch, gamesSecondBatch, gamesThirdBatch, gamesFourthBatch, gamesFifthBatch, gamesSixthBatch] = await Promise.all([
-      // Première requête : 500 premiers jeux (offset 0)
       igdbRequest<IGame>('games', `
         fields name, cover.image_id, first_release_date, platforms.id;
         where first_release_date >= ${startOfYear} & first_release_date <= ${endOfYear} & cover.image_id != null${platformFilter};
@@ -97,7 +93,6 @@ export async function GET(request: Request): Promise<NextResponse> {
         limit 500;
         offset 0;
       `),
-      // Deuxième requête : 500 jeux suivants (offset 500)
       igdbRequest<IGame>('games', `
         fields name, cover.image_id, first_release_date, platforms.id;
         where first_release_date >= ${startOfYear} & first_release_date <= ${endOfYear} & cover.image_id != null${platformFilter};
@@ -105,7 +100,6 @@ export async function GET(request: Request): Promise<NextResponse> {
         limit 500;
         offset 500;
       `),
-      // Troisième requête : 500 jeux suivants (offset 1000)
       igdbRequest<IGame>('games', `
         fields name, cover.image_id, first_release_date, platforms.id;
         where first_release_date >= ${startOfYear} & first_release_date <= ${endOfYear} & cover.image_id != null${platformFilter};
@@ -113,7 +107,6 @@ export async function GET(request: Request): Promise<NextResponse> {
         limit 500;
         offset 1000;
       `),
-      // Quatrième requête : 500 jeux suivants (offset 1500)
       igdbRequest<IGame>('games', `
         fields name, cover.image_id, first_release_date, platforms.id;
         where first_release_date >= ${startOfYear} & first_release_date <= ${endOfYear} & cover.image_id != null${platformFilter};
@@ -121,7 +114,6 @@ export async function GET(request: Request): Promise<NextResponse> {
         limit 500;
         offset 1500;
       `),
-      // Cinquième requête : 500 jeux suivants (offset 2000)
       igdbRequest<IGame>('games', `
         fields name, cover.image_id, first_release_date, platforms.id;
         where first_release_date >= ${startOfYear} & first_release_date <= ${endOfYear} & cover.image_id != null${platformFilter};
@@ -129,7 +121,6 @@ export async function GET(request: Request): Promise<NextResponse> {
         limit 500;
         offset 2000;
       `),
-      // Sixième requête : 500 jeux suivants (offset 2500)
       igdbRequest<IGame>('games', `
         fields name, cover.image_id, first_release_date, platforms.id;
         where first_release_date >= ${startOfYear} & first_release_date <= ${endOfYear} & cover.image_id != null${platformFilter};
@@ -139,7 +130,6 @@ export async function GET(request: Request): Promise<NextResponse> {
       `)
     ]);
     
-    // FUSIONNER les six lots
     const games = [
       ...(gamesFirstBatch || []), 
       ...(gamesSecondBatch || []), 
@@ -148,8 +138,6 @@ export async function GET(request: Request): Promise<NextResponse> {
       ...(gamesFifthBatch || []),
       ...(gamesSixthBatch || [])
     ];
-    
-    console.log(`Total: ${games.length} games from IGDB (${gamesFirstBatch?.length || 0} + ${gamesSecondBatch?.length || 0} + ${gamesThirdBatch?.length || 0} + ${gamesFourthBatch?.length || 0} + ${gamesFifthBatch?.length || 0} + ${gamesSixthBatch?.length || 0})`);
     
     const calendarGames: CalendarGames = {};
     months.forEach(month => {
@@ -176,7 +164,6 @@ export async function GET(request: Request): Promise<NextResponse> {
       });
     }
     
-    // Ajouter des jeux de fallback pour les mois vides (uniquement pour l'année en cours ou future)
     const currentYear = new Date().getFullYear();
     if (year >= currentYear) {
       months.forEach((month, monthIndex) => {
@@ -190,10 +177,6 @@ export async function GET(request: Request): Promise<NextResponse> {
         }
       });
     }
-    
-    // Log distribution par mois
-    const distribution = months.map(month => `${month}: ${calendarGames[month].length}`).join(', ');
-    console.log(`Distribution: ${distribution}`);
     
     return NextResponse.json(calendarGames);
   } catch (error) {
