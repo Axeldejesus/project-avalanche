@@ -6,7 +6,7 @@ interface AuthResponse {
   token_type: string;
 }
 
-// Cache pour stocker le token et éviter des appels répétés
+// ⚠️ SÉCURITÉ: Cache en mémoire serveur uniquement (jamais exposé au client)
 let tokenCache: {
   token: AuthResponse | null;
   expiry: number | null;
@@ -20,7 +20,8 @@ export default async function getAuth(): Promise<AuthResponse> {
     // Vérifier si nous avons un token en cache qui est toujours valide
     const now = Date.now();
     if (tokenCache.token && tokenCache.expiry && now < tokenCache.expiry) {
-      console.log('Using cached auth token');
+      // ⚠️ SÉCURITÉ: Ne jamais logger le token complet
+      console.log('Using cached auth token (expires in', Math.floor((tokenCache.expiry - now) / 1000), 'seconds)');
       return tokenCache.token;
     }
 
@@ -45,6 +46,9 @@ export default async function getAuth(): Promise<AuthResponse> {
     // Mettre en cache le token avec un temps d'expiration (90% de la durée pour être prudent)
     tokenCache.token = token;
     tokenCache.expiry = now + (token.expires_in * 900); // 90% de la durée en secondes
+    
+    // ⚠️ SÉCURITÉ: Ne jamais logger le token complet
+    console.log('New IGDB token obtained (expires in', token.expires_in, 'seconds)');
     
     return token;
   } catch (error) {

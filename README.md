@@ -57,30 +57,39 @@ Avalanche is a modern gaming discovery and collection management platform built 
    ```
 
 3. **Set up environment variables**
-   Create a `.env.local` file in the root directory with the following variables:
+   Create a `.env.local` file in the root directory:
 
    ```bash
+   # ⚠️ IMPORTANT: Ne JAMAIS commiter ce fichier!
+   # Ajouter .env.local dans .gitignore
+   
    # Firebase Configuration (Frontend)
-   NEXT_PUBLIC_FIREBASE_API_KEY=your_firebase_api_key
-   NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
+   NEXT_PUBLIC_FIREBASE_API_KEY=your_api_key_here
+   NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_project_id.firebaseapp.com
    NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_project_id
-   NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_project.appspot.com
+   NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_project_id.appspot.com
    NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
    NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id
-   NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID=your_measurement_id
+   NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID=G-XXXXXXXXXX
 
-   # Firebase Admin SDK (Backend)
+   # Firebase Admin SDK (Backend - KEEP SECRET!)
    FIREBASE_PROJECT_ID=your_project_id
-   FIREBASE_CLIENT_EMAIL=firebase-adminsdk-xxxxx@your_project.iam.gserviceaccount.com
-   FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nYour_Private_Key_Here\n-----END PRIVATE KEY-----\n"
+   FIREBASE_CLIENT_EMAIL=firebase-adminsdk-xxxxx@your_project_id.iam.gserviceaccount.com
+   FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nYour_Private_Key_Content_Here\n-----END PRIVATE KEY-----\n"
 
    # IGDB API (Game Database)
    IGDB_CLIENT_ID=your_twitch_client_id
    IGDB_SECRET_KEY=your_twitch_client_secret
 
-   # Optional: Custom API URL for production
-   NEXT_PUBLIC_API_URL=https://your-production-domain.com
+   # Optional: API URL for production
+   NEXT_PUBLIC_API_URL=https://your-domain.com
    ```
+
+   **🔒 Security Notes:**
+   - Never commit `.env.local` to version control
+   - Use different credentials for development and production
+   - Rotate API keys regularly
+   - Use environment variables in deployment platforms (Vercel, etc.)
 
 4. **Run the development server**
    ```bash
@@ -96,12 +105,14 @@ Avalanche is a modern gaming discovery and collection management platform built 
 2. Create a new project
 3. Enable Authentication, Firestore Database, and Storage
 4. Get your config from Project Settings > General
-5. Generate Admin SDK key from Project Settings > Service Accounts
+5. **For Admin SDK**: Go to Project Settings > Service Accounts > Generate New Private Key
+   - ⚠️ Keep this file secure and never commit it to Git!
 
 ### IGDB API Setup
 1. Go to [Twitch Developer Console](https://dev.twitch.tv/console)
 2. Create a new application
 3. Get Client ID and Client Secret
+4. ⚠️ Keep these credentials secure!
 
 ## 📝 Available Scripts
 
@@ -112,6 +123,16 @@ npm run start        # Start production server
 npm run lint         # Run ESLint
 npm test            # Run Jest tests
 ```
+
+## 🔒 Security Best Practices
+
+- ✅ All user inputs are validated with Zod schemas
+- ✅ Firebase Admin SDK is used only on server-side
+- ✅ API routes verify authentication before processing
+- ✅ Sensitive data is never cached in localStorage/sessionStorage
+- ✅ XSS protection through input sanitization
+- ✅ Environment variables for all secrets
+- ✅ HTTPS enforced in production
 
 ## 🎯 Key Features Overview
 
@@ -140,3 +161,7 @@ npm test            # Run Jest tests
 - [IGDB](https://www.igdb.com/) for providing the game database API
 - [Firebase](https://firebase.google.com/) for backend services
 - [Next.js](https://nextjs.org/) for the React framework
+
+---
+
+**⚠️ Important**: This is a portfolio project. Do not use real sensitive data in development.

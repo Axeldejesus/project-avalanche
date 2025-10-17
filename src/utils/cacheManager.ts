@@ -1,6 +1,7 @@
 /**
  * Gestionnaire de cache intelligent pour optimiser les lectures Firestore
  * Utilise sessionStorage (prioritaire) et localStorage (fallback) pour une meilleure persistance
+ * ⚠️ ATTENTION: Ne jamais stocker d'informations sensibles (tokens, mots de passe, données personnelles)
  */
 
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
@@ -10,11 +11,29 @@ interface CacheData<T> {
   timestamp: number;
 }
 
+// Liste des clés qui ne doivent JAMAIS être mises en cache
+const SENSITIVE_KEYS = ['token', 'password', 'auth', 'session', 'credential', 'secret'];
+
 export class CacheManager {
   /**
+   * Vérifie si une clé contient des informations sensibles
+   */
+  private static isSensitiveKey(key: string): boolean {
+    const lowerKey = key.toLowerCase();
+    return SENSITIVE_KEYS.some(sensitive => lowerKey.includes(sensitive));
+  }
+
+  /**
    * Stocke des données en cache avec timestamp
+   * ⚠️ Ne stocke PAS les données sensibles
    */
   static set<T>(key: string, data: T, useLocalStorage: boolean = false): void {
+    // Vérification de sécurité
+    if (this.isSensitiveKey(key)) {
+      console.warn(`⚠️ Security Warning: Attempted to cache sensitive data with key: ${key}`);
+      return;
+    }
+
     const cacheData: CacheData<T> = {
       data,
       timestamp: Date.now()
@@ -162,21 +181,35 @@ export class CacheManager {
   
   /**
    * Vide complètement le cache (utile lors de déconnexion)
+   * ⚠️ IMPORTANT: Toujours appeler lors de la déconnexion
    */
   static clearAll(): void {
     try {
-      // Ne supprimer que les clés liées à l'app (préfixe avalanche_)
-      const keys = [
+      // Supprimer TOUTES les clés liées à l'app
+      const keysToRemove = [
         'collectionCache',
         'collectionCacheTimestamp',
         'statsCache_',
         'statsCacheTimestamp_',
-        'statsForceReload'
+        'statsForceReload',
+        'userProfile',
+        'gameData'
       ];
       
-      keys.forEach(key => {
+      keysToRemove.forEach(key => {
         this.invalidatePattern(key);
       });
+
+      // Nettoyage complet pour la sécurité
+      if (typeof window !== 'undefined') {
+        // Ne garder que les préférences utilisateur non-sensibles
+        const themePreference = localStorage.getItem('theme');
+        sessionStorage.clear();
+        localStorage.clear();
+        if (themePreference) {
+          localStorage.setItem('theme', themePreference);
+        }
+      }
     } catch (error) {
       console.warn('Cache clear all failed:', error);
     }

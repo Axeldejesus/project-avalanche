@@ -9,6 +9,15 @@ import {
   type UpdateReviewInput
 } from '../schemas';
 
+// ⚠️ SÉCURITÉ: Sanitization des inputs
+const sanitizeText = (text: string | undefined): string | undefined => {
+  if (!text) return undefined;
+  // Supprimer les scripts et balises HTML potentiellement dangereuses
+  return text.replace(/<script[^>]*>.*?<\/script>/gi, '')
+             .replace(/<[^>]*>/g, '')
+             .trim();
+};
+
 // Ajouter un nouvel avis - stocké dans une sous-collection de l'utilisateur
 export const addReview = async (reviewData: ReviewInput & { userId: string; username: string; userProfileImage?: string }): Promise<{ success: boolean; error?: string; reviewId?: string }> => {
   try {
@@ -16,12 +25,24 @@ export const addReview = async (reviewData: ReviewInput & { userId: string; user
       return { success: false, error: 'User not authenticated' };
     }
 
+    // ⚠️ SÉCURITÉ: Vérifier que l'userId correspond à l'utilisateur connecté
+    if (reviewData.userId !== auth.currentUser.uid) {
+      return { success: false, error: 'Unauthorized: User ID mismatch' };
+    }
+
+    // ⚠️ SÉCURITÉ: Sanitization des données
+    const sanitizedData = {
+      ...reviewData,
+      username: sanitizeText(reviewData.username) || 'Anonymous',
+      comment: sanitizeText(reviewData.comment)
+    };
+
     // Validate input with Zod
     const validatedData = ReviewInputSchema.extend({
       userId: ReviewSchema.shape.userId,
       username: ReviewSchema.shape.username,
       userProfileImage: ReviewSchema.shape.userProfileImage
-    }).parse(reviewData);
+    }).parse(sanitizedData);
 
     // Utiliser gameId comme document ID dans la sous-collection reviews de l'utilisateur
     const reviewId = String(validatedData.gameId);
@@ -35,7 +56,7 @@ export const addReview = async (reviewData: ReviewInput & { userId: string; user
       userId: validatedData.userId,
       username: validatedData.username,
       gameId: validatedData.gameId,
-      gameName: validatedData.gameName,
+      gameName: sanitizeText(validatedData.gameName) || 'Unknown Game',
       gameCover: validatedData.gameCover,
       rating: validatedData.rating,
       createdAt: now,
@@ -62,11 +83,12 @@ export const addReview = async (reviewData: ReviewInput & { userId: string; user
     if (error.name === 'ZodError') {
       return { 
         success: false, 
-        error: error.issues.map((issue: any) => issue.message).join(', ')
+        error: 'Invalid data: ' + error.issues.map((issue: any) => issue.message).join(', ')
       };
     }
     
-    return { success: false, error: error.message };
+    // ⚠️ SÉCURITÉ: Ne pas exposer les détails de l'erreur
+    return { success: false, error: 'An error occurred while adding the review' };
   }
 };
 

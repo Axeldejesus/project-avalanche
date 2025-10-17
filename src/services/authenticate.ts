@@ -72,7 +72,12 @@ export function ensureFirestore(): Firestore {
 // Constante pour la durée maximale de session (7 jours en millisecondes)
 const MAX_SESSION_DURATION = 7 * 24 * 60 * 60 * 1000; // 7 jours
 
-// Enregistrer la date de dernière connexion ou renouvellement
+// ⚠️ SÉCURITÉ: Validation stricte des entrées utilisateur
+const sanitizeInput = (input: string): string => {
+  return input.trim().replace(/[<>]/g, ''); // Empêcher XSS basique
+};
+
+// Enregistrer la date de dernière connexion
 export const setLastLoginTimestamp = (): void => {
   if (isClient) {
     localStorage.setItem('lastLoginTimestamp', Date.now().toString());
@@ -108,8 +113,16 @@ export const registerUser = async (email: string, password: string, username: st
   }
 
   try {
+    // ⚠️ SÉCURITÉ: Sanitization avant validation
+    const sanitizedEmail = sanitizeInput(email);
+    const sanitizedUsername = sanitizeInput(username);
+    
     // Validate input with Zod
-    const validatedInput = RegisterInputSchema.parse({ email, password, username });
+    const validatedInput = RegisterInputSchema.parse({ 
+      email: sanitizedEmail, 
+      password, 
+      username: sanitizedUsername 
+    });
     
     // 1. Créer l'utilisateur dans Firebase Authentication
     const userCredential = await createUserWithEmailAndPassword(auth, validatedInput.email, validatedInput.password);
@@ -125,6 +138,9 @@ export const registerUser = async (email: string, password: string, username: st
     
     await createUserProfile(user.uid, profileData);
     
+    // ⚠️ SÉCURITÉ: Enregistrer le timestamp après succès
+    setLastLoginTimestamp();
+    
     return {
       success: true,
       user
@@ -136,7 +152,7 @@ export const registerUser = async (email: string, password: string, username: st
     if (error.name === 'ZodError') {
       return {
         success: false,
-        error: error.issues.map((issue: any) => issue.message).join(', ')
+        error: 'Données invalides: ' + error.issues.map((issue: any) => issue.message).join(', ')
       };
     }
     
@@ -155,10 +171,23 @@ export const loginUser = async (email: string, password: string) => {
   }
 
   try {
+    // ⚠️ SÉCURITÉ: Sanitization avant validation
+    const sanitizedEmail = sanitizeInput(email);
+    
     // Validate input with Zod
-    const validatedInput = LoginInputSchema.parse({ email, password });
+    const validatedInput = LoginInputSchema.parse({ email: sanitizedEmail, password });
     
     const userCredential = await signInWithEmailAndPassword(auth, validatedInput.email, validatedInput.password);
+    
+    // ⚠️ SÉCURITÉ: Vérifier si la session a expiré
+    if (hasSessionExpired()) {
+      await signOut(auth);
+      return {
+        success: false,
+        error: 'Session expirée. Veuillez vous reconnecter.'
+      };
+    }
+    
     // Enregistrer la date de connexion
     setLastLoginTimestamp();
     return {
@@ -172,7 +201,7 @@ export const loginUser = async (email: string, password: string) => {
     if (error.name === 'ZodError') {
       return {
         success: false,
-        error: error.issues.map((issue: any) => issue.message).join(', ')
+        error: 'Données invalides: ' + error.issues.map((issue: any) => issue.message).join(', ')
       };
     }
     
@@ -192,6 +221,14 @@ export const logoutUser = async () => {
 
   try {
     await signOut(auth);
+    
+    // ⚠️ SÉCURITÉ: Nettoyer TOUT le cache lors de la déconnexion
+    if (typeof window !== 'undefined') {
+      const { CacheManager } = await import('../utils/cacheManager');
+      CacheManager.clearAll();
+      localStorage.removeItem('lastLoginTimestamp');
+    }
+    
     return { success: true };
   } catch (error: any) {
     return {
