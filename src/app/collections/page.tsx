@@ -616,16 +616,43 @@ export default function CollectionsPage() {
     setLoading(true); // Ajouter cette ligne pour indiquer qu'on commence à charger
   };
   
-  // Load more games
-  const handleLoadMore = () => {
-    if (activeTab === 'collection') {
-      loadCollectionGames(false);
-    } else if (activeTab === 'lists' && activeListId) {
-      loadListGames(false);
-    }
-  };
+  // Add ref for infinite scroll observer
+  const loadingRef = useRef<HTMLDivElement>(null);
   
-  // Nouvelle fonction pour charger toutes les données et les mettre en cache
+  // Intersection observer for infinite scroll
+  useEffect(() => {
+    if (loading) return;
+
+    const observerCallback = (entries: IntersectionObserverEntry[]) => {
+      if (entries[0].isIntersecting) {
+        if (activeTab === 'collection' && hasMoreCollection) {
+          loadCollectionGames(false);
+        } else if (activeTab === 'lists' && activeListId && hasMoreListGames) {
+          loadListGames(false);
+        }
+      }
+    };
+
+    const options = {
+      root: null,
+      rootMargin: '0px',
+      threshold: 0.1
+    };
+
+    const observer = new IntersectionObserver(observerCallback, options);
+    
+    if (loadingRef.current) {
+      observer.observe(loadingRef.current);
+    }
+
+    return () => {
+      if (observer) {
+        observer.disconnect();
+      }
+    };
+  }, [loading, hasMoreCollection, hasMoreListGames, activeTab, activeListId]);
+  
+  // Collection stats
   const loadAllData = async () => {
     if (!user) return;
     
@@ -1150,15 +1177,14 @@ export default function CollectionsPage() {
                             activeListId={activeListId}
                           />
                           
-                          {hasMoreListGames && !loading && (
-                            <div className={styles.loadMoreContainer}>
-                              <button 
-                                className={styles.loadMoreButton}
-                                onClick={handleLoadMore}
-                                disabled={loading}
-                              >
-                                {loading ? 'Loading...' : 'Load More Games'}
-                              </button>
+                          {/* Replace load more button with discreet loading indicator */}
+                          {hasMoreListGames && (
+                            <div ref={loadingRef} className={styles.loadMore}>
+                              {loading && (
+                                <div className={styles.loadMoreIndicator}>
+                                  <div className={styles.loadMoreSpinner}></div>
+                                </div>
+                              )}
                             </div>
                           )}
                         </>
@@ -1227,15 +1253,14 @@ export default function CollectionsPage() {
                   activeListId={activeListId}
                 />
                 
-                {hasMoreCollection && !loading && (
-                  <div className={styles.loadMoreContainer}>
-                    <button 
-                      className={styles.loadMoreButton}
-                      onClick={handleLoadMore}
-                      disabled={loading}
-                    >
-                      {loading ? 'Loading...' : 'Load More Games'}
-                    </button>
+                {/* Replace load more button with discreet loading indicator */}
+                {hasMoreCollection && (
+                  <div ref={loadingRef} className={styles.loadMore}>
+                    {loading && (
+                      <div className={styles.loadMoreIndicator}>
+                        <div className={styles.loadMoreSpinner}></div>
+                      </div>
+                    )}
                   </div>
                 )}
               </>
