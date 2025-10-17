@@ -17,6 +17,7 @@
   /* Fond sombre PERMANENT - ne jamais afficher de blanc */
   background-color: #0f0f13 !important;
   isolation: isolate;
+  z-index: 1; /* Ajout pour contrôler le stacking context */
 }
 
 .heroOverlay {
@@ -527,6 +528,8 @@
   max-width: 1400px;
   margin: 0 auto;
   width: 100%;
+  position: relative;
+  z-index: 1; /* S'assurer que le contenu reste en dessous du menu mobile */
 }
 
 .twoColumnLayout {
@@ -634,6 +637,8 @@
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+  position: relative;
+  z-index: 1; /* S'assurer que la sidebar reste en dessous du menu mobile */
 }
 
 .sidebarCard {
@@ -642,6 +647,8 @@
   border-radius: 12px;
   padding: 1.5rem;
   backdrop-filter: blur(10px);
+  position: relative;
+  z-index: 1; /* S'assurer que les cartes restent en dessous du menu mobile */
 }
 
 .sidebarCard h3 {
@@ -826,7 +833,7 @@
   right: 0;
   bottom: 0;
   background: rgba(0, 0, 0, 0.7);
-  z-index: 1999; /* Augmenté de 999 à 1999, juste en dessous du menu */
+  z-index: 9998; /* Augmenté encore plus */
   backdrop-filter: blur(4px);
   animation: fadeIn 0.3s ease;
 }
@@ -848,7 +855,7 @@
   width: 280px;
   height: 100vh;
   background: linear-gradient(to bottom, #1a1b2e, #12141d);
-  z-index: 2000; /* Augmenté de 1000 à 2000 pour passer au-dessus de tout */
+  z-index: 9999; /* Augmenté encore plus pour être sûr qu'il passe au-dessus de tout */
   padding: 2rem 1.5rem;
   overflow-y: auto;
   box-shadow: 4px 0 20px rgba(0, 0, 0, 0.3);
