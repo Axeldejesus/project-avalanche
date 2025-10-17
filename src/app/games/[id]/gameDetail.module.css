@@ -4,6 +4,8 @@
   min-height: 100vh;
   background: linear-gradient(to bottom, #12141d, #1a1b2e);
   color: #ffffff;
+  position: relative;
+  z-index: 0; /* Créer un nouveau stacking context pour tout le contenu */
 }
 
 /* Hero Header */
@@ -529,13 +531,15 @@
   margin: 0 auto;
   width: 100%;
   position: relative;
-  z-index: 1; /* S'assurer que le contenu reste en dessous du menu mobile */
+  z-index: 0; /* Réinitialiser à 0 au lieu de 1 */
 }
 
 .twoColumnLayout {
   display: grid;
   grid-template-columns: 1fr 300px;
   gap: 2.5rem;
+  position: relative;
+  z-index: 0; /* Ajouter pour créer un nouveau stacking context */
 }
 
 .gameMainContent {
@@ -638,7 +642,7 @@
   flex-direction: column;
   gap: 1.5rem;
   position: relative;
-  z-index: 1; /* S'assurer que la sidebar reste en dessous du menu mobile */
+  z-index: 0; /* Réinitialiser à 0 au lieu de 1 */
 }
 
 .sidebarCard {
@@ -648,7 +652,7 @@
   padding: 1.5rem;
   backdrop-filter: blur(10px);
   position: relative;
-  z-index: 1; /* S'assurer que les cartes restent en dessous du menu mobile */
+  z-index: 0; /* Réinitialiser à 0 au lieu de 1 */
 }
 
 .sidebarCard h3 {
@@ -833,7 +837,7 @@
   right: 0;
   bottom: 0;
   background: rgba(0, 0, 0, 0.7);
-  z-index: 9998; /* Augmenté encore plus */
+  z-index: 99998; /* Augmenté énormément */
   backdrop-filter: blur(4px);
   animation: fadeIn 0.3s ease;
 }
@@ -855,7 +859,7 @@
   width: 280px;
   height: 100vh;
   background: linear-gradient(to bottom, #1a1b2e, #12141d);
-  z-index: 9999; /* Augmenté encore plus pour être sûr qu'il passe au-dessus de tout */
+  z-index: 99999; /* Augmenté énormément */
   padding: 2rem 1.5rem;
   overflow-y: auto;
   box-shadow: 4px 0 20px rgba(0, 0, 0, 0.3);
