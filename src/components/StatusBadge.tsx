@@ -1,5 +1,10 @@
-import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+
+/**
+ * StatusBadge — VOID PROTOCOL
+ * Design : dot coloré + label, fond translucide teinté
+ * "playing" : dot avec animation pulse
+ */
 
 export type GameCollectionStatus =
   | 'playing'
@@ -13,35 +18,34 @@ export type GameCollectionStatus =
 const statusMeta = {
   playing: {
     label: 'En cours',
-    className: 'border-emerald-400/20 bg-emerald-400/10 text-emerald-200',
+    dotClass: 'bg-emerald-400 animate-[statusPulse_2s_ease-in-out_infinite] shadow-[0_0_7px_rgba(52,211,153,0.8)]',
+    chipClass: 'bg-emerald-400/10 text-emerald-300 ring-1 ring-emerald-400/20',
   },
   completed: {
-    label: 'Termine',
-    className: 'border-cyan-400/20 bg-cyan-400/10 text-cyan-200',
+    label: 'Terminé',
+    dotClass: 'bg-cyan-400',
+    chipClass: 'bg-cyan-400/10 text-cyan-300 ring-1 ring-cyan-400/20',
   },
   toPlay: {
     label: 'Backlog',
-    className: 'border-amber-400/20 bg-amber-400/10 text-amber-100',
+    dotClass: 'bg-amber-400',
+    chipClass: 'bg-amber-400/10 text-amber-300 ring-1 ring-amber-400/20',
   },
   abandoned: {
-    label: 'Abandonne',
-    className: 'border-rose-400/20 bg-rose-400/10 text-rose-200',
+    label: 'Abandonné',
+    dotClass: 'bg-rose-400',
+    chipClass: 'bg-rose-400/10 text-rose-300 ring-1 ring-rose-400/20',
   },
   wishlist: {
     label: 'Wishlist',
-    className: 'border-fuchsia-400/20 bg-fuchsia-400/10 text-fuchsia-200',
+    dotClass: 'bg-fuchsia-400',
+    chipClass: 'bg-fuchsia-400/10 text-fuchsia-300 ring-1 ring-fuchsia-400/20',
   },
 } as const;
 
-function normalizeStatus(status: GameCollectionStatus) {
-  if (status === 'backlog') {
-    return 'toPlay';
-  }
-
-  if (status === 'dropped') {
-    return 'abandoned';
-  }
-
+function normalizeStatus(status: GameCollectionStatus): keyof typeof statusMeta {
+  if (status === 'backlog') return 'toPlay';
+  if (status === 'dropped') return 'abandoned';
   return status;
 }
 
@@ -58,11 +62,15 @@ export default function StatusBadge({ status, className }: StatusBadgeProps) {
   const meta = getStatusMeta(status);
 
   return (
-    <Badge
-      variant="outline"
-      className={cn('rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em]', meta.className, className)}
+    <span
+      className={cn(
+        'inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em]',
+        meta.chipClass,
+        className
+      )}
     >
+      <span className={cn('h-1.5 w-1.5 shrink-0 rounded-full', meta.dotClass)} />
       {meta.label}
-    </Badge>
+    </span>
   );
 }

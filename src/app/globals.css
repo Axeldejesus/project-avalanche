@@ -1,46 +1,58 @@
 @import "tailwindcss";
 
 /* ============================================================
-  SHADCN/UI CSS VARIABLES — Premium Gaming Dark Theme
+   VOID PROTOCOL — Système de Design Premium
+   Direction artistique : Cinematic Game Intelligence
+   Palette : Indigo électrique + Ambre + Ice cyan sur fond obsidian
    ============================================================ */
 :root {
-  --background: 220 30% 7%;
-  --foreground: 210 20% 96%;
+  /* === FOND & SURFACES === */
+  --background: 223 32% 5%;        /* #070812 — obsidian chaud, ni noir pur ni navy banal */
+  --foreground: 220 20% 95%;       /* #eef0f9 — blanc légèrement violacé */
 
-  --card: 220 24% 10%;
-  --card-foreground: 210 20% 96%;
+  --card: 223 26% 8%;              /* #0d0e1a — surface card, distinction subtile du fond */
+  --card-foreground: 220 20% 95%;
 
-  --popover: 220 22% 11%;
-  --popover-foreground: 210 20% 96%;
+  --popover: 223 28% 10%;          /* #10111e — menus/tooltips légèrement plus élevés */
+  --popover-foreground: 220 20% 95%;
 
-  --primary: 168 86% 45%;
+  /* === COULEURS D'ACCENT === */
+  /* Primary : Indigo électrique — entre violet Tailwind et electric blue */
+  --primary: 252 88% 65%;          /* #6c44f5 */
   --primary-foreground: 0 0% 100%;
 
-  --secondary: 218 20% 15%;
-  --secondary-foreground: 210 20% 96%;
+  --secondary: 223 22% 13%;        /* #171827 — surfaces secondaires */
+  --secondary-foreground: 220 20% 95%;
 
-  --muted: 219 18% 15%;
-  --muted-foreground: 214 11% 67%;
+  --muted: 223 20% 12%;            /* #141523 */
+  --muted-foreground: 220 14% 58%; /* #888da8 — métadonnées lisibles */
 
-  --accent: 214 22% 18%;
-  --accent-foreground: 210 20% 96%;
+  --accent: 223 22% 14%;           /* #171928 */
+  --accent-foreground: 220 20% 95%;
 
-  --destructive: 0 84% 60%;
+  --destructive: 0 78% 56%;
   --destructive-foreground: 0 0% 100%;
 
-  --border: 217 18% 24%;
-  --input: 217 18% 24%;
-  --ring: 168 86% 45%;
+  --border: 223 20% 15%;           /* #1b1c2a — quasi-invisible, structure uniquement */
+  --input: 223 20% 16%;
+  --ring: 252 88% 65%;
 
   --radius: 0.75rem;
 
-  /* Legacy tokens (utilisés par les CSS Modules encore actifs) */
-  --bg-base: #091018;
-  --bg-surface: #101a24;
-  --bg-card: #111d28;
-  --accent-primary: #10bfa1;
-  --accent-light: #56e2c8;
-  --text-primary: #eef3f7;
+  /* === TOKENS CUSTOM VOID PROTOCOL === */
+  --gold: 38 92% 52%;              /* #f0920e — ambre ratings/prestige */
+  --ice: 192 100% 52%;             /* #00d4f0 — cyan CTAs/highlights */
+  --gold-glow: rgba(240, 146, 14, 0.2);
+  --primary-glow: rgba(108, 68, 245, 0.24);
+  --ice-glow: rgba(0, 212, 240, 0.18);
+
+  /* Tokens legacy pour CSS Modules encore actifs */
+  --bg-base: #070812;
+  --bg-surface: #0d0e1a;
+  --bg-card: #10111e;
+  --accent-primary: #6c44f5;
+  --accent-light: #a78bfc;
+  --text-primary: #eef0f9;
 
   /* Polices */
   --font-heading: var(--font-oxanium);
@@ -48,8 +60,7 @@
 }
 
 /* ============================================================
-   TAILWIND V4 — THEME MAPPING
-   Mappe les variables shadcn aux utilitaires Tailwind
+   TAILWIND V4 — MAPPING THÈME
    ============================================================ */
 @theme inline {
   --color-background: hsl(var(--background));
@@ -80,12 +91,18 @@
   --color-input: hsl(var(--input));
   --color-ring: hsl(var(--ring));
 
+  /* Tokens custom exposés comme couleurs Tailwind */
+  --color-gold: hsl(var(--gold));
+  --color-ice: hsl(var(--ice));
+
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: var(--radius);
   --radius-lg: calc(var(--radius) + 4px);
-  --radius-xl: calc(var(--radius) + 8px);
+  --radius-xl: calc(var(--radius) + 10px);
 
   --font-sans: var(--font-body);
+  --font-oxanium: var(--font-oxanium);
+  --font-body: var(--font-body);
 }
 
 /* ============================================================
@@ -104,21 +121,23 @@ html {
 }
 
 body {
+  /* Ambient mesh : indigo gauche + ice droite, sur fond obsidian */
   background:
-    radial-gradient(circle at top left, rgba(16, 191, 161, 0.14), transparent 28%),
-    radial-gradient(circle at top right, rgba(56, 189, 248, 0.12), transparent 30%),
-    linear-gradient(180deg, #071019 0%, #09131c 40%, #071019 100%);
+    radial-gradient(ellipse 55% 40% at 0% 0%, rgba(108, 68, 245, 0.11) 0%, transparent 60%),
+    radial-gradient(ellipse 45% 35% at 100% 100%, rgba(0, 212, 240, 0.08) 0%, transparent 55%),
+    radial-gradient(ellipse 30% 50% at 65% 20%, rgba(108, 68, 245, 0.05) 0%, transparent 50%),
+    hsl(var(--background));
   color: hsl(var(--foreground));
   font-family: var(--font-body), system-ui, sans-serif;
   font-weight: 400;
   letter-spacing: 0.01em;
-  line-height: 1.6;
+  line-height: 1.65;
 }
 
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-heading), sans-serif;
   font-weight: 700;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.025em;
   line-height: 1.2;
 }
 
@@ -127,50 +146,150 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 ::selection {
-  background: rgba(16, 191, 161, 0.3);
+  background: rgba(108, 68, 245, 0.32);
   color: hsl(var(--foreground));
 }
 
+/* Scrollbar personnalisé */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: hsl(var(--background)); }
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--border));
+  border-radius: 99px;
+}
+::-webkit-scrollbar-thumb:hover { background: hsl(var(--primary) / 0.6); }
+
 /* ============================================================
-   UTILITAIRES CUSTOM
+   UTILITAIRES — VOID PROTOCOL
    ============================================================ */
 @layer utilities {
+
+  /* === VERRE / HEADER === */
   .glass {
-    background: rgba(7, 16, 25, 0.82);
-    backdrop-filter: blur(18px);
-    -webkit-backdrop-filter: blur(18px);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    background: rgba(7, 8, 18, 0.86);
+    backdrop-filter: blur(20px) saturate(1.3);
+    -webkit-backdrop-filter: blur(20px) saturate(1.3);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.055);
   }
 
+  /* === LUEUR PRIMARY === */
   .glow-primary {
-    box-shadow: 0 18px 60px rgba(16, 191, 161, 0.18);
+    box-shadow:
+      0 0 0 1px rgba(108, 68, 245, 0.2),
+      0 20px 60px rgba(108, 68, 245, 0.18),
+      0 4px 20px rgba(0, 0, 0, 0.4);
   }
 
+  /* === GRADIENT TEXTE — WORDMARK AVALANCHE === */
   .text-gradient-primary {
-    background: linear-gradient(135deg, #7df9d0 0%, #3bd1ff 55%, #f7c95d 100%);
+    background: linear-gradient(125deg, #c4b0ff 0%, #8b6dff 30%, #6c44f5 58%, #00d4f0 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
 
+  /* === GRADIENT TEXTE GOLD (ratings, score) === */
+  .text-gradient-gold {
+    background: linear-gradient(135deg, #ffd166 0%, #f0920e 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* === SURFACE PRINCIPALE (panels, page intro) === */
+  .surface-panel {
+    background: linear-gradient(145deg, hsl(223 26% 9%) 0%, hsl(223 30% 7%) 100%);
+    border: 1px solid hsl(var(--border));
+    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.5);
+  }
+
+  /* === BRUIT SUBTIL (texture visuelle légère) === */
+  .surface-noise {
+    background-image:
+      radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.04) 1px, transparent 0),
+      linear-gradient(180deg, rgba(255, 255, 255, 0.015), rgba(255, 255, 255, 0));
+    background-size: 20px 20px, auto;
+  }
+
+  /* === CARD FRAME — Base pour toutes les game cards === */
+  .card-frame {
+    background: hsl(var(--card));
+    border: 1px solid hsl(var(--border));
+    border-radius: var(--radius-lg);
+    transition: border-color 0.25s ease, box-shadow 0.3s ease, transform 0.2s ease;
+  }
+
+  .card-frame:hover {
+    border-color: hsl(var(--primary) / 0.4);
+    box-shadow:
+      0 0 0 1px hsl(var(--primary) / 0.15),
+      0 24px 70px rgba(0, 0, 0, 0.55),
+      0 0 50px hsl(var(--primary) / 0.1);
+    transform: translateY(-2px);
+  }
+
+  /* === STAT CHIP — Tuiles de métriques === */
+  .stat-chip {
+    background: hsl(var(--muted));
+    border: 1px solid hsl(var(--border));
+    border-radius: var(--radius-md);
+  }
+
+  /* === DIVISEUR DE SECTION (ligne qui s'efface sur les côtés) === */
+  .section-divider {
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      hsl(var(--border)) 20%,
+      hsl(var(--border)) 80%,
+      transparent 100%
+    );
+  }
+
+  /* === AMBIENT BG (pages avec gradient de fond renforcé) === */
   .ambient-bg {
     background:
-      radial-gradient(ellipse 80% 50% at 20% 0%, rgba(16, 191, 161, 0.1) 0%, transparent 60%),
-      radial-gradient(ellipse 60% 40% at 80% 100%, rgba(56, 189, 248, 0.08) 0%, transparent 50%),
+      radial-gradient(ellipse 60% 40% at 15% 0%, rgba(108, 68, 245, 0.12) 0%, transparent 60%),
+      radial-gradient(ellipse 40% 30% at 85% 100%, rgba(0, 212, 240, 0.09) 0%, transparent 50%),
       hsl(var(--background));
   }
 
-  .surface-panel {
-    background: linear-gradient(180deg, rgba(19, 30, 40, 0.94) 0%, rgba(11, 18, 28, 0.92) 100%);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    box-shadow: 0 18px 50px rgba(0, 0, 0, 0.28);
+  /* === BADGE SCORE AMBRE === */
+  .score-badge {
+    background: linear-gradient(135deg, rgba(240, 146, 14, 0.22), rgba(240, 146, 14, 0.12));
+    border: 1px solid rgba(240, 146, 14, 0.3);
+    color: hsl(var(--gold));
+    border-radius: 6px;
+    font-family: var(--font-heading), monospace;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    font-variant-numeric: tabular-nums;
   }
 
-  .surface-noise {
-    background-image:
-      linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0)),
-      radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.045) 1px, transparent 0);
-    background-size: auto, 16px 16px;
+  /* === BOUTON ICE (CTA primaire alternatif) === */
+  .btn-ice {
+    background: linear-gradient(135deg, rgba(0, 212, 240, 0.18), rgba(0, 212, 240, 0.1));
+    border: 1px solid rgba(0, 212, 240, 0.3);
+    color: hsl(var(--ice));
+  }
+
+  /* === GRADIENT BORDER ANIMÉ (sur hover card) === */
+  .gradient-border-hover {
+    position: relative;
+  }
+  .gradient-border-hover::after {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    background: linear-gradient(135deg, hsl(var(--primary) / 0.5), hsl(var(--ice) / 0.3), transparent 60%);
+    z-index: -1;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  .gradient-border-hover:hover::after {
+    opacity: 1;
   }
 }
 
@@ -183,6 +302,21 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 @keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(10px); }
+  from { opacity: 0; transform: translateY(12px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulseGlow {
+  0%, 100% { box-shadow: 0 0 8px rgba(108, 68, 245, 0.4); }
+  50%       { box-shadow: 0 0 20px rgba(108, 68, 245, 0.7), 0 0 40px rgba(108, 68, 245, 0.3); }
+}
+
+@keyframes statusPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.6; transform: scale(0.85); }
+}
+
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(20px); }
+  to   { opacity: 1; transform: translateX(0); }
 }

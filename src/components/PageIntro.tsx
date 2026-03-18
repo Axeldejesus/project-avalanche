@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { cn } from '@/lib/utils';
 
 interface PageIntroProps {
   eyebrow?: string;
@@ -6,37 +7,76 @@ interface PageIntroProps {
   description: string;
   actions?: ReactNode;
   children?: ReactNode;
+  className?: string;
 }
 
+/**
+ * PageIntro — VOID PROTOCOL
+ * Design : Banner éditorial avec ambient indigo + dot grid
+ */
 export default function PageIntro({
   eyebrow,
   title,
   description,
   actions,
   children,
+  className,
 }: PageIntroProps) {
   return (
-    <section className="surface-panel surface-noise relative overflow-hidden rounded-[28px] p-6 md:p-8">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(16,191,161,0.16),transparent_36%),radial-gradient(circle_at_bottom_right,rgba(247,201,93,0.1),transparent_28%)]" />
-      <div className="relative z-10 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-        <div className="max-w-3xl space-y-3">
-          {eyebrow ? (
-            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-primary/80">
-              {eyebrow}
-            </p>
-          ) : null}
-          <div className="space-y-2">
-            <h1 className="max-w-4xl text-3xl font-semibold tracking-tight text-foreground md:text-5xl">
+    <section
+      className={cn(
+        'relative overflow-hidden rounded-[24px] border border-border',
+        'bg-gradient-to-b from-[hsl(223_28%_9%)] to-[hsl(223_32%_7%)]',
+        className
+      )}
+    >
+      {/* Ambient glows */}
+      <div className="pointer-events-none absolute -left-16 -top-16 h-56 w-56 rounded-full bg-primary/8 blur-[72px]" />
+      <div className="pointer-events-none absolute -right-8 bottom-0 h-40 w-40 rounded-full bg-[hsl(var(--ice))]/6 blur-[56px]" />
+
+      {/* Dot grid */}
+      <div
+        className="pointer-events-none absolute inset-0 opacity-35"
+        style={{
+          backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.045) 1px, transparent 0)',
+          backgroundSize: '24px 24px',
+        }}
+      />
+
+      <div className="relative z-10 p-6 md:p-8 lg:p-10">
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+          <div className="max-w-3xl space-y-3">
+
+            {eyebrow && (
+              <p className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.3em] text-primary/80">
+                <span className="h-1 w-1 rounded-full bg-primary" />
+                {eyebrow}
+              </p>
+            )}
+
+            <h1 className="text-3xl font-black leading-[1.1] tracking-tight text-foreground md:text-5xl lg:text-[50px]">
               {title}
             </h1>
-            <p className="max-w-2xl text-sm leading-7 text-muted-foreground md:text-base">
+
+            <p className="max-w-2xl text-sm leading-[1.75] text-muted-foreground md:text-[15px]">
               {description}
             </p>
           </div>
+
+          {actions && (
+            <div className="flex flex-wrap items-center gap-3 lg:shrink-0">
+              {actions}
+            </div>
+          )}
         </div>
-        {actions ? <div className="flex flex-wrap items-center gap-3">{actions}</div> : null}
+
+        {children && (
+          <>
+            <div className="section-divider mt-6 mb-5" />
+            <div>{children}</div>
+          </>
+        )}
       </div>
-      {children ? <div className="relative z-10 mt-8">{children}</div> : null}
     </section>
   );
 }

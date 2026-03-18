@@ -10,12 +10,17 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
 const navLinks = [
-  { href: '/', label: 'Accueil', icon: Home },
-  { href: '/games', label: 'Explorer', icon: Compass },
-  { href: '/collections', label: 'Bibliotheque', icon: Library },
-  { href: '/stats', label: 'Statistiques', icon: BarChart2 },
+  { href: '/',            label: 'Accueil',      icon: Home     },
+  { href: '/games',       label: 'Explorer',     icon: Compass  },
+  { href: '/collections', label: 'Bibliothèque', icon: Library  },
+  { href: '/stats',       label: 'Statistiques', icon: BarChart2 },
 ];
 
+/**
+ * Navigation — VOID PROTOCOL
+ * Desktop : liens texte avec indicateur underline actif glissant
+ * Mobile  : Sheet droite redesignée, layout épuré
+ */
 const Navigation: React.FC = () => {
   const pathname = usePathname();
   const { user, userProfile, loading } = useAuth();
@@ -39,28 +44,40 @@ const Navigation: React.FC = () => {
 
   return (
     <>
-      <nav className="hidden items-center gap-2 md:flex" aria-label="Navigation principale">
-        {navLinks.map(({ href, label, icon: Icon }) => (
-          <Link
-            key={href}
-            href={href}
-            className={cn(
-              'flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition-all',
-              isActive(href)
-                ? 'border-primary/30 bg-primary/10 text-primary shadow-[0_0_0_1px_rgba(16,191,161,0.12)]'
-                : 'border-transparent text-muted-foreground hover:border-white/8 hover:bg-white/5 hover:text-foreground'
-            )}
-          >
-            <Icon className="h-4 w-4" />
-            <span>{label}</span>
-          </Link>
-        ))}
+      {/* ── Navigation desktop ─────────────────────────────── */}
+      <nav className="hidden items-center md:flex" aria-label="Navigation principale">
+        {navLinks.map(({ href, label, icon: Icon }) => {
+          const active = isActive(href);
+          return (
+            <Link
+              key={href}
+              href={href}
+              className={cn(
+                'relative flex items-center gap-2 px-3.5 py-2.5 text-[13px] font-medium transition-colors duration-200',
+                active
+                  ? 'text-foreground'
+                  : 'text-muted-foreground hover:text-foreground/80'
+              )}
+            >
+              <Icon className={cn('h-3.5 w-3.5 transition-colors', active ? 'text-primary' : '')} />
+              <span>{label}</span>
+              {/* Indicateur actif — barre indigo en bas */}
+              <span
+                className={cn(
+                  'absolute bottom-0 left-1/2 h-px -translate-x-1/2 rounded-full bg-primary transition-all duration-300',
+                  active ? 'w-2/3 opacity-100' : 'w-0 opacity-0'
+                )}
+              />
+            </Link>
+          );
+        })}
       </nav>
 
+      {/* ── Menu mobile (Sheet) ─────────────────────────────── */}
       <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
         <SheetTrigger asChild>
           <button
-            className="flex items-center justify-center rounded-full border border-white/10 bg-white/5 p-2 text-muted-foreground hover:text-foreground md:hidden"
+            className="flex items-center justify-center rounded-xl border border-border bg-muted/60 p-2 text-muted-foreground transition-colors hover:border-primary/30 hover:text-foreground md:hidden"
             aria-label="Ouvrir le menu"
           >
             <Menu className="h-5 w-5" />
@@ -69,22 +86,24 @@ const Navigation: React.FC = () => {
 
         <SheetContent
           side="right"
-          className="w-80 border-l border-white/10 bg-[rgba(8,14,22,0.98)] p-0"
+          className="w-[280px] border-l border-border bg-[hsl(223_30%_6%)] p-0 sm:w-80"
           showCloseButton={false}
         >
-          <SheetHeader className="border-b border-white/10 px-5 py-5 text-left">
-            <div className="flex items-start justify-between gap-4">
+          {/* En-tête Sheet */}
+          <SheetHeader className="border-b border-border px-5 py-4 text-left">
+            <div className="flex items-center justify-between">
               <div>
-                <SheetTitle className="font-oxanium text-xl font-bold tracking-[0.24em] text-gradient-primary">
+                <SheetTitle className="font-oxanium text-lg font-black tracking-[0.38em] text-gradient-primary">
                   AVALANCHE
                 </SheetTitle>
-                <SheetDescription className="mt-2 text-sm leading-6 text-muted-foreground">
-                  Suivi personnel, backlog et decouverte dans une interface unique.
+                <SheetDescription className="mt-1 flex items-center gap-1.5 text-[10px] uppercase tracking-[0.22em] text-muted-foreground/70">
+                  <span className="h-1 w-1 rounded-full bg-primary/50" />
+                  Game Intelligence
                 </SheetDescription>
               </div>
               <button
                 onClick={() => setIsMobileMenuOpen(false)}
-                className="rounded-full border border-white/10 p-2 text-muted-foreground hover:text-foreground"
+                className="rounded-xl border border-border p-2 text-muted-foreground transition-colors hover:border-primary/30 hover:text-foreground"
                 aria-label="Fermer le menu"
               >
                 <X className="h-4 w-4" />
@@ -92,29 +111,30 @@ const Navigation: React.FC = () => {
             </div>
           </SheetHeader>
 
-          <div className="border-b border-white/10 px-5 py-4">
+          {/* Profil utilisateur ou CTA auth */}
+          <div className="border-b border-border px-4 py-4">
             {loading ? (
-              <div className="h-8 w-24 animate-pulse rounded-md bg-muted" />
+              <div className="h-14 animate-pulse rounded-xl bg-muted" />
             ) : user && userProfile ? (
               <Link
                 href="/profile"
                 onClick={() => setIsMobileMenuOpen(false)}
-                className="flex w-full items-center gap-3 rounded-2xl border border-white/8 bg-white/4 p-3 text-left transition-colors hover:bg-white/8"
+                className="flex w-full items-center gap-3 rounded-xl border border-border bg-muted/40 p-3 text-left transition-colors hover:border-primary/25 hover:bg-primary/5"
               >
                 {userProfile.profileImageUrl ? (
                   <img
                     src={userProfile.profileImageUrl}
                     alt={userProfile.username}
-                    className="h-11 w-11 rounded-full border border-white/10 object-cover"
+                    className="h-10 w-10 rounded-full border border-border object-cover"
                   />
                 ) : (
-                  <div className="flex h-11 w-11 items-center justify-center rounded-full bg-primary/20 text-sm font-semibold text-primary">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/20 text-sm font-bold text-primary">
                     {userProfile.username?.charAt(0).toUpperCase()}
                   </div>
                 )}
-                <div>
-                  <p className="text-sm font-semibold text-foreground">{userProfile.username}</p>
-                  <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">Profil joueur</p>
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-semibold text-foreground">{userProfile.username}</p>
+                  <p className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">Profil joueur</p>
                 </div>
               </Link>
             ) : (
@@ -122,7 +142,7 @@ const Navigation: React.FC = () => {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="flex-1 gap-1.5"
+                  className="flex-1 gap-1.5 text-muted-foreground hover:text-foreground"
                   onClick={handleLoginClick}
                 >
                   <LogIn className="h-4 w-4" />
@@ -140,39 +160,46 @@ const Navigation: React.FC = () => {
             )}
           </div>
 
-          <nav className="flex flex-col gap-2 p-4" aria-label="Navigation mobile">
-            {navLinks.map(({ href, label, icon: Icon }) => (
-              <Link
-                key={href}
-                href={href}
-                onClick={() => setIsMobileMenuOpen(false)}
-                className={cn(
-                  'flex items-center gap-3 rounded-2xl border px-4 py-3 text-sm font-medium transition-colors',
-                  isActive(href)
-                    ? 'border-primary/20 bg-primary/10 text-primary'
-                    : 'border-transparent text-muted-foreground hover:border-white/8 hover:bg-white/5 hover:text-foreground'
-                )}
-              >
-                <Icon className="h-4 w-4" />
-                <span>{label}</span>
-              </Link>
-            ))}
+          {/* Liens de navigation */}
+          <nav className="flex flex-col p-3" aria-label="Navigation mobile">
+            {navLinks.map(({ href, label, icon: Icon }) => {
+              const active = isActive(href);
+              return (
+                <Link
+                  key={href}
+                  href={href}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className={cn(
+                    'flex items-center gap-3 rounded-xl px-3.5 py-3 text-sm font-medium transition-colors',
+                    active
+                      ? 'bg-primary/10 text-primary'
+                      : 'text-muted-foreground hover:bg-white/4 hover:text-foreground'
+                  )}
+                >
+                  {/* Indicateur actif gauche */}
+                  <span className={cn('h-5 w-0.5 rounded-full transition-all', active ? 'bg-primary' : 'bg-transparent')} />
+                  <Icon className="h-4 w-4 shrink-0" />
+                  <span>{label}</span>
+                </Link>
+              );
+            })}
 
-            {user ? (
+            {user && (
               <Link
                 href="/profile"
                 onClick={() => setIsMobileMenuOpen(false)}
                 className={cn(
-                  'flex items-center gap-3 rounded-2xl border px-4 py-3 text-sm font-medium transition-colors',
+                  'flex items-center gap-3 rounded-xl px-3.5 py-3 text-sm font-medium transition-colors',
                   isActive('/profile')
-                    ? 'border-primary/20 bg-primary/10 text-primary'
-                    : 'border-transparent text-muted-foreground hover:border-white/8 hover:bg-white/5 hover:text-foreground'
+                    ? 'bg-primary/10 text-primary'
+                    : 'text-muted-foreground hover:bg-white/4 hover:text-foreground'
                 )}
               >
-                <User className="h-4 w-4" />
+                <span className={cn('h-5 w-0.5 rounded-full transition-all', isActive('/profile') ? 'bg-primary' : 'bg-transparent')} />
+                <User className="h-4 w-4 shrink-0" />
                 <span>Profil</span>
               </Link>
-            ) : null}
+            )}
           </nav>
         </SheetContent>
       </Sheet>
