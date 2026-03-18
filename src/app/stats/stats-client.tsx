@@ -1,16 +1,20 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { 
-  FiPieChart, FiBarChart2, FiAward, FiClock, FiPlay, 
-  FiX, FiHeart, FiTv, FiCalendar
-} from 'react-icons/fi';
-import { 
-  getUserCollectionStats, 
-  getUserCollectionForStats
-} from '@/services/collectionService';
+import React, { useEffect, useState } from 'react';
+import {
+  Activity,
+  CalendarDays,
+  Clock3,
+  Heart,
+  Layers3,
+  MonitorSmartphone,
+  PieChart,
+  Sparkles,
+  Trophy,
+  XCircle,
+} from 'lucide-react';
+import { getUserCollectionForStats } from '@/services/collectionService';
 import { type CollectionItem, type CollectionStats } from '@/schemas';
-import styles from './stats.module.css';
 import { Doughnut, Line } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -23,11 +27,11 @@ import {
   Title,
   Tooltip,
   Legend,
-  Filler, // Ajouter Filler
+  Filler,
 } from 'chart.js';
 import { CacheManager } from '@/utils/cacheManager';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
-// Enregistrer les composants nécessaires pour Chart.js
 ChartJS.register(
   CategoryScale,
   LinearScale,
@@ -38,7 +42,7 @@ ChartJS.register(
   Title,
   Tooltip,
   Legend,
-  Filler // Ajouter Filler ici
+  Filler
 );
 
 interface StatsClientProps {
@@ -104,8 +108,6 @@ const StatsClient: React.FC<StatsClientProps> = ({ userId }) => {
           
           if (result.items && result.items.length > 0) {
             analyzeCollectionData(result.items);
-          } else {
-            setError("No games found in your collection");
           }
           
           CacheManager.set(
@@ -225,293 +227,336 @@ const StatsClient: React.FC<StatsClientProps> = ({ userId }) => {
     setGenres(genreData);
     setYearsData(yearData);
   };
+
+  const percentage = (value: number, total: number) => (total > 0 ? Math.round((value / total) * 100) : 0);
   
-  // Configuration pour le graphique en anneau des plateformes
   const platformChartData = {
     labels: platforms.map(p => p.name),
     datasets: [
       {
         data: platforms.map(p => p.count),
         backgroundColor: platforms.map(p => p.color),
-        borderColor: 'rgba(30, 30, 45, 0.8)',
+        borderColor: 'rgba(6, 10, 18, 0.85)',
         borderWidth: 2,
+        hoverOffset: 10,
       },
     ],
   };
   
-  // Configuration pour le graphique en anneau des genres
   const genreChartData = {
     labels: genres.map(g => g.name),
     datasets: [
       {
         data: genres.map(g => g.count),
         backgroundColor: genres.map(g => g.color),
-        borderColor: 'rgba(30, 30, 45, 0.8)',
+        borderColor: 'rgba(6, 10, 18, 0.85)',
         borderWidth: 2,
+        hoverOffset: 10,
       },
     ],
   };
   
-  // Configuration pour le graphique en ligne des années
   const yearChartData = {
     labels: yearsData.map(y => y.year.toString()),
     datasets: [
       {
-        label: 'Games Added',
+        label: 'Jeux ajoutes',
         data: yearsData.map(y => y.count),
-        borderColor: '#6c5ce7',
-        backgroundColor: 'rgba(108, 92, 231, 0.2)',
+        borderColor: '#10bfa1',
+        backgroundColor: 'rgba(16, 191, 161, 0.18)',
         tension: 0.3,
         fill: true,
+        pointRadius: 4,
+        pointHoverRadius: 6,
       },
     ],
   };
-  
-  // Options communes pour les graphiques
-  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
-  const isSmallMobile = typeof window !== 'undefined' && window.innerWidth < 480;
 
-  const chartOptions = {
+  const doughnutOptions = {
     responsive: true,
     maintainAspectRatio: false,
-    layout: {
-      padding: {
-        top: isSmallMobile ? 5 : 10,
-        bottom: isSmallMobile ? 5 : 10,
-        left: isSmallMobile ? 5 : 10,
-        right: isSmallMobile ? 5 : 10
-      }
-    },
+    cutout: '64%',
     plugins: {
       legend: {
         position: 'bottom' as const,
-        align: 'center' as const,
         labels: {
-          color: 'rgba(255, 255, 255, 0.8)',
-          font: {
-            size: isSmallMobile ? 9 : (isMobile ? 10 : 12)
-          },
-          padding: isSmallMobile ? 6 : (isMobile ? 8 : 10),
-          boxWidth: isSmallMobile ? 10 : (isMobile ? 12 : 15),
-          boxHeight: isSmallMobile ? 10 : (isMobile ? 12 : 15),
+          color: 'rgba(229, 231, 235, 0.82)',
+          padding: 14,
+          boxWidth: 12,
+          boxHeight: 12,
           usePointStyle: true
         }
       },
       tooltip: {
-        backgroundColor: 'rgba(30, 30, 45, 0.95)',
+        backgroundColor: 'rgba(10, 14, 22, 0.96)',
         titleColor: 'white',
         bodyColor: 'white',
-        borderColor: 'rgba(255, 255, 255, 0.1)',
+        borderColor: 'rgba(255, 255, 255, 0.08)',
         borderWidth: 1,
-        padding: isSmallMobile ? 6 : (isMobile ? 8 : 12),
-        titleFont: {
-          size: isSmallMobile ? 11 : (isMobile ? 12 : 14)
-        },
-        bodyFont: {
-          size: isSmallMobile ? 10 : (isMobile ? 11 : 13)
-        }
+        padding: 12,
       }
     }
   };
 
-  // Options spécifiques pour les graphiques en camembert (pie/doughnut)
-  const pieChartOptions = {
-    ...chartOptions,
+  const lineOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
     plugins: {
-      ...chartOptions.plugins,
       legend: {
-        ...chartOptions.plugins.legend,
         position: 'bottom' as const,
-        align: 'center' as const,
         labels: {
-          ...chartOptions.plugins.legend.labels,
-          generateLabels: (chart: any) => {
-            const datasets = chart.data.datasets;
-            if (datasets.length === 0) return [];
-            
-            const data = datasets[0].data;
-            const labels = chart.data.labels;
-            const total = data.reduce((acc: number, val: number) => acc + val, 0);
-            
-            return labels.map((label: string, i: number) => {
-              const value = data[i];
-              const percentage = total > 0 ? ((value / total) * 100).toFixed(0) : 0;
-              
-              return {
-                text: isSmallMobile ? `${label} (${percentage}%)` : `${label}: ${value} (${percentage}%)`,
-                fillStyle: datasets[0].backgroundColor[i],
-                hidden: false,
-                index: i
-              };
-            });
-          }
+          color: 'rgba(229, 231, 235, 0.82)',
+          padding: 14,
+          usePointStyle: true,
         }
+      },
+      tooltip: {
+        backgroundColor: 'rgba(10, 14, 22, 0.96)',
+        titleColor: 'white',
+        bodyColor: 'white',
+        borderColor: 'rgba(255, 255, 255, 0.08)',
+        borderWidth: 1,
+        padding: 12,
       }
-    }
+    },
+    scales: {
+      x: {
+        ticks: { color: 'rgba(229, 231, 235, 0.6)' },
+        grid: { color: 'rgba(255,255,255,0.05)' },
+      },
+      y: {
+        beginAtZero: true,
+        ticks: { color: 'rgba(229, 231, 235, 0.6)', precision: 0 },
+        grid: { color: 'rgba(255,255,255,0.05)' },
+      },
+    },
   };
+
+  const statusCards = stats
+    ? [
+        { label: 'Termines', value: stats.completed, icon: Trophy, tone: 'text-emerald-200 bg-emerald-400/10 border-emerald-400/20' },
+        { label: 'En cours', value: stats.playing, icon: Activity, tone: 'text-sky-200 bg-sky-400/10 border-sky-400/20' },
+        { label: 'Backlog', value: stats.toPlay, icon: Clock3, tone: 'text-amber-200 bg-amber-400/10 border-amber-400/20' },
+        { label: 'Wishlist', value: stats.wishlist, icon: Heart, tone: 'text-fuchsia-200 bg-fuchsia-400/10 border-fuchsia-400/20' },
+        { label: 'Abandonnes', value: stats.abandoned, icon: XCircle, tone: 'text-rose-200 bg-rose-400/10 border-rose-400/20' },
+      ]
+    : [];
+
+  const leadPlatform = platforms[0];
+  const leadGenre = genres[0];
+  const latestYear = yearsData[yearsData.length - 1];
 
   if (isLoading) {
     return (
-      <div className={styles.loadingContainer}>
-        <div className={styles.spinner}></div>
-        <p>Loading your gaming statistics...</p>
+      <div className="grid gap-4 lg:grid-cols-3">
+        {Array.from({ length: 6 }).map((_, index) => (
+          <div key={index} className="h-40 animate-pulse rounded-[28px] border border-white/8 bg-white/4" />
+        ))}
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className={styles.errorContainer}>
-        <p className={styles.errorMessage}>{error}</p>
+      <div className="rounded-[28px] border border-destructive/20 bg-destructive/10 px-5 py-6 text-sm text-destructive">
+        {error}
+      </div>
+    );
+  }
+
+  if (games.length === 0 || !stats) {
+    return (
+      <div className="rounded-[28px] border border-white/8 bg-white/4 px-6 py-12 text-center">
+        <p className="text-lg font-semibold text-foreground">Aucune statistique disponible</p>
+        <p className="mt-2 text-sm text-muted-foreground">
+          Ajoute des jeux a ta collection pour faire apparaitre des tendances de plateformes, de genres et de progression.
+        </p>
       </div>
     );
   }
 
   return (
-    <main className={styles.statsContainer}>
-      <h1 className={styles.statsTitle}>Your Gaming Dashboard</h1>
-      
-      {games.length === 0 ? (
-        <div className={styles.emptyStats}>
-          <h2>No statistics available</h2>
-          <p>Add games to your collection to see your gaming statistics</p>
+    <div className="space-y-6">
+      <section className="surface-panel surface-noise relative overflow-hidden rounded-[30px] p-6 md:p-7">
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(16,191,161,0.18),transparent_30%),radial-gradient(circle_at_bottom_right,rgba(247,201,93,0.12),transparent_24%)]" />
+        <div className="relative z-10 grid gap-5 xl:grid-cols-[1.2fr_0.8fr]">
+          <div className="space-y-4">
+            <p className="text-xs uppercase tracking-[0.22em] text-primary/80">Tableau de bord</p>
+            <h2 className="max-w-2xl text-3xl font-semibold tracking-tight text-foreground">
+              Une lecture immediate de ta bibliotheque: rythme, completion et terrains de predilection.
+            </h2>
+            <p className="max-w-2xl text-sm leading-6 text-muted-foreground">
+              La collection ne sert pas juste a stocker des jeux. Elle raconte tes cycles, tes plateformes dominantes et ce que tu termines vraiment.
+            </p>
+            <div className="grid gap-3 sm:grid-cols-3">
+              <div className="rounded-[22px] border border-white/8 bg-black/15 p-4">
+                <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Jeux suivis</p>
+                <p className="mt-3 text-3xl font-semibold text-foreground">{stats.total}</p>
+              </div>
+              <div className="rounded-[22px] border border-white/8 bg-black/15 p-4">
+                <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Taux de completion</p>
+                <p className="mt-3 text-3xl font-semibold text-foreground">{percentage(stats.completed, stats.total)}%</p>
+              </div>
+              <div className="rounded-[22px] border border-white/8 bg-black/15 p-4">
+                <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Backlog actif</p>
+                <p className="mt-3 text-3xl font-semibold text-foreground">{stats.toPlay + stats.playing}</p>
+              </div>
+            </div>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
+            <div className="rounded-[24px] border border-white/8 bg-black/20 p-4">
+              <div className="flex items-center gap-2 text-xs uppercase tracking-[0.18em] text-muted-foreground">
+                <MonitorSmartphone className="h-4 w-4" />
+                Plateforme dominante
+              </div>
+              <p className="mt-3 text-lg font-semibold text-foreground">{leadPlatform?.name || 'Aucune'}</p>
+              <p className="mt-1 text-sm text-muted-foreground">{leadPlatform ? `${leadPlatform.count} jeux dans ton historique` : 'Ajoute des plateformes pour voir une tendance.'}</p>
+            </div>
+            <div className="rounded-[24px] border border-white/8 bg-black/20 p-4">
+              <div className="flex items-center gap-2 text-xs uppercase tracking-[0.18em] text-muted-foreground">
+                <Sparkles className="h-4 w-4" />
+                Genre fort
+              </div>
+              <p className="mt-3 text-lg font-semibold text-foreground">{leadGenre?.name || 'Aucun'}</p>
+              <p className="mt-1 text-sm text-muted-foreground">{leadGenre ? `${leadGenre.count} occurences dans la collection` : 'Ajoute des jeux pour faire emerger une preference.'}</p>
+            </div>
+            <div className="rounded-[24px] border border-white/8 bg-black/20 p-4 sm:col-span-2 xl:col-span-1">
+              <div className="flex items-center gap-2 text-xs uppercase tracking-[0.18em] text-muted-foreground">
+                <CalendarDays className="h-4 w-4" />
+                Derniere dynamique
+              </div>
+              <p className="mt-3 text-lg font-semibold text-foreground">{latestYear ? `${latestYear.year}` : 'Aucune annee'}</p>
+              <p className="mt-1 text-sm text-muted-foreground">{latestYear ? `${latestYear.count} jeu${latestYear.count > 1 ? 'x' : ''} ajoute${latestYear.count > 1 ? 's' : ''} sur la derniere annee visible.` : 'Ligne du temps indisponible.'}</p>
+            </div>
+          </div>
         </div>
-      ) : (
-        <>
-          {/* Summary cards */}
-          <div className={styles.summaryCards}>
-            <div className={styles.summaryCard}>
-              <div className={styles.summaryIconWrapper}>
-                <FiBarChart2 className={styles.summaryIcon} />
+      </section>
+
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+        {statusCards.map((item) => {
+          const Icon = item.icon;
+
+          return (
+            <div key={item.label} className={item.tone + ' rounded-[24px] border p-4'}>
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-sm font-medium">{item.label}</span>
+                <Icon className="h-4 w-4" />
               </div>
-              <div className={styles.summaryInfo}>
-                <span className={styles.summaryLabel}>Total Games</span>
-                <span className={styles.summaryValue}>{stats?.total || 0}</span>
-              </div>
+              <p className="mt-4 text-3xl font-semibold text-foreground">{item.value}</p>
+              <p className="mt-2 text-xs uppercase tracking-[0.16em] text-current/75">{percentage(item.value, stats.total)}% de la bibliotheque</p>
             </div>
-            
-            <div className={styles.summaryCard}>
-              <div className={styles.summaryIconWrapper} style={{ backgroundColor: 'rgba(0, 184, 148, 0.2)', color: '#00b894' }}>
-                <FiAward className={styles.summaryIcon} />
-              </div>
-              <div className={styles.summaryInfo}>
-                <span className={styles.summaryLabel}>Completed</span>
-                <span className={styles.summaryValue}>
-                  {stats?.completed || 0}
-                  <span className={styles.percentage}>
-                    {stats && stats.total > 0 ? ` (${Math.round((stats.completed / stats.total) * 100)}%)` : ''}
-                  </span>
-                </span>
-              </div>
+          );
+        })}
+      </div>
+
+      <div className="grid gap-4 xl:grid-cols-[1fr_1fr]">
+        <Card className="surface-panel rounded-[28px] border-white/8 bg-transparent py-0">
+          <CardHeader className="pb-0">
+            <CardTitle className="flex items-center gap-2 text-xl text-foreground">
+              <MonitorSmartphone className="h-5 w-5 text-primary" />
+              Repartition par plateformes
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-5">
+            <div className="h-[320px]">
+              {platforms.length > 0 ? <Doughnut data={platformChartData} options={doughnutOptions} /> : <p className="text-sm text-muted-foreground">Aucune donnee plateforme.</p>}
             </div>
-            
-            <div className={styles.summaryCard}>
-              <div className={styles.summaryIconWrapper} style={{ backgroundColor: 'rgba(108, 92, 231, 0.2)', color: '#6c5ce7' }}>
-                <FiPlay className={styles.summaryIcon} />
-              </div>
-              <div className={styles.summaryInfo}>
-                <span className={styles.summaryLabel}>Playing</span>
-                <span className={styles.summaryValue}>
-                  {stats?.playing || 0}
-                  <span className={styles.percentage}>
-                    {stats && stats.total > 0 ? ` (${Math.round((stats.playing / stats.total) * 100)}%)` : ''}
-                  </span>
-                </span>
-              </div>
+          </CardContent>
+        </Card>
+
+        <Card className="surface-panel rounded-[28px] border-white/8 bg-transparent py-0">
+          <CardHeader className="pb-0">
+            <CardTitle className="flex items-center gap-2 text-xl text-foreground">
+              <PieChart className="h-5 w-5 text-primary" />
+              Repartition par genres
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-5">
+            <div className="h-[320px]">
+              {genres.length > 0 ? <Doughnut data={genreChartData} options={doughnutOptions} /> : <p className="text-sm text-muted-foreground">Aucune donnee genre.</p>}
             </div>
-            
-            <div className={styles.summaryCard}>
-              <div className={styles.summaryIconWrapper} style={{ backgroundColor: 'rgba(253, 203, 110, 0.2)', color: '#fdcb6e' }}>
-                <FiClock className={styles.summaryIcon} />
-              </div>
-              <div className={styles.summaryInfo}>
-                <span className={styles.summaryLabel}>To Play</span>
-                <span className={styles.summaryValue}>
-                  {stats?.toPlay || 0}
-                  <span className={styles.percentage}>
-                    {stats && stats.total > 0 ? ` (${Math.round((stats.toPlay / stats.total) * 100)}%)` : ''}
-                  </span>
-                </span>
-              </div>
-            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card className="surface-panel rounded-[28px] border-white/8 bg-transparent py-0">
+        <CardHeader className="pb-0">
+          <CardTitle className="flex items-center gap-2 text-xl text-foreground">
+            <Layers3 className="h-5 w-5 text-primary" />
+            Evolution de la collection
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="pt-5">
+          <div className="h-[320px]">
+            {yearsData.length > 0 ? <Line data={yearChartData} options={lineOptions} /> : <p className="text-sm text-muted-foreground">Aucune ligne du temps exploitable.</p>}
           </div>
-          
-          {/* Detailed statistics */}
-          <div className={styles.chartsGrid}>
-            <div className={styles.chartCard}>
-              <h2 className={styles.chartTitle}>
-                <FiTv className={styles.chartIcon} />
-                Platforms Distribution
-              </h2>
-              <div className={styles.chartContainer}>
-                {platforms.length > 0 ? (
-                  <Doughnut data={platformChartData} options={chartOptions} />
-                ) : (
-                  <p className={styles.noDataMessage}>No platform data available</p>
-                )}
-              </div>
+        </CardContent>
+      </Card>
+
+      <div className="grid gap-4 xl:grid-cols-3">
+        <Card className="surface-panel rounded-[28px] border-white/8 bg-transparent py-0 xl:col-span-2">
+          <CardHeader className="pb-0">
+            <CardTitle className="flex items-center gap-2 text-xl text-foreground">
+              <Sparkles className="h-5 w-5 text-primary" />
+              Lecture rapide
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="grid gap-3 pt-5 md:grid-cols-3">
+            <div className="rounded-[22px] border border-white/8 bg-black/20 p-4">
+              <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">Completion</p>
+              <p className="mt-2 text-lg font-semibold text-foreground">{stats.completed} jeux termines</p>
+              <p className="mt-1 text-sm text-muted-foreground">Tu termines {percentage(stats.completed, stats.total)}% de ce que tu ajoutes.</p>
             </div>
-            
-            <div className={styles.chartCard}>
-              <h2 className={styles.chartTitle}>
-                <FiPieChart className={styles.chartIcon} />
-                Genres Distribution
-              </h2>
-              <div className={styles.chartContainer}>
-                {genres.length > 0 ? (
-                  <Doughnut data={genreChartData} options={chartOptions} />
-                ) : (
-                  <p className={styles.noDataMessage}>No genre data available</p>
-                )}
-              </div>
+            <div className="rounded-[22px] border border-white/8 bg-black/20 p-4">
+              <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">Saturation</p>
+              <p className="mt-2 text-lg font-semibold text-foreground">{stats.toPlay + stats.wishlist} jeux a surveiller</p>
+              <p className="mt-1 text-sm text-muted-foreground">Le backlog et la wishlist restent le principal reservoir a arbitrer.</p>
             </div>
-            
-            <div className={styles.chartCard}>
-              <h2 className={styles.chartTitle}>
-                <FiCalendar className={styles.chartIcon} />
-                Games Added by Year
-              </h2>
-              <div className={styles.chartContainer}>
-                {yearsData.length > 0 ? (
-                  <Line data={yearChartData} options={chartOptions} />
-                ) : (
-                  <p className={styles.noDataMessage}>No timeline data available</p>
-                )}
-              </div>
+            <div className="rounded-[22px] border border-white/8 bg-black/20 p-4">
+              <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">Focus actuel</p>
+              <p className="mt-2 text-lg font-semibold text-foreground">{stats.playing} session{stats.playing > 1 ? 's' : ''} active{stats.playing > 1 ? 's' : ''}</p>
+              <p className="mt-1 text-sm text-muted-foreground">Assez pour garder une rotation vive sans brouiller le suivi.</p>
             </div>
+          </CardContent>
+        </Card>
+
+        <Card className="surface-panel rounded-[28px] border-white/8 bg-transparent py-0">
+          <CardHeader className="pb-0">
+            <CardTitle className="text-xl text-foreground">Top plateformes</CardTitle>
+          </CardHeader>
+          <CardContent className="pt-5">
+            <div className="space-y-3">
+              {platforms.slice(0, 5).map((platform, index) => (
+                <div key={platform.name} className="flex items-center justify-between rounded-[18px] border border-white/8 bg-black/20 px-4 py-3">
+                  <div className="flex items-center gap-3">
+                    <span className="flex h-8 w-8 items-center justify-center rounded-full border border-white/8 bg-white/5 text-xs font-semibold text-muted-foreground">{index + 1}</span>
+                    <span className="text-sm font-medium text-foreground">{platform.name}</span>
+                  </div>
+                  <span className="text-sm text-muted-foreground">{platform.count}</span>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card className="surface-panel rounded-[28px] border-white/8 bg-transparent py-0">
+        <CardHeader className="pb-0">
+          <CardTitle className="text-xl text-foreground">Top genres</CardTitle>
+        </CardHeader>
+        <CardContent className="pt-5">
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
+            {genres.slice(0, 5).map((genre, index) => (
+              <div key={genre.name} className="rounded-[20px] border border-white/8 bg-black/20 p-4">
+                <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">#{index + 1}</p>
+                <p className="mt-3 text-base font-semibold text-foreground">{genre.name}</p>
+                <p className="mt-2 text-sm text-muted-foreground">{genre.count} jeu{genre.count > 1 ? 'x' : ''}</p>
+              </div>
+            ))}
           </div>
-          
-          {/* Top Lists */}
-          <div className={styles.topLists}>
-            <div className={styles.topListCard}>
-              <h2 className={styles.topListTitle}>Top Platforms</h2>
-              <ul className={styles.topListItems}>
-                {platforms.slice(0, 5).map((platform, index) => (
-                  <li key={platform.name} className={styles.topListItem}>
-                    <span className={styles.topListRank}>{index + 1}</span>
-                    <span className={styles.topListName}>{platform.name}</span>
-                    <span className={styles.topListValue}>{platform.count} games</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-            
-            <div className={styles.topListCard}>
-              <h2 className={styles.topListTitle}>Top Genres</h2>
-              <ul className={styles.topListItems}>
-                {genres.slice(0, 5).map((genre, index) => (
-                  <li key={genre.name} className={styles.topListItem}>
-                    <span className={styles.topListRank}>{index + 1}</span>
-                    <span className={styles.topListName}>{genre.name}</span>
-                    <span className={styles.topListValue}>{genre.count} games</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-        </>
-      )}
-    </main>
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 export default StatsClient;

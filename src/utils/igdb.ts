@@ -4,26 +4,33 @@ const CLIENT_ID = process.env.IGDB_CLIENT_ID;
 
 let cachedToken: string | null = null;
 let tokenExpiry: number | null = null;
+// Singleton promise to prevent concurrent duplicate auth requests
+let tokenPromise: Promise<string> | null = null;
 
 async function getAccessToken(): Promise<string> {
-  // Check if we have a valid cached token
+  // Return cached token if still valid
   if (cachedToken && tokenExpiry && Date.now() < tokenExpiry) {
     return cachedToken;
   }
-  
-  // Otherwise get a new token using getAuth from auth.js
-  try {
-    const data = await getAuth();
-    
-    cachedToken = data.access_token;
-    // Set expiry time (subtract 5 minutes for safety)
-    tokenExpiry = Date.now() + ((data.expires_in - 300) * 1000);
-    
-    return cachedToken;
-  } catch (error) {
-    console.error('Failed to get access token:', error);
-    throw error;
-  }
+
+  // Deduplicate: if there's already a in-flight auth request, reuse it
+  if (tokenPromise) return tokenPromise;
+
+  tokenPromise = getAuth()
+    .then((data) => {
+      cachedToken = data.access_token;
+      // Subtract 5 minutes for safety margin
+      tokenExpiry = Date.now() + ((data.expires_in - 300) * 1000);
+      tokenPromise = null;
+      return cachedToken!;
+    })
+    .catch((error) => {
+      tokenPromise = null;
+      console.error('Failed to get access token:', error);
+      throw error;
+    });
+
+  return tokenPromise;
 }
 
 export async function igdbRequest<T = any>(endpoint: string, query: string, cacheTTL: number = 3600): Promise<T[]> {

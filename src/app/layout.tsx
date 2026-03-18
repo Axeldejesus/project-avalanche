@@ -1,10 +1,10 @@
 import './globals.css';
 import { Space_Grotesk, Oxanium } from 'next/font/google';
-import { AuthProvider } from '../context/AuthContext'; // Import du provider d'authentification
+import { AuthProvider } from '../context/AuthContext';
 import { ToastProvider } from '@/context/ToastContext';
+import { Toaster } from '@/components/ui/sonner';
 import type { Metadata } from 'next';
 
-// Définition des polices avec next/font
 const spaceGrotesk = Space_Grotesk({
   subsets: ['latin'],
   display: 'swap',
@@ -21,7 +21,7 @@ const oxanium = Oxanium({
 
 export const metadata: Metadata = {
   title: 'Avalanche',
-  description: 'Find, track, and discover the best video games with Avalanche, your ultimate gaming platform',
+  description: 'Trouvez, suivez et découvrez les meilleurs jeux vidéo avec Avalanche, votre plateforme gaming ultime',
 };
 
 export default function RootLayout({
@@ -30,13 +30,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${spaceGrotesk.variable} ${oxanium.variable}`}>
+    <html lang="fr" className={`dark ${spaceGrotesk.variable} ${oxanium.variable}`}>
       <body>
         <AuthProvider>
           <ToastProvider>
             {children}
           </ToastProvider>
         </AuthProvider>
+        <Toaster richColors theme="dark" position="bottom-right" />
       </body>
     </html>
   );

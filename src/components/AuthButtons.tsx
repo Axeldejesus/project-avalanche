@@ -1,15 +1,13 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { usePathname } from 'next/navigation';
-import Link from 'next/link';
-import styles from '../styles/Home.module.css';
 import LoginModal from './modals/LoginModal';
 import RegisterModal from './modals/RegisterModal';
-import UserAvatar from './UserAvatar';
-import { onAuthStateChange, auth, getUserProfile } from '../services/authenticate';
+import UserMenu from './UserMenu';
+import { Button } from '@/components/ui/button';
+import { onAuthStateChange, getUserProfile } from '../services/authenticate';
 import { User } from 'firebase/auth';
-import { FiLogIn, FiUserPlus } from 'react-icons/fi';
+import { LogIn, UserPlus } from 'lucide-react';
 
 const AuthButtons: React.FC = () => {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
@@ -24,84 +22,55 @@ const AuthButtons: React.FC = () => {
     localStorage.getItem('profileUsernameUpdated')
   );
 
-  // Add pathname to detect current route
-  const pathname = usePathname();
-  const isProfilePage = pathname === '/profile' || (pathname && pathname.startsWith('/profile/'));
-
-  // Initialize state from localStorage if available (to prevent flash)
   useEffect(() => {
-    // Check localStorage for cached auth state
     const cachedAuthState = localStorage.getItem('userIsAuthenticated');
-    
-    // Set initial loading state based on cached data
-    if (cachedAuthState === 'true') {
-      // Don't show login buttons if we think user is authenticated
-      setIsLoading(true);
-    } else if (cachedAuthState === 'false') {
-      // Safe to show login buttons if we know user isn't authenticated
-      setIsLoading(false);
-    }
-    
-    // Set up auth state listener
+    if (cachedAuthState !== 'true') setIsLoading(false);
+
     const unsubscribe = onAuthStateChange(async (user) => {
       setCurrentUser(user);
-      
       if (user) {
-        // Store in localStorage that user is authenticated
         localStorage.setItem('userIsAuthenticated', 'true');
-        
-        // Get the user's profile from Firestore
         const profileResult = await getUserProfile(user.uid);
-        if (profileResult.success && profileResult.data) {  // Added check for data
+        if (profileResult.success && profileResult.data) {
           setUserProfile(profileResult.data);
         }
       } else {
-        // Clear authentication flag in localStorage
         localStorage.setItem('userIsAuthenticated', 'false');
         setUserProfile(null);
       }
-      
-      // Either way, we now know the auth state, so we're not loading anymore
       setIsLoading(false);
     });
-    
+
     return () => unsubscribe();
   }, []);
 
-  // Add enhanced effect to check for profile updates (both image and username)
+  // Écoute les mises à jour de profil via localStorage
   useEffect(() => {
-    // Function to check if profile was updated
     const checkProfileUpdates = () => {
       const newImageTimestamp = localStorage.getItem('profileImageUpdated');
       const newUsernameTimestamp = localStorage.getItem('profileUsernameUpdated');
-      
-      // Check if either image or username was updated
-      if (newImageTimestamp !== profileUpdateTimestamp || 
-          newUsernameTimestamp !== usernameUpdateTimestamp) {
-        
+
+      if (
+        newImageTimestamp !== profileUpdateTimestamp ||
+        newUsernameTimestamp !== usernameUpdateTimestamp
+      ) {
         setProfileUpdateTimestamp(newImageTimestamp);
         setUsernameUpdateTimestamp(newUsernameTimestamp);
-        
-        // If user is logged in, refresh their profile
+
         if (currentUser) {
-          getUserProfile(currentUser.uid).then(profileResult => {
-            if (profileResult.success && profileResult.data) {  // Added check for data
+          getUserProfile(currentUser.uid).then((profileResult) => {
+            if (profileResult.success && profileResult.data) {
               setUserProfile(profileResult.data);
             }
           });
         }
       }
     };
-    
-    // Check immediately (for when returning to the page)
+
     checkProfileUpdates();
-    
-    // Also set up an interval to periodically check
     const intervalId = setInterval(checkProfileUpdates, 5000);
-    
-    // Set up event listener for visibility changes
     document.addEventListener('visibilitychange', checkProfileUpdates);
-    
+
     return () => {
       clearInterval(intervalId);
       document.removeEventListener('visibilitychange', checkProfileUpdates);
@@ -112,97 +81,61 @@ const AuthButtons: React.FC = () => {
     setIsLoginModalOpen(true);
     setIsRegisterModalOpen(false);
   };
-  
+
   const openRegisterModal = () => {
     setIsRegisterModalOpen(true);
     setIsLoginModalOpen(false);
   };
-  
-  const closeLoginModal = () => {
-    setIsLoginModalOpen(false);
-  };
-  
-  const closeRegisterModal = () => {
-    setIsRegisterModalOpen(false);
-  };
-  
-  // Add event listeners for opening modals from mobile menu
+
+  // Écoute les events CustomEvent depuis la navigation mobile
   useEffect(() => {
     const handleOpenLoginModal = () => {
-      console.log('openLoginModal event received'); // Debug log
       setIsLoginModalOpen(true);
       setIsRegisterModalOpen(false);
     };
-    
     const handleOpenRegisterModal = () => {
-      console.log('openRegisterModal event received'); // Debug log
       setIsRegisterModalOpen(true);
       setIsLoginModalOpen(false);
     };
-    
     window.addEventListener('openLoginModal', handleOpenLoginModal as EventListener);
     window.addEventListener('openRegisterModal', handleOpenRegisterModal as EventListener);
-    
     return () => {
       window.removeEventListener('openLoginModal', handleOpenLoginModal as EventListener);
       window.removeEventListener('openRegisterModal', handleOpenRegisterModal as EventListener);
     };
   }, []);
-  
-  // Always render modals (even when user is logged in) to handle mobile menu events
+
   return (
     <>
       {isLoading ? (
-        <div className={styles.authLoading}></div>
+        <div className="h-8 w-24 animate-pulse rounded-md bg-muted" />
       ) : currentUser && userProfile ? (
-        <div className={`${styles.userMenu} ${styles.userMenuLoggedIn}`}>
-          <Link href="/profile">
-            <div className={`${styles.userButton} ${isProfilePage ? styles.userButtonActive : ''}`}>
-              {userProfile.profileImageUrl ? (
-                <div 
-                  className={styles.userAvatar}
-                  style={{ 
-                    backgroundImage: `url(${userProfile.profileImageUrl})`,
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center',
-                    width: '100%',
-                    height: '100%',
-                    borderRadius: '50%'
-                  }}
-                />
-              ) : (
-                userProfile.username?.[0]?.toUpperCase() || 'A'
-              )}
-            </div>
-          </Link>
-          <div className={styles.usernameDisplay}>
-            {userProfile.username || 'User'}
-          </div>
-        </div>
+        <UserMenu
+          username={userProfile.username || 'Utilisateur'}
+          imageUrl={userProfile.profileImageUrl}
+        />
       ) : (
-        <div className={styles.userMenu}>
-          <div className={styles.authButtonsContainer}>
-            <button className={styles.loginBtn} onClick={openLoginModal}>
-              <FiLogIn className={styles.buttonIcon} /> Login
-            </button>
-            <button className={styles.registerBtn} onClick={openRegisterModal}>
-              <FiUserPlus className={styles.buttonIcon} /> Register
-            </button>
-          </div>
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" size="sm" onClick={openLoginModal} className="gap-1.5">
+            <LogIn className="h-4 w-4" />
+            Connexion
+          </Button>
+          <Button size="sm" onClick={openRegisterModal} className="gap-1.5">
+            <UserPlus className="h-4 w-4" />
+            S'inscrire
+          </Button>
         </div>
       )}
-      
-      {/* Always render modals */}
-      <LoginModal 
-        isOpen={isLoginModalOpen} 
-        onClose={closeLoginModal} 
-        onSwitchToRegister={openRegisterModal} 
+
+      <LoginModal
+        isOpen={isLoginModalOpen}
+        onClose={() => setIsLoginModalOpen(false)}
+        onSwitchToRegister={openRegisterModal}
       />
-      
-      <RegisterModal 
-        isOpen={isRegisterModalOpen} 
-        onClose={closeRegisterModal} 
-        onSwitchToLogin={openLoginModal} 
+      <RegisterModal
+        isOpen={isRegisterModalOpen}
+        onClose={() => setIsRegisterModalOpen(false)}
+        onSwitchToLogin={openLoginModal}
       />
     </>
   );

@@ -2,12 +2,13 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { FiStar } from 'react-icons/fi';
+import { ChevronLeft, ChevronRight, MessageSquareText, Star } from 'lucide-react';
 import { DocumentSnapshot } from 'firebase/firestore';
+import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
 import { getReviewsByUser } from '../services/reviewService';
 import { type Review } from '../schemas';
 import FirebaseIndexHelper from './FirebaseIndexHelper';
-import styles from '../styles/UserReviews.module.css';
 
 interface UserReviewsProps {
   userId: string;
@@ -159,7 +160,7 @@ const UserReviews: React.FC<UserReviewsProps> = ({ userId }) => {
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
+    return date.toLocaleDateString('fr-FR', {
       year: 'numeric',
       month: 'short',
       day: 'numeric'
@@ -230,15 +231,14 @@ const UserReviews: React.FC<UserReviewsProps> = ({ userId }) => {
   };
 
   return (
-    <div className={styles.userReviewsContainer}>
-      <h3 className={styles.userReviewsTitle}>Your Game Reviews</h3>
+    <div className="space-y-5">
       
       {error && (
         <>
-          <div className={styles.userReviewsError}>
+          <div className="rounded-[22px] border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">
             <p>{error}</p>
             {error.includes('index') && (
-              <p>This is a one-time setup issue. The system is creating necessary database indexes.</p>
+              <p className="mt-2 text-destructive/80">L'index Firestore est encore en cours de creation.</p>
             )}
           </div>
           <FirebaseIndexHelper error={error} />
@@ -246,30 +246,42 @@ const UserReviews: React.FC<UserReviewsProps> = ({ userId }) => {
       )}
       
       {reviews.length === 0 && currentPage === 1 && !loading ? (
-        <div className={styles.noReviews}>
-          You haven't reviewed any games yet.
+        <div className="rounded-[24px] border border-white/8 bg-white/4 px-5 py-10 text-center">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full border border-white/8 bg-black/20 text-muted-foreground">
+            <MessageSquareText className="h-5 w-5" />
+          </div>
+          <p className="mt-4 text-base font-semibold text-foreground">Aucune review publiee</p>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Tes prochains avis apparaitront ici avec un acces direct a la fiche du jeu.
+          </p>
         </div>
       ) : (
         <>
-          {/* Pagination moved to top - Afficher seulement s'il y a plus d'une page */}
           {(currentPage > 1 || pageCache.get(currentPage)?.hasMore) && (
-            <div className={styles.userReviewsPagination}>
-              <button 
-                className={`${styles.paginationButton} ${styles.navButton}`}
+            <div className="flex flex-col gap-3 rounded-[22px] border border-white/8 bg-white/4 p-4 sm:flex-row sm:items-center sm:justify-between">
+              <Button
+                variant="outline"
+                className="gap-2 border-white/10 bg-white/5"
                 onClick={() => changePage(currentPage - 1)}
                 disabled={currentPage === 1 || loading}
               >
-                Prev
-              </button>
+                <ChevronLeft className="h-4 w-4" />
+                Precedent
+              </Button>
               
-              <div className={styles.paginationNumbers}>
+              <div className="flex flex-wrap items-center justify-center gap-2">
                 {generatePaginationNumbers().map((page, index) => (
                   page === 'ellipsis1' || page === 'ellipsis2' ? (
-                    <span key={`ellipsis-${index}`} className={styles.paginationEllipsis}>...</span>
+                    <span key={`ellipsis-${index}`} className="px-2 text-sm text-muted-foreground">...</span>
                   ) : (
                     <button
                       key={page}
-                      className={`${styles.paginationNumber} ${currentPage === page ? styles.activePage : ''}`}
+                      className={cn(
+                        'flex h-10 min-w-10 items-center justify-center rounded-xl border px-3 text-sm transition-colors',
+                        currentPage === page
+                          ? 'border-primary/30 bg-primary/10 text-primary'
+                          : 'border-white/10 bg-black/20 text-muted-foreground hover:text-foreground'
+                      )}
                       onClick={() => changePage(Number(page))}
                       disabled={loading}
                     >
@@ -279,60 +291,64 @@ const UserReviews: React.FC<UserReviewsProps> = ({ userId }) => {
                 ))}
               </div>
               
-              <button 
-                className={`${styles.paginationButton} ${styles.navButton}`}
+              <Button
+                variant="outline"
+                className="gap-2 border-white/10 bg-white/5"
                 onClick={() => changePage(currentPage + 1)}
                 disabled={!pageCache.get(currentPage)?.hasMore || loading}
               >
-                Next
-              </button>
+                Suivant
+                <ChevronRight className="h-4 w-4" />
+              </Button>
             </div>
           )}
           
-          <div className={`${styles.userReviewsList} ${loading ? styles.fadedContent : ''}`}>
+          <div className={cn('grid gap-4', loading && 'opacity-70')}>
             {reviews.length > 0 ? (
               reviews.map((review, idx) => (
-                <div 
+                <button
                   key={`${review.id}-${idx}`} 
-                  className={styles.userReviewItem}
+                  type="button"
+                  className="rounded-[24px] border border-white/8 bg-white/4 p-4 text-left transition-colors hover:bg-white/7"
                   onClick={() => navigateToGame(review.gameId)}
                 >
-                  <div className={styles.userReviewGameInfo}>
-                    <img 
+                  <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                    <div className="flex gap-4">
+                      <img 
                       src={review.gameCover} 
                       alt={review.gameName} 
-                      className={styles.gameCover} 
+                      className="h-24 w-16 flex-shrink-0 overflow-hidden rounded-[18px] border border-white/8 object-cover" 
                     />
-                    <div className={styles.gameDetails}>
-                      <h4 className={styles.gameName}>{review.gameName}</h4>
-                      <div className={styles.ratingDate}>
-                        <div className={styles.reviewRating}>
+                      <div className="space-y-3">
+                        <div>
+                          <p className="text-xs uppercase tracking-[0.16em] text-primary/80">Review</p>
+                          <h4 className="mt-1 text-lg font-semibold text-foreground">{review.gameName}</h4>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-3">
+                          <div className="flex items-center gap-1 rounded-full border border-white/8 bg-black/20 px-3 py-2">
                           {Array.from({ length: 5 }).map((_, i) => (
-                            <FiStar
+                            <Star
                               key={`star-${review.id}-${i}`}
-                              className={i < review.rating ? styles.starFilled : styles.star}
-                              fill={i < review.rating ? '#FFD700' : 'none'}
+                              className={i < review.rating ? 'h-4 w-4 text-amber-300' : 'h-4 w-4 text-muted-foreground'}
+                              fill={i < review.rating ? 'currentColor' : 'none'}
                             />
                           ))}
+                          </div>
+                          <span className="text-xs uppercase tracking-[0.16em] text-muted-foreground">
+                            Mis a jour le {formatDate(review.updatedAt)}
+                          </span>
                         </div>
-                        <span className={styles.reviewDate}>
-                          {formatDate(review.updatedAt)}
-                        </span>
                       </div>
                     </div>
                   </div>
-                  <p className={styles.reviewComment}>{review.comment}</p>
-                </div>
+                  <p className="mt-4 line-clamp-3 text-sm leading-6 text-foreground/90">
+                    {review.comment?.trim() || 'Aucun commentaire detaille, seulement une note.'}
+                  </p>
+                </button>
               ))
             ) : (
-              <div className={styles.noReviews}>
-                {loading ? 'Loading reviews...' : (currentPage > 1 ? 'No reviews on this page. Please go back to the previous page.' : 'You haven\'t reviewed any games yet.')}
-              </div>
-            )}
-            
-            {loading && (
-              <div className={styles.overlayLoading}>
-                <div className={styles.loadingSpinner}></div>
+              <div className="rounded-[24px] border border-white/8 bg-white/4 px-5 py-8 text-center text-sm text-muted-foreground">
+                {loading ? 'Chargement des reviews...' : (currentPage > 1 ? 'Aucune review sur cette page. Reviens a la precedente.' : 'Aucune review publiee pour le moment.')}
               </div>
             )}
           </div>

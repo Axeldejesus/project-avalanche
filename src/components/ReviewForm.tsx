@@ -1,11 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { FiStar, FiEdit, FiTrash2, FiCheck, FiX } from 'react-icons/fi';
-import { addReview, updateReview, deleteReview, getUserGameReview } from '../services/reviewService';
-import { Review } from '../schemas/index';
+import { useEffect, useState } from 'react';
+import { Check, MessageSquareText, PencilLine, Star, Trash2, X } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { addReview, deleteReview, getUserGameReview, updateReview } from '../services/reviewService';
 import { useAuth } from '../context/AuthContext';
-import styles from '../styles/ReviewForm.module.css';
+import { Review } from '../schemas/index';
 
 interface ReviewFormProps {
   gameId: number;
@@ -40,14 +41,6 @@ const ReviewForm: React.FC<ReviewFormProps> = ({ gameId, gameName, gameCover, on
     checkExistingReview();
   }, [user, gameId]);
 
-  const handleRatingClick = (selectedRating: number) => {
-    setRating(selectedRating);
-  };
-
-  const handleRatingHover = (hoveredRating: number) => {
-    setHoveredRating(hoveredRating);
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -66,16 +59,9 @@ const ReviewForm: React.FC<ReviewFormProps> = ({ gameId, gameName, gameCover, on
     setSuccess(null);
 
     try {
-      if (existingReview && !isEditing) {
-        setIsEditing(true);
-        setIsSubmitting(false);
-        setSuccess("You can now edit your review.");
-        return;
-      }
-
       let result;
 
-      if (existingReview && isEditing) {
+      if (existingReview) {
         const updateData: any = {};
         if (rating > 0) updateData.rating = rating;
         if (comment.trim() !== '') updateData.comment = comment;
@@ -208,121 +194,159 @@ const ReviewForm: React.FC<ReviewFormProps> = ({ gameId, gameName, gameCover, on
 
   if (!user) {
     return (
-      <div className={styles.reviewFormLoginPrompt}>
-        <p>Please log in to leave a review</p>
+      <div className="rounded-[28px] border border-white/8 bg-white/4 px-5 py-8 text-center">
+        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full border border-white/8 bg-black/20 text-muted-foreground">
+          <MessageSquareText className="h-5 w-5" />
+        </div>
+        <p className="mt-4 text-base font-semibold text-foreground">Connecte-toi pour publier un avis</p>
+        <p className="mt-2 text-sm text-muted-foreground">
+          Ton rating et ton commentaire seront rattaches a ton profil et visibles dans la fiche du jeu.
+        </p>
       </div>
     );
   }
 
+  const isReadOnly = Boolean(existingReview && !isEditing);
+  const title = existingReview ? (isEditing ? 'Modifier ton avis' : 'Ton avis') : 'Publier un avis';
+  const subtitle = existingReview
+    ? isEditing
+      ? 'Affinez la note ou le commentaire sans perdre votre historique.'
+      : 'Ton retour est deja en ligne. Tu peux le retoucher ou le retirer.'
+    : 'Ajoute une note rapide ou un commentaire plus detaille pour enrichir la fiche.';
+
   return (
-    <div className={styles.reviewFormContainer}>
-      <h3 className={styles.reviewFormTitle}>
-        {existingReview && !isEditing ? 'Your Review' : (existingReview ? 'Edit Your Review' : 'Write a Review')}
-      </h3>
+    <div className="surface-panel rounded-[28px] p-5 md:p-6">
+      <div className="flex flex-col gap-2 border-b border-white/8 pb-4">
+        <p className="text-xs uppercase tracking-[0.2em] text-primary/80">Review</p>
+        <h3 className="text-2xl font-semibold text-foreground">{title}</h3>
+        <p className="max-w-2xl text-sm text-muted-foreground">{subtitle}</p>
+      </div>
 
-      {error && <div className={styles.reviewFormError}>{error}</div>}
-      {success && <div className={styles.reviewFormSuccess}>{success}</div>}
+      {error ? (
+        <div className="mt-4 rounded-[20px] border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+          {error}
+        </div>
+      ) : null}
+      {success ? (
+        <div className="mt-4 rounded-[20px] border border-primary/20 bg-primary/10 px-4 py-3 text-sm text-primary">
+          {success}
+        </div>
+      ) : null}
 
-      <form onSubmit={handleSubmit} className={styles.reviewForm}>
-        <div className={styles.ratingContainer}>
-          <label>Rating:</label>
-          <div className={styles.starRating}>
-            {[1, 2, 3, 4, 5].map((star) => (
-              <div
-                key={star}
-                className={`${styles.starWrapper} ${(isEditing || !existingReview) ? styles.starWrapperActive : ''}`}
-                onClick={() => !isSubmitting && (isEditing || !existingReview) && handleRatingClick(star)}
-                onMouseEnter={() => !isSubmitting && (isEditing || !existingReview) && handleRatingHover(star)}
-                onMouseLeave={() => !isSubmitting && (isEditing || !existingReview) && handleRatingHover(0)}
-              >
-                <FiStar
-                  className={`${styles.star} ${
-                    (hoveredRating ? star <= hoveredRating : star <= rating)
-                      ? styles.starActive
-                      : ''
-                  } ${(isEditing || !existingReview) ? styles.starInteractive : styles.starDisabled}`}
-                  fill={
-                    (hoveredRating ? star <= hoveredRating : star <= rating)
-                      ? '#FFD700'
-                      : 'none'
-                  }
-                />
-              </div>
-            ))}
-            <span className={styles.ratingText}>
-              {rating > 0 ? `${rating} Star${rating !== 1 ? 's' : ''}` : 'Select Rating'}
-            </span>
+      <form onSubmit={handleSubmit} className="mt-5 space-y-5">
+        <div className="rounded-[24px] border border-white/8 bg-white/4 p-4">
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div>
+              <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Ta note</p>
+              <p className="mt-2 text-sm text-muted-foreground">
+                {rating > 0 ? `${rating}/5` : 'Aucune note pour le moment'}
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              {[1, 2, 3, 4, 5].map((starValue) => {
+                const isActive = hoveredRating ? starValue <= hoveredRating : starValue <= rating;
+
+                return (
+                  <button
+                    key={starValue}
+                    type="button"
+                    onClick={() => !isSubmitting && !isReadOnly && setRating(starValue)}
+                    onMouseEnter={() => !isSubmitting && !isReadOnly && setHoveredRating(starValue)}
+                    onMouseLeave={() => !isSubmitting && !isReadOnly && setHoveredRating(0)}
+                    disabled={isReadOnly || isSubmitting}
+                    className={cn(
+                      'flex h-11 w-11 items-center justify-center rounded-2xl border transition-colors',
+                      isActive
+                        ? 'border-amber-400/30 bg-amber-400/12 text-amber-300'
+                        : 'border-white/8 bg-black/20 text-muted-foreground',
+                      !isReadOnly && 'hover:border-white/12 hover:bg-white/8 hover:text-foreground'
+                    )}
+                    aria-label={`Donner ${starValue} etoile${starValue > 1 ? 's' : ''}`}
+                  >
+                    <Star className="h-5 w-5" fill={isActive ? 'currentColor' : 'none'} />
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
 
-        <div className={styles.commentContainer}>
-          <label htmlFor="review-comment">
-            Comment: {isEditing && <span className={styles.editableIndicator}>(Editable)</span>}
+        <div className="space-y-2">
+          <label htmlFor="review-comment" className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
+            Commentaire
           </label>
           <textarea
             id="review-comment"
             value={comment}
-            onChange={(e) => setComment(e.target.value)}
-            disabled={isSubmitting || (!isEditing && existingReview !== null)}
-            placeholder="Share your thoughts about this game..."
-            className={`${styles.commentTextarea} ${(!isEditing && existingReview !== null) ? styles.disabledTextarea : ''} ${isEditing ? styles.editableTextarea : ''}`}
-            rows={4}
+            onChange={(event) => setComment(event.target.value)}
+            disabled={isSubmitting || isReadOnly}
+            placeholder="Ce que tu retiens du jeu, ce qui marche, ce qui casse le rythme, ce qui merite d'etre signale."
+            rows={6}
+            className={cn(
+              'min-h-[150px] w-full rounded-[24px] border border-white/10 bg-black/20 px-4 py-3 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground/70',
+              isReadOnly ? 'cursor-default opacity-80' : 'focus:border-primary/40 focus:bg-black/25'
+            )}
           />
         </div>
 
-        <div className={styles.reviewFormActions}>
-          {existingReview && !isEditing ? (
-            <>
-              <button
+        {existingReview && !isEditing ? (
+          <div className="flex flex-col gap-3 border-t border-white/8 pt-4 sm:flex-row sm:justify-between">
+            <div className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
+              Publie le {new Date(existingReview.createdAt).toLocaleDateString('fr-FR')}
+            </div>
+            <div className="flex flex-col gap-3 sm:flex-row">
+              <Button
                 type="button"
-                onClick={(e) => {
-                  e.preventDefault();
+                variant="outline"
+                className="gap-2 border-white/10 bg-white/5"
+                disabled={isSubmitting}
+                onClick={() => {
                   setIsEditing(true);
-                  setSuccess("You can now edit your review.");
+                  setSuccess('Mode edition active.');
                 }}
-                className={styles.editButton}
-                disabled={isSubmitting}
               >
-                <FiEdit /> Edit
-              </button>
-              <button
+                <PencilLine className="h-4 w-4" />
+                Modifier
+              </Button>
+              <Button
                 type="button"
+                variant="outline"
+                className="gap-2 border-destructive/20 bg-destructive/10 text-destructive hover:bg-destructive/15"
+                disabled={isSubmitting}
                 onClick={handleDeleteReview}
-                className={styles.deleteButton}
-                disabled={isSubmitting}
               >
-                <FiTrash2 /> Delete
-              </button>
-            </>
-          ) : (
-            <>
-              <button
-                type="submit"
-                className={styles.submitButton}
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? 'Submitting...' : (
-                  <>
-                    <FiCheck /> {existingReview ? 'Update' : 'Submit'}
-                  </>
-                )}
-              </button>
-              {isEditing && (
-                <button
+                <Trash2 className="h-4 w-4" />
+                Supprimer
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-3 border-t border-white/8 pt-4 sm:flex-row sm:justify-between">
+            <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
+              Une note ou un commentaire suffit pour enregistrer ton avis.
+            </p>
+            <div className="flex flex-col gap-3 sm:flex-row">
+              {isEditing ? (
+                <Button
                   type="button"
-                  onClick={(e) => {
-                    e.preventDefault();
+                  variant="outline"
+                  className="gap-2 border-white/10 bg-white/5"
+                  onClick={(event) => {
+                    event.preventDefault();
                     handleCancel();
                   }}
-                  className={styles.cancelButton}
                   disabled={isSubmitting}
                 >
-                  <FiX /> Cancel
-                </button>
-              )}
-            </>
-          )}
-        </div>
+                  <X className="h-4 w-4" />
+                  Annuler
+                </Button>
+              ) : null}
+              <Button type="submit" className="gap-2" disabled={isSubmitting}>
+                {isSubmitting ? <span>Envoi...</span> : <><Check className="h-4 w-4" />{existingReview ? 'Mettre a jour' : 'Publier'}</>}
+              </Button>
+            </div>
+          </div>
+        )}
       </form>
     </div>
   );

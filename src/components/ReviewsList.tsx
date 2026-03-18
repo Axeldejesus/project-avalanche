@@ -1,12 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { FiStar, FiChevronRight, FiChevronLeft } from 'react-icons/fi';
+import { ChevronLeft, ChevronRight, MessageSquareText, Star } from 'lucide-react';
 import { DocumentSnapshot } from 'firebase/firestore';
+import { Button } from '@/components/ui/button';
 import { getReviewsByGame } from '../services/reviewService';
 import { type Review } from '../schemas';
 import FirebaseIndexHelper from './FirebaseIndexHelper';
-import styles from '../styles/ReviewsList.module.css';
+import UserAvatar from './UserAvatar';
 
 interface ReviewsListProps {
   gameId: number;
@@ -126,7 +127,7 @@ const ReviewsList: React.FC<ReviewsListProps> = ({ gameId, refreshTrigger = 0 })
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
+    return date.toLocaleDateString('fr-FR', {
       year: 'numeric',
       month: 'short',
       day: 'numeric'
@@ -134,18 +135,24 @@ const ReviewsList: React.FC<ReviewsListProps> = ({ gameId, refreshTrigger = 0 })
   };
 
   return (
-    <div className={styles.reviewsListContainer}>
-      <h3 className={styles.reviewsListTitle}>User Reviews</h3>
+    <div className="space-y-5">
+      <div className="flex flex-col gap-2 border-b border-white/8 pb-4">
+        <p className="text-xs uppercase tracking-[0.2em] text-primary/80">Communaute</p>
+        <h3 className="text-2xl font-semibold text-foreground">Avis des joueurs</h3>
+        <p className="max-w-2xl text-sm text-muted-foreground">
+          Retours recents, notes syntheses et commentaires detailles sur cette fiche.
+        </p>
+      </div>
       
       {error && (
         <>
-          <div className={styles.reviewsListError}>
+          <div className="rounded-[22px] border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">
             {error}
             {error.includes('index') && (
-              <p>This is a one-time setup issue. The system is creating necessary database indexes.</p>
+              <p className="mt-2 text-destructive/80">L'index Firestore est encore en cours de creation.</p>
             )}
             {error.includes('permissions') && (
-              <p>This is a configuration issue. Please contact the site administrator.</p>
+              <p className="mt-2 text-destructive/80">Probleme de permissions. Contacte l'administrateur du site.</p>
             )}
           </div>
           <FirebaseIndexHelper error={error} />
@@ -153,84 +160,86 @@ const ReviewsList: React.FC<ReviewsListProps> = ({ gameId, refreshTrigger = 0 })
       )}
       
       {reviews.length === 0 ? (
-        <div className={styles.noReviews}>
-          {loading ? 'Loading reviews...' : 'No reviews yet. Be the first to review this game!'}
+        <div className="rounded-[24px] border border-white/8 bg-white/4 px-5 py-10 text-center">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full border border-white/8 bg-black/20 text-muted-foreground">
+            <MessageSquareText className="h-5 w-5" />
+          </div>
+          <p className="mt-4 text-base font-semibold text-foreground">
+            {loading ? 'Chargement des avis...' : 'Aucun avis pour le moment'}
+          </p>
+          <p className="mt-2 text-sm text-muted-foreground">
+            {loading ? 'La liste se remplit.' : 'Sois le premier a donner le ton sur ce jeu.'}
+          </p>
         </div>
       ) : (
         <>
-          <div className={styles.reviewsList}>
+          <div className="space-y-4">
             {reviews.map((review, idx) => (
-              <div key={`${review.id}-${idx}`} className={styles.reviewItem}>
-                <div className={styles.reviewHeader}>
-                  <div className={styles.reviewUser}>
-                    {review.userProfileImage ? (
-                      <img 
-                        src={review.userProfileImage} 
-                        alt={review.username} 
-                        className={styles.userAvatar} 
-                        onError={(e) => {
-                          // Fallback to placeholder if image fails to load
-                          const target = e.target as HTMLImageElement;
-                          target.style.display = 'none';
-                          target.nextElementSibling?.classList.remove('hidden');
-                        }}
-                      />
-                    ) : null}
-                    {!review.userProfileImage && (
-                      <div className={styles.userAvatarPlaceholder}>
-                        {review.username.charAt(0).toUpperCase()}
-                      </div>
-                    )}
-                    <span className={styles.username}>{review.username}</span>
+              <article key={`${review.id}-${idx}`} className="rounded-[24px] border border-white/8 bg-white/4 p-5 transition-colors hover:bg-white/6">
+                <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                  <div className="flex items-center gap-3">
+                    <UserAvatar username={review.username} imageUrl={review.userProfileImage} size="medium" />
+                    <div>
+                      <p className="text-sm font-semibold text-foreground">{review.username}</p>
+                      <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">
+                        Publie le {formatDate(review.createdAt)}
+                      </p>
+                    </div>
                   </div>
-                  <div className={styles.reviewRating}>
+                  <div className="flex items-center gap-1 rounded-full border border-white/8 bg-black/20 px-3 py-2">
                     {Array.from({ length: 5 }).map((_, i) => (
-                      <FiStar
+                      <Star
                         key={`star-${review.id}-${i}`}
-                        className={i < review.rating ? styles.starFilled : styles.star}
-                        fill={i < review.rating ? '#FFD700' : 'none'}
+                        className={i < review.rating ? 'h-4 w-4 text-amber-300' : 'h-4 w-4 text-muted-foreground'}
+                        fill={i < review.rating ? 'currentColor' : 'none'}
                       />
                     ))}
                   </div>
                 </div>
-                <div className={styles.reviewContent}>
-                  <p className={styles.reviewComment}>{review.comment}</p>
-                  <div className={styles.reviewDate}>
-                    Posted on {formatDate(review.createdAt)}
-                    {review.updatedAt !== review.createdAt && 
-                      ` (Edited on ${formatDate(review.updatedAt)})`}
-                  </div>
+                <div className="mt-4 space-y-3">
+                  <p className="text-sm leading-6 text-foreground/90">
+                    {review.comment?.trim() || 'Aucun commentaire detaille, seulement une note.'}
+                  </p>
+                  <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">
+                    {review.updatedAt !== review.createdAt
+                      ? `Modifie le ${formatDate(review.updatedAt)}`
+                      : 'Version originale'}
+                  </p>
                 </div>
-              </div>
+              </article>
             ))}
           </div>
           
           {(page > 1 || pageCache.get(page)?.hasMore) && (
-            <div className={styles.reviewsPagination}>
-              <button
-                className={styles.paginationButton}
+            <div className="flex flex-col items-center justify-between gap-3 border-t border-white/8 pt-4 sm:flex-row">
+              <Button
+                variant="outline"
+                className="gap-2 border-white/10 bg-white/5"
                 onClick={handlePrevPage}
                 disabled={page === 1 || loading}
               >
-                <FiChevronLeft /> Previous
-              </button>
+                <ChevronLeft className="h-4 w-4" />
+                Precedent
+              </Button>
               
-              <span className={styles.paginationInfo}>Page {page}</span>
+              <span className="text-sm text-muted-foreground">Page {page}</span>
               
-              <button
-                className={styles.paginationButton}
+              <Button
+                variant="outline"
+                className="gap-2 border-white/10 bg-white/5"
                 onClick={handleNextPage}
                 disabled={!pageCache.get(page)?.hasMore || loading}
               >
-                Next <FiChevronRight />
-              </button>
+                Suivant
+                <ChevronRight className="h-4 w-4" />
+              </Button>
             </div>
           )}
         </>
       )}
       
       {loading && reviews.length > 0 && (
-        <div className={styles.loadingMoreReviews}>Loading more reviews...</div>
+        <div className="text-sm text-muted-foreground">Chargement des avis supplementaires...</div>
       )}
     </div>
   );

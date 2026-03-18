@@ -1,53 +1,46 @@
 'use client';
 
-import React, { useRef, useState } from 'react';
-import { useEffect } from 'react';
-import Link from 'next/link';
-import { FiCalendar, FiUsers, FiArrowLeft, FiMessageSquare, FiBookmark, FiSearch, FiMenu, FiX, FiHome, FiBarChart2 } from 'react-icons/fi';
-import { RiGamepadFill } from 'react-icons/ri';
-import { BsCollectionPlay } from 'react-icons/bs';
-import { motion } from 'framer-motion';
-import styles from './gameDetail.module.css';
-import { Button } from '@/components/ui/button';
-import GameVideosWrapper from '@/components/GameVideosWrapper';
-import ScreenshotGallery from '@/components/ScreenshotGallery';
-import BackButton from '@/components/BackButton';
-import SearchBar from '@/components/SearchBar';
-import { useAuth } from '@/context/AuthContext';
-import { usePathname, useRouter } from 'next/navigation';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
+import { useRouter } from 'next/navigation';
+import {
+  CalendarDays,
+  Gamepad2,
+  Layers3,
+  MessageSquareMore,
+  Plus,
+  ScrollText,
+  Star,
+  UserRound,
+} from 'lucide-react';
+import AppShell from '@/components/AppShell';
+import BackButton from '@/components/BackButton';
+import EmptyState from '@/components/EmptyState';
+import GameCard from '@/components/GameCard';
+import StatusBadge from '@/components/StatusBadge';
 import AddToCollectionModal from '@/components/modals/AddToCollectionModal';
 import LoginModal from '@/components/modals/LoginModal';
 import RegisterModal from '@/components/modals/RegisterModal';
+import GameVideosWrapper from '@/components/GameVideosWrapper';
+import ScreenshotGallery from '@/components/ScreenshotGallery';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useAuth } from '@/context/AuthContext';
 import { getUserGameInCollection } from '@/services/collectionService';
 
-// Dynamically load review components to improve initial page performance
 const DynamicReviewForm = dynamic(() => import('@/components/ReviewForm'), {
-  loading: () => <div className={styles.reviewLoading}>Loading review form...</div>,
-  ssr: false
+  loading: () => <div className="text-sm text-muted-foreground">Chargement du formulaire...</div>,
+  ssr: false,
 });
 
 const DynamicReviewsList = dynamic(() => import('@/components/ReviewsList'), {
-  loading: () => <div className={styles.reviewLoading}>Loading reviews...</div>,
-  ssr: false
+  loading: () => <div className="text-sm text-muted-foreground">Chargement des reviews...</div>,
+  ssr: false,
 });
-
-interface Developer {
-  name: string;
-}
-
-interface Publisher {
-  name: string;
-}
 
 interface ReleaseDate {
   date: number;
   platform: string;
-}
-
-interface Screenshot {
-  id: string;
-  url: string;
 }
 
 interface SimilarGame {
@@ -71,803 +64,397 @@ interface GameDetail {
   similarGames: SimilarGame[];
 }
 
-// Helper to format date
 function formatReleaseDate(timestamp: number): string {
-  if (!timestamp || isNaN(timestamp)) {
-    return 'Unknown date';
+  const date = new Date(timestamp * 1000);
+
+  if (Number.isNaN(date.getTime())) {
+    return 'Date inconnue';
   }
-  
-  try {
-    const date = new Date(timestamp * 1000);
-    
-    // Check if date is valid
-    if (isNaN(date.getTime())) {
-      return 'Unknown date';
-    }
-    
-    const options: Intl.DateTimeFormatOptions = { month: 'long', day: 'numeric', year: 'numeric' };
-    return new Intl.DateTimeFormat('en-US', options).format(date);
-  } catch (error) {
-    console.error('Error formatting date:', error);
-    return 'Unknown date';
-  }
+
+  return new Intl.DateTimeFormat('fr-FR', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  }).format(date);
 }
 
 export default function GameDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  // Properly unwrap the params Promise using React.use()
-  const unwrappedParams = React.use(params);
-  const id = unwrappedParams.id;
-
+  const { id } = React.use(params);
+  const router = useRouter();
+  const reviewsRef = useRef<HTMLDivElement>(null);
+  const { user } = useAuth();
   const [gameDetail, setGameDetail] = useState<GameDetail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [refreshReviews, setRefreshReviews] = useState<number>(0);
+  const [refreshReviews, setRefreshReviews] = useState(0);
   const [isCollectionModalOpen, setIsCollectionModalOpen] = useState(false);
-  const [collectionStatus, setCollectionStatus] = useState<string | null>(null);
-  const [backgroundImageUrl, setBackgroundImageUrl] = useState<string>('');
-  
-  const { user, userProfile } = useAuth();
-  const pathname = usePathname();
-  const routerNav = useRouter();
-  
-  // Add ref for scrolling to reviews section
-  const reviewsRef = useRef<HTMLDivElement>(null);
-  
-  // Scroll to reviews section function
-  const scrollToReviews = () => {
-    reviewsRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isDesktopMenuOpen, setIsDesktopMenuOpen] = useState(false);
+  const [collectionStatus, setCollectionStatus] = useState<
+    'playing' | 'completed' | 'toPlay' | 'abandoned' | 'wishlist' | null
+  >(null);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
 
   useEffect(() => {
     const fetchGameDetail = async () => {
+      setIsLoading(true);
+      setError(null);
+
       try {
-        const res = await fetch(`/api/games/${id}`);
-        
-        if (!res.ok) {
-          throw new Error('Failed to fetch game details');
+        const response = await fetch(`/api/games/${id}`);
+
+        if (!response.ok) {
+          throw new Error('Impossible de charger les details du jeu.');
         }
-        
-        const data = await res.json();
+
+        const data = await response.json();
         setGameDetail(data);
-        
-        // Précharger l'image EN ARRIÈRE-PLAN (ne pas bloquer l'affichage)
-        const bgImage = data.screenshots && data.screenshots.length > 0 
-          ? data.screenshots[0] 
-          : data.cover;
-        
-        const img = new Image();
-        img.onload = () => {
-          // L'image est prête, l'afficher avec une transition douce
-          setBackgroundImageUrl(bgImage);
-        };
-        img.onerror = () => {
-          // Pas grave si l'image ne charge pas, le fond reste sombre
-          console.warn('Background image failed to load');
-        };
-        img.src = bgImage;
-        
-      } catch (error) {
-        console.error('Error fetching game details:', error);
-        setError('Could not load game details');
+      } catch (fetchError: any) {
+        setError(fetchError.message || 'Impossible de charger les details du jeu.');
       } finally {
         setIsLoading(false);
       }
     };
-    
+
     fetchGameDetail();
   }, [id]);
-  
-  // Check if game is in user's collection
+
   useEffect(() => {
-    const checkCollection = async () => {
-      if (user && gameDetail) {
-        const collectionItem = await getUserGameInCollection(user.uid, parseInt(id));
-        if (collectionItem) {
-          setCollectionStatus(collectionItem.status);
-        } else {
-          setCollectionStatus(null);
-        }
-      }
-    };
-    
-    if (!isLoading && gameDetail) {
-      checkCollection();
-    }
-  }, [user, id, gameDetail, isLoading]);
-  
-  // Handle review submission
-  const handleReviewSubmitted = () => {
-    setRefreshReviews(prev => prev + 1);
-  };
-  
-  // Handle opening the collection modal
-  const openCollectionModal = () => {
-    setIsCollectionModalOpen(true);
-  };
-  
-  // Handle collection updates
-  const handleCollectionUpdated = async () => {
-    if (user) {
-      const collectionItem = await getUserGameInCollection(user.uid, parseInt(id));
-      if (collectionItem) {
-        setCollectionStatus(collectionItem.status);
-      } else {
+    const syncCollectionStatus = async () => {
+      if (!user) {
         setCollectionStatus(null);
+        return;
       }
-    }
-  };
-  
-  // Close search when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as HTMLElement;
-      // Ne pas fermer si on clique sur le bouton toggle lui-même
-      if (isSearchOpen && !target.closest(`.${styles.mobileSearchContainer}`) && !target.closest(`.${styles.mobileSearchToggle}`)) {
-        setIsSearchOpen(false);
-      }
-      if (isMobileMenuOpen && !target.closest(`.${styles.mobileNav}`) && !target.closest(`.${styles.mobileMenuToggle}`)) {
-        setIsMobileMenuOpen(false);
-      }
-      if (isDesktopMenuOpen && !target.closest(`.${styles.desktopNavMenu}`) && !target.closest(`.${styles.desktopMenuToggle}`)) {
-        setIsDesktopMenuOpen(false);
-      }
+
+      const item = await getUserGameInCollection(user.uid, Number(id));
+      setCollectionStatus(item?.status ?? null);
     };
-    
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [isSearchOpen, isMobileMenuOpen, isDesktopMenuOpen]);
-  
-  // Toggle search on mobile
-  const toggleSearch = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsSearchOpen(!isSearchOpen);
-  };
-  
-  // Toggle mobile menu
-  const toggleMobileMenu = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsMobileMenuOpen(!isMobileMenuOpen);
-  };
-  
-  // Toggle desktop menu
-  const toggleDesktopMenu = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDesktopMenuOpen(!isDesktopMenuOpen);
-  };
 
-  // Close mobile menu
-  const closeMobileMenu = () => {
-    setIsMobileMenuOpen(false);
-  };
-  
-  // Close desktop menu
-  const closeDesktopMenu = () => {
-    setIsDesktopMenuOpen(false);
-  };
+    syncCollectionStatus();
+  }, [id, refreshReviews, user]);
 
-  // Handle navigation
-  const handleNavigation = (path: string, event: React.MouseEvent) => {
-    event.preventDefault();
-    if (pathname === path) {
-      closeMobileMenu();
-      return;
-    }
-    closeMobileMenu();
-    routerNav.push(path);
-  };
-  
-  const getInitials = (name: string) => {
-    return name
-      .split(' ')
-      .map(word => word[0])
-      .join('')
-      .toUpperCase()
-      .substring(0, 2);
-  };
-  
-  const handleProfileClick = () => {
-    if (pathname === '/profile') {
-      closeMobileMenu();
-      return;
-    }
-    closeMobileMenu();
-    routerNav.push('/profile');
-  };
-  
-  const handleLoginClick = () => {
-    closeMobileMenu();
-    closeDesktopMenu();
-    setIsLoginModalOpen(true);
-    setIsRegisterModalOpen(false);
-  };
-  
-  const handleRegisterClick = () => {
-    closeMobileMenu();
-    closeDesktopMenu();
-    setIsRegisterModalOpen(true);
-    setIsLoginModalOpen(false);
-  };
-  
-  // Add event listeners for opening modals
   useEffect(() => {
     const handleOpenLoginModal = () => {
-      console.log('openLoginModal event received in game detail');
       setIsLoginModalOpen(true);
       setIsRegisterModalOpen(false);
     };
-    
+
     const handleOpenRegisterModal = () => {
-      console.log('openRegisterModal event received in game detail');
       setIsRegisterModalOpen(true);
       setIsLoginModalOpen(false);
     };
-    
+
     window.addEventListener('openLoginModal', handleOpenLoginModal as EventListener);
     window.addEventListener('openRegisterModal', handleOpenRegisterModal as EventListener);
-    
+
     return () => {
       window.removeEventListener('openLoginModal', handleOpenLoginModal as EventListener);
       window.removeEventListener('openRegisterModal', handleOpenRegisterModal as EventListener);
     };
   }, []);
 
-  const isActive = (path: string) => {
-    if (path === '/' && pathname === '/') return true;
-    if (path !== '/' && pathname?.startsWith(path)) return true;
-    return false;
+  const earliestRelease = useMemo(() => {
+    if (!gameDetail?.releaseDates.length) {
+      return null;
+    }
+
+    return gameDetail.releaseDates.reduce((earliest, current) =>
+      current.date < earliest.date ? current : earliest
+    );
+  }, [gameDetail?.releaseDates]);
+
+  const openCollectionModal = () => {
+    if (!user) {
+      setIsLoginModalOpen(true);
+      setIsRegisterModalOpen(false);
+      return;
+    }
+
+    setIsCollectionModalOpen(true);
   };
 
   if (isLoading) {
     return (
-      <div className={styles.loaderContainer}>
-        <div className={styles.gameLoader}>
-          <div className={styles.loaderBar}></div>
+      <AppShell>
+        <div className="surface-panel rounded-[28px] px-6 py-16 text-center text-muted-foreground">
+          Chargement de la fiche jeu...
         </div>
-        <p>Loading game details...</p>
-      </div>
+      </AppShell>
     );
   }
-  
+
   if (error || !gameDetail) {
     return (
-      <div className={styles.errorContainer}>
-        <h1>Game Not Found</h1>
-        <p>The game you're looking for doesn't exist or there was an error.</p>
-        <Link href="/games" className={styles.backLink}>
-          <FiArrowLeft className={styles.backIcon} /> Return to Games
-        </Link>
-      </div>
+      <AppShell>
+        <EmptyState
+          title="Jeu introuvable"
+          description="La fiche demandee n'est pas disponible ou n'a pas pu etre chargee correctement."
+          actions={<Button onClick={() => router.push('/games')}>Retour au catalogue</Button>}
+        />
+      </AppShell>
     );
   }
-  
-  // Find the earliest release date
-  const earliestRelease = gameDetail.releaseDates.length > 0 
-    ? gameDetail.releaseDates.reduce((earliest, current) => 
-        current.date < earliest.date ? current : earliest, 
-        gameDetail.releaseDates[0]
-      ) 
-    : null;
-    
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: { 
-      opacity: 1,
-      transition: { 
-        staggerChildren: 0.1,
-        delayChildren: 0.2 
-      }
-    }
-  };
-  
-  const itemVariants = {
-    hidden: { y: 20, opacity: 0 },
-    visible: { 
-      y: 0, 
-      opacity: 1,
-      transition: { duration: 0.5 }
-    }
-  };
-  
+
   return (
-    <motion.div 
-      className={styles.container}
-      initial="hidden"
-      animate="visible"
-      variants={containerVariants}
-    >
-      <div 
-        className={styles.heroHeader}
-        style={{ 
-          backgroundImage: backgroundImageUrl ? `url(${backgroundImageUrl})` : 'none',
-          // Transition douce quand l'image apparaît
-          transition: 'background-image 0.5s ease-in-out'
-        }}
-      >
-        <div className={styles.heroOverlay}>
-          <div className={styles.topBar}>
-            <div className={styles.backButtonWrapper}>
-              <BackButton />
-              <button 
-                className={styles.desktopMenuToggle}
-                onClick={toggleDesktopMenu}
-                aria-label="Toggle navigation menu"
-              >
-                <FiMenu size={20} />
-              </button>
-            </div>
-            
-            {/* Desktop navigation menu */}
-            {isDesktopMenuOpen && (
-              <div className={styles.desktopNavMenu}>
-                <div className={styles.desktopNavHeader}>
-                  {user && userProfile ? (
-                    <>
-                      <button 
-                        className={styles.desktopNavProfileButton}
-                        onClick={handleProfileClick}
-                        aria-label="Go to profile"
-                      >
-                        {userProfile.profileImageUrl ? (
-                          <img 
-                            src={userProfile.profileImageUrl} 
-                            alt={userProfile.username} 
-                            className={styles.desktopNavProfileAvatar}
-                          />
-                        ) : (
-                          getInitials(userProfile.username || user.email || 'User')
-                        )}
-                      </button>
-                      <div className={styles.desktopNavUsername}>
-                        {userProfile.username || user.email?.split('@')[0] || 'User'}
-                      </div>
-                    </>
-                  ) : (
-                    <div className={styles.desktopNavAuthButtons}>
-                      <button 
-                        className={styles.desktopLoginBtn}
-                        onClick={handleLoginClick}
-                      >
-                        Log In
-                      </button>
-                      <button 
-                        className={styles.desktopRegisterBtn}
-                        onClick={handleRegisterClick}
-                      >
-                        Sign Up
-                      </button>
-                    </div>
-                  )}
-                </div>
-                
-                <div className={styles.desktopNavItems}>
-                  <a 
-                    href="/" 
-                    className={`${styles.desktopNavItem} ${isActive('/') ? styles.active : ''}`}
-                    onClick={(e) => handleNavigation('/', e)}
-                  >
-                    <FiHome className={styles.navIcon} />
-                    <span>Home</span>
-                  </a>
-                  <a 
-                    href="/games" 
-                    className={`${styles.desktopNavItem} ${isActive('/games') ? styles.active : ''}`}
-                    onClick={(e) => handleNavigation('/games', e)}
-                  >
-                    <RiGamepadFill className={styles.navIcon} />
-                    <span>Games</span>
-                  </a>
-                  <a 
-                    href="/collections" 
-                    className={`${styles.desktopNavItem} ${isActive('/collections') ? styles.active : ''}`}
-                    onClick={(e) => handleNavigation('/collections', e)}
-                  >
-                    <BsCollectionPlay className={styles.navIcon} />
-                    <span>Collections</span>
-                  </a>
-                  <a 
-                    href="/stats" 
-                    className={`${styles.desktopNavItem} ${isActive('/stats') ? styles.active : ''}`}
-                    onClick={(e) => handleNavigation('/stats', e)}
-                  >
-                    <FiBarChart2 className={styles.navIcon} />
-                    <span>Stats</span>
-                  </a>
-                </div>
-              </div>
-            )}
-            
-            {/* Desktop search bar */}
-            <div className={styles.desktopSearchContainer}>
-              <SearchBar />
-            </div>
-            
-            {/* Mobile controls */}
-            <div className={styles.mobileControls}>
-              <button 
-                className={styles.mobileSearchToggle}
-                onClick={toggleSearch}
-                onTouchStart={(e) => e.currentTarget.style.transform = 'scale(0.95)'}
-                onTouchEnd={(e) => e.currentTarget.style.transform = 'scale(1)'
-                }
-                aria-label="Toggle search"
-              >
-                <FiSearch size={20} />
-              </button>
-              <button 
-                className={styles.mobileMenuToggle}
-                onClick={toggleMobileMenu}
-                onTouchStart={(e) => e.currentTarget.style.transform = 'scale(0.95)'}
-                onTouchEnd={(e) => e.currentTarget.style.transform = 'scale(1)'}
-                aria-label="Toggle menu"
-              >
-                {isMobileMenuOpen ? <FiX size={24} /> : <FiMenu size={24} />}
-              </button>
-            </div>
+    <AppShell contentClassName="space-y-6">
+      <section className="surface-panel relative overflow-hidden rounded-[30px] p-6 md:p-8">
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(16,191,161,0.14),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(247,201,93,0.1),transparent_24%)]" />
+        <div className="relative z-10 space-y-6">
+          <div className="flex flex-wrap items-center gap-3">
+            <BackButton />
+            {collectionStatus ? <StatusBadge status={collectionStatus} /> : null}
           </div>
-          
-          {/* Mobile search dropdown */}
-          {isSearchOpen && (
-            <div className={styles.mobileSearchContainer}>
-              <SearchBar />
+
+          <div className="grid gap-6 xl:grid-cols-[320px_1fr] xl:items-start">
+            <div className="overflow-hidden rounded-[26px] border border-white/10 bg-black/20">
+              <img src={gameDetail.cover} alt={gameDetail.name} className="h-full w-full object-cover" />
             </div>
-          )}
-          
-          {/* Mobile navigation menu - styled like Home.module.css */}
-          {isMobileMenuOpen && (
-            <>
-              <div 
-                className={styles.mobileMenuOverlay}
-                onClick={closeMobileMenu}
-              />
-              <div className={styles.mobileNav}>
-                <div className={styles.mobileNavHeader}>
-                  <div className={styles.mobileNavHeaderTop}>
-                    <button 
-                      className={styles.mobileCloseButton}
-                      onClick={closeMobileMenu}
-                      aria-label="Close menu"
+
+            <div className="space-y-5">
+              <div className="space-y-3">
+                <p className="text-xs font-semibold uppercase tracking-[0.28em] text-primary/80">
+                  Game Detail
+                </p>
+                <h1 className="text-4xl font-semibold tracking-tight text-foreground md:text-5xl">
+                  {gameDetail.name}
+                </h1>
+                <div className="flex flex-wrap gap-2">
+                  {gameDetail.genres.map((genre) => (
+                    <span
+                      key={genre}
+                      className="rounded-full border border-white/10 bg-white/6 px-3 py-1 text-xs uppercase tracking-[0.14em] text-muted-foreground"
                     >
-                      <FiX />
-                    </button>
-                  </div>
-                  
-                  {/* Profile section in mobile menu */}
-                  <div className={styles.mobileNavProfile}>
-                    {user && userProfile ? (
-                      <>
-                        <button 
-                          className={styles.mobileNavProfileButton}
-                          onClick={handleProfileClick}
-                          aria-label="Go to profile"
-                        >
-                          {userProfile.profileImageUrl ? (
-                            <img 
-                              src={userProfile.profileImageUrl} 
-                              alt={userProfile.username} 
-                              className={styles.mobileNavProfileAvatar}
-                            />
-                          ) : (
-                            getInitials(userProfile.username || user.email || 'User')
-                          )}
-                        </button>
-                        <div className={styles.mobileNavUsername}>
-                          {userProfile.username || user.email?.split('@')[0] || 'User'}
-                        </div>
-                      </>
-                    ) : (
-                      <div className={styles.mobileNavAuthButtons}>
-                        <button 
-                          className={styles.mobileLoginBtn}
-                          onClick={handleLoginClick}
-                        >
-                          Log In
-                        </button>
-                        <button 
-                          className={styles.mobileRegisterBtn}
-                          onClick={handleRegisterClick}
-                        >
-                          Sign Up
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-                
-                <div className={styles.mobileNavItems}>
-                  <a 
-                    href="/" 
-                    className={`${styles.mobileNavItem} ${isActive('/') ? styles.active : ''}`}
-                    onClick={(e) => handleNavigation('/', e)}
-                  >
-                    <FiHome className={styles.navIcon} />
-                    <span>Home</span>
-                  </a>
-                  <a 
-                    href="/games" 
-                    className={`${styles.mobileNavItem} ${isActive('/games') ? styles.active : ''}`}
-                    onClick={(e) => handleNavigation('/games', e)}
-                  >
-                    <RiGamepadFill className={styles.navIcon} />
-                    <span>Games</span>
-                  </a>
-                  <a 
-                    href="/collections" 
-                    className={`${styles.mobileNavItem} ${isActive('/collections') ? styles.active : ''}`}
-                    onClick={(e) => handleNavigation('/collections', e)}
-                  >
-                    <BsCollectionPlay className={styles.navIcon} />
-                    <span>Collections</span>
-                  </a>
-                  <a 
-                    href="/stats" 
-                    className={`${styles.mobileNavItem} ${isActive('/stats') ? styles.active : ''}`}
-                    onClick={(e) => handleNavigation('/stats', e)}
-                  >
-                    <FiBarChart2 className={styles.navIcon} />
-                    <span>Stats</span>
-                  </a>
-                </div>
-              </div>
-            </>
-          )}
-          
-          <div className={styles.heroContent}>
-            <motion.div 
-              className={styles.coverWrapper}
-              variants={itemVariants}
-            >
-              <img 
-                src={gameDetail.cover} 
-                alt={gameDetail.name} 
-                className={styles.gameCover} 
-              />
-            </motion.div>
-            
-            <motion.div 
-              className={styles.gameInfo}
-              variants={itemVariants}
-            >
-              <h1 className={styles.gameTitle}>{gameDetail.name}</h1>
-              
-              {gameDetail.genres.length > 0 && (
-                <div className={styles.gameGenres}>
-                  {gameDetail.genres.map((genre, index) => (
-                    <span key={`${genre}-${index}`} className={styles.genrePill}>
                       {genre}
                     </span>
                   ))}
                 </div>
-              )}
-              
-              <div className={styles.releasePlatforms}>
-                {earliestRelease && (
-                  <div className={styles.infoItem}>
-                    <FiCalendar className={styles.infoIcon} />
-                    <span>{formatReleaseDate(earliestRelease.date)}</span>
-                  </div>
-                )}
-                
-                {gameDetail.developers.length > 0 && (
-                  <div className={styles.infoItem}>
-                    <FiUsers className={styles.infoIcon} />
-                    <span>{gameDetail.developers[0]}</span>
-                  </div>
-                )}
               </div>
-              
-              {/* Desktop action buttons - visible on desktop only */}
-              <div className={styles.gameActions}>
-                <Button 
-                  className={`${styles.primaryButton} ${collectionStatus ? styles.inCollectionButton : ''}`}
-                  onClick={openCollectionModal}
-                >
-                  <FiBookmark /> {collectionStatus ? 'In Collection' : 'Add to Collection'}
+
+              <div className="flex flex-wrap gap-3">
+                <Button className="gap-2" onClick={openCollectionModal}>
+                  <Plus className="h-4 w-4" />
+                  {collectionStatus ? 'Modifier dans ma collection' : 'Ajouter a ma collection'}
                 </Button>
-                <Button 
-                  className={styles.reviewButton} 
-                  onClick={scrollToReviews}
+                <Button
+                  variant="outline"
+                  className="gap-2 border-white/10 bg-white/5"
+                  onClick={() => reviewsRef.current?.scrollIntoView({ behavior: 'smooth' })}
                 >
-                  <FiMessageSquare /> Write a Review
+                  <MessageSquareMore className="h-4 w-4" />
+                  Aller aux reviews
                 </Button>
               </div>
-            </motion.div>
-          </div>
-          
-          {/* Move action buttons below hero on mobile */}
-          <div className={styles.mobileActionsWrapper}>
-            <div className={styles.gameActions}>
-              <Button 
-                className={`${styles.primaryButton} ${collectionStatus ? styles.inCollectionButton : ''}`}
-                onClick={openCollectionModal}
-              >
-                <FiBookmark /> {collectionStatus ? 'In Collection' : 'Add to Collection'}
-              </Button>
-              <Button 
-                className={styles.reviewButton} 
-                onClick={scrollToReviews}
-              >
-                <FiMessageSquare /> Write a Review
-              </Button>
+
+              <p className="max-w-3xl text-sm leading-7 text-muted-foreground md:text-base">
+                {gameDetail.summary}
+              </p>
+
+              <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+                <div className="rounded-[22px] border border-white/8 bg-black/15 p-4">
+                  <div className="flex items-center gap-2 text-xs uppercase tracking-[0.18em] text-muted-foreground">
+                    <CalendarDays className="h-4 w-4" />
+                    Premiere sortie
+                  </div>
+                  <p className="mt-3 text-sm font-semibold text-foreground">
+                    {earliestRelease ? formatReleaseDate(earliestRelease.date) : 'Date inconnue'}
+                  </p>
+                </div>
+                <div className="rounded-[22px] border border-white/8 bg-black/15 p-4">
+                  <div className="flex items-center gap-2 text-xs uppercase tracking-[0.18em] text-muted-foreground">
+                    <Gamepad2 className="h-4 w-4" />
+                    Plateformes
+                  </div>
+                  <p className="mt-3 text-sm font-semibold text-foreground">
+                    {gameDetail.platforms.slice(0, 2).join(', ') || 'Non renseigne'}
+                  </p>
+                </div>
+                <div className="rounded-[22px] border border-white/8 bg-black/15 p-4">
+                  <div className="flex items-center gap-2 text-xs uppercase tracking-[0.18em] text-muted-foreground">
+                    <UserRound className="h-4 w-4" />
+                    Developpeurs
+                  </div>
+                  <p className="mt-3 text-sm font-semibold text-foreground">
+                    {gameDetail.developers.slice(0, 2).join(', ') || 'Non renseigne'}
+                  </p>
+                </div>
+                <div className="rounded-[22px] border border-white/8 bg-black/15 p-4">
+                  <div className="flex items-center gap-2 text-xs uppercase tracking-[0.18em] text-muted-foreground">
+                    <Layers3 className="h-4 w-4" />
+                    Editeurs
+                  </div>
+                  <p className="mt-3 text-sm font-semibold text-foreground">
+                    {gameDetail.publishers.slice(0, 2).join(', ') || 'Non renseigne'}
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
-      </div>
-      
-      {/* Main Content */}
-      <motion.div 
-        className={styles.gameContent}
-        variants={containerVariants}
-      >
-        <div className={styles.twoColumnLayout}>
-          <motion.div 
-            className={styles.gameMainContent}
-            variants={itemVariants}
-          >
-            <motion.section 
-              className={styles.gameSummary}
-              variants={itemVariants}
-            >
-              <h2>About</h2>
-              <p>{gameDetail.summary}</p>
-              {gameDetail.storyline && (
-                <>
-                  <h3>Storyline</h3>
-                  <p>{gameDetail.storyline}</p>
-                </>
-              )}
-            </motion.section>
-            
-            {/* Game Videos Section */}
-            <motion.section 
-              variants={itemVariants}
-              className={styles.videoSection}
-            >
-              <GameVideosWrapper gameId={parseInt(id)} />
-            </motion.section>
-            
-            {/* Screenshots Section */}
-            {gameDetail.screenshots.length > 0 && (
-              <motion.section 
-                className={styles.screenshotsSection}
-                variants={itemVariants}
-              >
-                <h2>Screenshots</h2>
-                <ScreenshotGallery 
-                  screenshots={gameDetail.screenshots} 
-                  gameName={gameDetail.name} 
-                />
-              </motion.section>
-            )}
-            
-            {/* Reviews Section */}
-            <motion.section
-              ref={reviewsRef}
-              variants={itemVariants}
-              className={styles.reviewsSection}
-            >
-              <h2 className={styles.reviewsTitle}>Game Reviews</h2>
-              <div className={styles.reviewsContainer}>
-                <DynamicReviewForm 
-                  gameId={parseInt(id)}
-                  gameName={gameDetail.name}
-                  gameCover={gameDetail.cover}
-                  onReviewSubmitted={handleReviewSubmitted}
-                />
-                <DynamicReviewsList 
-                  gameId={parseInt(id)}
-                  refreshTrigger={refreshReviews}
-                />
-              </div>
-            </motion.section>
-          </motion.div>
-          
-          <motion.aside 
-            className={styles.gameSidebar}
-            variants={itemVariants}
-          >
-            {gameDetail.platforms.length > 0 && (
-              <motion.div 
-                className={styles.sidebarCard}
-                variants={itemVariants}
-              >
-                <h3>Available On</h3>
-                <div className={styles.platformList}>
-                  {gameDetail.platforms.map((platform, index) => (
-                    <span key={index} className={styles.platformBadge}>
-                      {platform}
-                    </span>
-                  ))}
-                </div>
-              </motion.div>
-            )}
-            
-            {gameDetail.developers.length > 0 && (
-              <motion.div 
-                className={styles.sidebarCard}
-                variants={itemVariants}
-              >
-                <h3>Developers</h3>
-                <ul className={styles.simpleList}>
-                  {gameDetail.developers.map((developer, index) => (
-                    <li key={`${developer}-${index}`}>{developer}</li>
-                  ))}
-                </ul>
-              </motion.div>
-            )}
-            
-            {gameDetail.publishers.length > 0 && (
-              <motion.div 
-                className={styles.sidebarCard}
-                variants={itemVariants}
-              >
-                <h3>Publishers</h3>
-                <ul className={styles.simpleList}>
-                  {gameDetail.publishers.map((publisher, index) => (
-                    <li key={`${publisher}-${index}`}>{publisher}</li>
-                  ))}
-                </ul>
-              </motion.div>
-            )}
-            
-            {gameDetail.releaseDates.length > 0 && (
-              <motion.div 
-                className={styles.sidebarCard}
-                variants={itemVariants}
-              >
-                <h3>Release Dates</h3>
-                <ul className={styles.releaseDatesList}>
-                  {gameDetail.releaseDates.map((release, index) => (
-                    <li key={`${release.platform}-${release.date}-${index}`}>
-                      <span className={styles.releasePlatform}>{release.platform}</span>
-                      <span className={styles.releaseDate}>{formatReleaseDate(release.date)}</span>
-                    </li>
-                  ))}
-                </ul>
-              </motion.div>
-            )}
-          </motion.aside>
-        </div>
-      </motion.div>
-      
-      {/* Add the collection modal */}
-      {gameDetail && (
-        <AddToCollectionModal
-          isOpen={isCollectionModalOpen}
-          onClose={() => setIsCollectionModalOpen(false)}
-          gameId={parseInt(id)}
-          gameName={gameDetail.name}
-          gameCover={gameDetail.cover}
-          onCollectionUpdated={handleCollectionUpdated}
-        />
-      )}
+      </section>
 
-      {/* Add the modals at the end */}
-      <LoginModal 
-        isOpen={isLoginModalOpen} 
-        onClose={() => setIsLoginModalOpen(false)} 
+      {gameDetail.storyline ? (
+        <Card className="surface-panel gap-0 rounded-[28px] border-white/8 bg-transparent py-0">
+          <CardHeader className="px-6 pt-6">
+            <CardTitle className="flex items-center gap-3 text-2xl">
+              <ScrollText className="h-5 w-5 text-primary" />
+              Synopsis
+            </CardTitle>
+            <CardDescription>
+              Une lecture rapide du contexte narratif et de la proposition du jeu.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4 px-6 pb-6">
+            <p className="text-sm leading-7 text-muted-foreground">{gameDetail.storyline}</p>
+          </CardContent>
+        </Card>
+      ) : null}
+
+      <div className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
+        <Card className="surface-panel gap-0 rounded-[28px] border-white/8 bg-transparent py-0">
+          <CardHeader className="px-6 pt-6">
+            <CardTitle className="text-2xl">Calendrier des sorties</CardTitle>
+            <CardDescription>Vue compacte des sorties connues par plateforme.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3 px-6 pb-6">
+            {gameDetail.releaseDates.length > 0 ? (
+              gameDetail.releaseDates.slice(0, 8).map((release) => (
+                <div
+                  key={`${release.platform}-${release.date}`}
+                  className="flex items-center justify-between rounded-[18px] border border-white/8 bg-white/4 px-4 py-3"
+                >
+                  <span className="text-sm font-medium text-foreground">{release.platform}</span>
+                  <span className="text-sm text-muted-foreground">{formatReleaseDate(release.date)}</span>
+                </div>
+              ))
+            ) : (
+              <p className="text-sm text-muted-foreground">Aucune date de sortie detaillee disponible.</p>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="surface-panel gap-0 rounded-[28px] border-white/8 bg-transparent py-0">
+          <CardHeader className="px-6 pt-6">
+            <CardTitle className="flex items-center gap-3 text-2xl">
+              <Star className="h-5 w-5 text-primary" />
+              Identite du jeu
+            </CardTitle>
+            <CardDescription>Plateformes, genres et ecosysteme de production.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-5 px-6 pb-6">
+            <div>
+              <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Genres</p>
+              <p className="mt-2 text-sm text-foreground">{gameDetail.genres.join(', ') || 'Non renseigne'}</p>
+            </div>
+            <div>
+              <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Plateformes</p>
+              <p className="mt-2 text-sm text-foreground">{gameDetail.platforms.join(', ') || 'Non renseigne'}</p>
+            </div>
+            <div>
+              <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Developpeurs</p>
+              <p className="mt-2 text-sm text-foreground">{gameDetail.developers.join(', ') || 'Non renseigne'}</p>
+            </div>
+            <div>
+              <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Editeurs</p>
+              <p className="mt-2 text-sm text-foreground">{gameDetail.publishers.join(', ') || 'Non renseigne'}</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {gameDetail.screenshots.length > 0 ? (
+        <Card className="surface-panel gap-0 rounded-[28px] border-white/8 bg-transparent py-0">
+          <CardHeader className="px-6 pt-6">
+            <CardTitle className="text-2xl">Captures d'ecran</CardTitle>
+            <CardDescription>
+              Une galerie immersive, utile pour juger l'ambiance et la direction artistique.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="px-6 pb-6">
+            <ScreenshotGallery screenshots={gameDetail.screenshots} gameName={gameDetail.name} />
+          </CardContent>
+        </Card>
+      ) : null}
+
+      <Card className="surface-panel gap-0 rounded-[28px] border-white/8 bg-transparent py-0">
+        <CardHeader className="px-6 pt-6">
+          <CardTitle className="text-2xl">Videos</CardTitle>
+          <CardDescription>Trailers et extraits charges dynamiquement pour limiter le cout initial.</CardDescription>
+        </CardHeader>
+        <CardContent className="px-6 pb-6">
+          <GameVideosWrapper gameId={gameDetail.id} />
+        </CardContent>
+      </Card>
+
+      {gameDetail.similarGames.length > 0 ? (
+        <Card className="surface-panel gap-0 rounded-[28px] border-white/8 bg-transparent py-0">
+          <CardHeader className="px-6 pt-6">
+            <CardTitle className="text-2xl">Jeux similaires</CardTitle>
+            <CardDescription>Des pistes immediates pour prolonger la meme vibe ou la meme boucle de jeu.</CardDescription>
+          </CardHeader>
+          <CardContent className="grid gap-4 px-6 pb-6 sm:grid-cols-2 xl:grid-cols-4">
+            {gameDetail.similarGames.map((game) => (
+              <GameCard
+                key={game.id}
+                game={{ id: game.id, name: game.name, cover: game.cover }}
+                onClick={(gameId) => router.push(`/games/${gameId}`)}
+              />
+            ))}
+          </CardContent>
+        </Card>
+      ) : null}
+
+      <div ref={reviewsRef} className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
+        <Card className="surface-panel gap-0 rounded-[28px] border-white/8 bg-transparent py-0">
+          <CardHeader className="px-6 pt-6">
+            <CardTitle className="text-2xl">Ta review</CardTitle>
+            <CardDescription>Ajoute une note et une impression exploitable plus tard.</CardDescription>
+          </CardHeader>
+          <CardContent className="px-6 pb-6">
+            <DynamicReviewForm
+              gameId={gameDetail.id}
+              gameName={gameDetail.name}
+              gameCover={gameDetail.cover}
+              onReviewSubmitted={() => setRefreshReviews((current) => current + 1)}
+            />
+          </CardContent>
+        </Card>
+
+        <Card className="surface-panel gap-0 rounded-[28px] border-white/8 bg-transparent py-0">
+          <CardHeader className="px-6 pt-6">
+            <CardTitle className="text-2xl">Reviews joueurs</CardTitle>
+            <CardDescription>Retours communautaires recents sur ce jeu.</CardDescription>
+          </CardHeader>
+          <CardContent className="px-6 pb-6">
+            <DynamicReviewsList gameId={gameDetail.id} refreshTrigger={refreshReviews} />
+          </CardContent>
+        </Card>
+      </div>
+
+      <AddToCollectionModal
+        isOpen={isCollectionModalOpen}
+        onClose={() => setIsCollectionModalOpen(false)}
+        gameId={gameDetail.id}
+        gameName={gameDetail.name}
+        gameCover={gameDetail.cover}
+        onCollectionUpdated={() => setRefreshReviews((current) => current + 1)}
+      />
+
+      <LoginModal
+        isOpen={isLoginModalOpen}
+        onClose={() => setIsLoginModalOpen(false)}
         onSwitchToRegister={() => {
           setIsLoginModalOpen(false);
           setIsRegisterModalOpen(true);
-        }} 
+        }}
       />
-      
-      <RegisterModal 
-        isOpen={isRegisterModalOpen} 
-        onClose={() => setIsRegisterModalOpen(false)} 
+
+      <RegisterModal
+        isOpen={isRegisterModalOpen}
+        onClose={() => setIsRegisterModalOpen(false)}
         onSwitchToLogin={() => {
           setIsRegisterModalOpen(false);
           setIsLoginModalOpen(true);
-        }} 
+        }}
       />
-    </motion.div>
+    </AppShell>
   );
 }

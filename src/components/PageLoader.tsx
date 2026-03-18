@@ -1,14 +1,13 @@
 'use client';
 
 import React from 'react';
-import styles from '../styles/PageLoader.module.css';
 
 const PageLoader: React.FC = () => {
   return (
-    <div className={styles.pageLoaderOverlay}>
-      <div className={styles.pageLoaderContent}>
-        <div className={styles.spinner}></div>
-        <p className={styles.loadingText}>Loading...</p>
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-background/80 backdrop-blur-sm">
+      <div className="flex flex-col items-center gap-3">
+        <div className="h-10 w-10 animate-spin rounded-full border-4 border-border border-t-primary" />
+        <p className="text-sm text-muted-foreground">Chargement...</p>
       </div>
     </div>
   );

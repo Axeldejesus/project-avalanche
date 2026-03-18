@@ -1,1322 +1,753 @@
-'use client';
+"use client";
 
-import { useState, useEffect, useRef, JSX } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Header from '@/components/Header';
+import {
+  BookMarked,
+  Grid2x2,
+  Heart,
+  LayoutList,
+  Library,
+  Plus,
+  Search,
+  Trash2,
+} from 'lucide-react';
+import AppShell from '@/components/AppShell';
+import EmptyState from '@/components/EmptyState';
+import PageIntro from '@/components/PageIntro';
+import StatusBadge from '@/components/StatusBadge';
+import { Button } from '@/components/ui/button';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/context/AuthContext';
-import { getUserCollection, getUserCollectionStats, removeFromCollection } from '@/services/collectionService';
-import { type CollectionItem, type CollectionStats } from '@/schemas';
-import { getUserLists, getListsWithCounts, getGamesInList, deleteList, removeGameFromList, createList } from '@/services/listService';
-import { type List, type ListGame } from '@/schemas';
-import { FiList, FiPlay, FiClock, FiAward, FiX, FiHeart, FiSearch, FiTrash2, FiPlus, FiEdit2, FiTag, FiLayers, FiGrid, FiChevronDown, FiChevronUp, FiFilm, FiBookmark, FiStar, FiLogIn, FiUserPlus } from 'react-icons/fi';
-import { FaGamepad } from 'react-icons/fa';
-import { DocumentSnapshot } from 'firebase/firestore';
-import { CacheManager } from '@/utils/cacheManager';
-import styles from './collections.module.css';
+import type { CollectionItem, CollectionStats, List, ListGame } from '@/schemas';
+import { getUserCollectionForStats, removeFromCollection } from '@/services/collectionService';
+import { createList, deleteList, getGamesInList, getUserLists, removeGameFromList } from '@/services/listService';
 
-const AVAILABLE_ICONS = [
-  { icon: <FaGamepad />, name: 'gamepad' },
-  { icon: <FiHeart />, name: 'heart' },
-  { icon: <FiStar />, name: 'star' },
-  { icon: <FiAward />, name: 'award' },
-  { icon: <FiBookmark />, name: 'bookmark' },
-  { icon: <FiTag />, name: 'tag' },
-  { icon: <FiFilm />, name: 'film' },
-  { icon: <FiLayers />, name: 'layers' }
-];
+type ViewMode = 'grid' | 'list';
+type LibraryTab = 'collection' | 'lists';
+type StatusFilter = 'all' | 'playing' | 'completed' | 'toPlay' | 'abandoned' | 'wishlist';
 
-// Component for creating a new list
-const CreateListForm = ({ onClose, onSuccess }: { onClose: () => void, onSuccess: () => void }) => {
-  const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
-  const [selectedIcon, setSelectedIcon] = useState('gamepad');
-  const [selectedColor, setSelectedColor] = useState('#7c3aed');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  // Palette de couleurs étendue (sans doublons)
-  const colorPalette = [
-    '#7c3aed', // Purple
-    '#6366f1', // Indigo
-    '#3b82f6', // Blue
-    '#06b6d4', // Cyan
-    '#10b981', // Green
-    '#84cc16', // Lime
-    '#eab308', // Yellow
-    '#f59e0b', // Amber
-    '#f97316', // Orange
-    '#ef4444', // Red
-    '#ec4899', // Pink
-    '#8b5cf6', // Violet
-    '#d946ef', // Fuchsia
-    '#f43f5e', // Rose
-    '#14b8a6', // Teal
-    '#0ea5e9', // Sky
-    '#a855f7', // Purple Light
-    '#fb923c', // Orange Light
-    '#e11d48', // Crimson
-    '#059669'  // Emerald
-  ];
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!name.trim()) {
-      setError('Please enter a list name');
-      return;
-    }
-    
-    setIsSubmitting(true);
-    setError(null);
-    
-    try {
-      const result = await createList({
-        name: name.trim(),
-        description: description.trim(),
-        icon: selectedIcon,
-        color: selectedColor
-      });
-      
-      if (result.success) {
-        onSuccess();
-        onClose();
-      } else {
-        setError(result.error || 'Failed to create list');
-      }
-    } catch (error: any) {
-      setError(error.message || 'An error occurred');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  return (
-    <div className={styles.createListForm}>
-      <h3>Create New List</h3>
-      <form onSubmit={handleSubmit}>
-        <div className={styles.formGroup}>
-          <label>List Name*</label>
-          <input
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="e.g. Games to Finish"
-            maxLength={50}
-            required
-          />
-        </div>
-        
-        <div className={styles.formGroup}>
-          <label>Description (Optional)</label>
-          <textarea
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            placeholder="What's this list about?"
-            maxLength={200}
-            rows={3}
-          />
-        </div>
-        
-        <div className={styles.formGroup}>
-          <label>Icon</label>
-          <div className={styles.iconSelector}>
-            {AVAILABLE_ICONS.map((item) => (
-              <button
-                key={item.name}
-                type="button"
-                className={`${styles.iconOption} ${selectedIcon === item.name ? styles.selectedIcon : ''}`}
-                onClick={() => setSelectedIcon(item.name)}
-              >
-                {item.icon}
-              </button>
-            ))}
-          </div>
-        </div>
-        
-        <div className={styles.formGroup}>
-          <label>Color</label>
-          <div className={styles.colorSelector}>
-            {colorPalette.map((color) => (
-              <button
-                key={color}
-                type="button"
-                className={`${styles.colorOption} ${selectedColor === color ? styles.selectedColor : ''}`}
-                style={{ backgroundColor: color }}
-                onClick={() => setSelectedColor(color)}
-                title={color}
-              />
-            ))}
-          </div>
-        </div>
-        
-        {error && <div className={styles.errorMessage}>{error}</div>}
-        
-        <div className={styles.formActions}>
-          <button 
-            type="button" 
-            className={styles.cancelButton}
-            onClick={onClose}
-          >
-            Cancel
-          </button>
-          <button 
-            type="submit"
-            className={styles.submitButton}
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? 'Creating...' : 'Create List'}
-          </button>
-        </div>
-      </form>
-    </div>
-  );
+const emptyStats: CollectionStats = {
+  total: 0,
+  completed: 0,
+  playing: 0,
+  toPlay: 0,
+  abandoned: 0,
+  wishlist: 0,
 };
 
-// Confirmation modal component
-const DeleteConfirmModal = ({ 
-  isOpen, 
-  onClose, 
-  onConfirm, 
-  gameName,
-  isDeleting 
-}: { 
-  isOpen: boolean, 
-  onClose: () => void, 
-  onConfirm: () => void, 
-  gameName: string,
-  isDeleting: boolean 
-}) => {
-  if (!isOpen) return null;
-  
+const statusFilters: Array<{
+  key: StatusFilter;
+  label: string;
+  getValue: (stats: CollectionStats) => number;
+}> = [
+  { key: 'all', label: 'Tous', getValue: (stats) => stats.total },
+  { key: 'playing', label: 'En cours', getValue: (stats) => stats.playing },
+  { key: 'completed', label: 'Termines', getValue: (stats) => stats.completed },
+  { key: 'toPlay', label: 'Backlog', getValue: (stats) => stats.toPlay },
+  { key: 'wishlist', label: 'Wishlist', getValue: (stats) => stats.wishlist },
+];
+
+function formatDate(value?: string) {
+  if (!value) {
+    return 'Date inconnue';
+  }
+
+  return new Date(value).toLocaleDateString('fr-FR', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  });
+}
+
+function CollectionCard({
+  item,
+  viewMode,
+  onOpen,
+  onRemove,
+}: {
+  item: CollectionItem;
+  viewMode: ViewMode;
+  onOpen: (gameId: number) => void;
+  onRemove: (gameId: number, gameName: string) => void;
+}) {
+  if (viewMode === 'list') {
+    return (
+      <div className="surface-panel flex flex-col gap-4 rounded-[24px] p-4 md:flex-row md:items-center">
+        <button
+          type="button"
+          onClick={() => onOpen(item.gameId)}
+          className="flex min-w-0 flex-1 items-center gap-4 text-left"
+        >
+          <img
+            src={item.gameCover}
+            alt={item.gameName}
+            className="h-28 w-20 rounded-[18px] object-cover"
+          />
+          <div className="min-w-0 flex-1 space-y-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <StatusBadge status={item.status} />
+              {item.rating ? (
+                <span className="rounded-full border border-white/10 bg-black/20 px-2 py-1 text-xs text-amber-200">
+                  {item.rating.toFixed(1)}/5
+                </span>
+              ) : null}
+            </div>
+            <h3 className="text-lg font-semibold text-foreground">{item.gameName}</h3>
+            <p className="line-clamp-2 text-sm text-muted-foreground">
+              {[...(item.genres || []), ...(item.platforms || [])].join(' • ') || 'Aucune metadonnee'}
+            </p>
+            <div className="flex flex-wrap gap-4 text-xs uppercase tracking-[0.16em] text-muted-foreground">
+              <span>Ajoute le {formatDate(item.addedAt)}</span>
+              {item.hoursPlayed ? <span>{item.hoursPlayed}h jouees</span> : null}
+            </div>
+            {item.notes ? <p className="line-clamp-2 text-sm text-foreground/85">{item.notes}</p> : null}
+          </div>
+        </button>
+        <Button
+          variant="outline"
+          className="border-destructive/20 bg-destructive/10 text-destructive hover:bg-destructive/15"
+          onClick={() => onRemove(item.gameId, item.gameName)}
+        >
+          <Trash2 className="h-4 w-4" />
+          Retirer
+        </Button>
+      </div>
+    );
+  }
+
   return (
-    <div className={styles.modalOverlay} onClick={onClose}>
-      <div className={styles.deleteModalContent} onClick={(e) => e.stopPropagation()}>
-        <div className={styles.deleteModalHeader}>
-          <FiTrash2 className={styles.deleteModalIcon} />
-          <h3>Remove from Collection?</h3>
+    <div className="surface-panel overflow-hidden rounded-[24px]">
+      <button type="button" onClick={() => onOpen(item.gameId)} className="w-full text-left">
+        <div className="relative aspect-[3/4] overflow-hidden">
+          <img src={item.gameCover} alt={item.gameName} className="h-full w-full object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/10 to-transparent" />
+          <StatusBadge status={item.status} className="absolute left-3 top-3" />
         </div>
-        <p className={styles.deleteModalMessage}>
-          Are you sure you want to remove <strong>{gameName}</strong> from your collection? This action cannot be undone.
-        </p>
-        <div className={styles.deleteModalActions}>
-          <button 
-            className={styles.cancelDeleteButton}
-            onClick={onClose}
-            disabled={isDeleting}
-          >
-            Cancel
-          </button>
-          <button 
-            className={styles.confirmDeleteButton}
-            onClick={onConfirm}
-            disabled={isDeleting}
-          >
-            {isDeleting ? (
-              <>
-                <span className={styles.smallSpinner}></span>
-                Removing...
-              </>
-            ) : (
-              <>
-                <FiTrash2 />
-                Remove
-              </>
-            )}
-          </button>
+        <div className="space-y-2 p-4">
+          <h3 className="line-clamp-2 text-base font-semibold text-foreground">{item.gameName}</h3>
+          <p className="line-clamp-2 text-sm text-muted-foreground">
+            {item.genres?.join(' • ') || item.genre || 'Aucun genre renseigne'}
+          </p>
+          <div className="flex flex-wrap gap-2 text-xs uppercase tracking-[0.14em] text-muted-foreground">
+            <span>{formatDate(item.updatedAt)}</span>
+            {item.hoursPlayed ? <span>{item.hoursPlayed}h</span> : null}
+          </div>
         </div>
+      </button>
+      <div className="border-t border-white/8 p-4 pt-0">
+        <Button
+          variant="ghost"
+          className="mt-3 w-full justify-center text-destructive hover:bg-destructive/10 hover:text-destructive"
+          onClick={() => onRemove(item.gameId, item.gameName)}
+        >
+          Retirer de la bibliotheque
+        </Button>
       </div>
     </div>
   );
-};
+}
 
-// Game list component
-const GameList = ({ 
-  games, 
-  onDeleteGame, 
-  viewMode, 
-  deletingId, 
-  setDeletingId,
-  activeTab,
-  activeListId
-}: { 
-  games: (CollectionItem | ListGame)[], 
-  onDeleteGame: (gameId: number) => void,
-  viewMode: 'grid' | 'list',
-  deletingId: number | null,
-  setDeletingId: (id: number | null) => void,
-  activeTab: 'collection' | 'lists',
-  activeListId: string | null
-}): JSX.Element => {
+function ListGameCard({
+  game,
+  viewMode,
+  onOpen,
+  onRemove,
+}: {
+  game: ListGame;
+  viewMode: ViewMode;
+  onOpen: (gameId: number) => void;
+  onRemove: (gameId: number, gameName: string) => void;
+}) {
+  if (viewMode === 'list') {
+    return (
+      <div className="surface-panel flex flex-col gap-4 rounded-[24px] p-4 md:flex-row md:items-center">
+        <button
+          type="button"
+          onClick={() => onOpen(game.gameId)}
+          className="flex min-w-0 flex-1 items-center gap-4 text-left"
+        >
+          <img src={game.gameCover} alt={game.gameName} className="h-24 w-16 rounded-[16px] object-cover" />
+          <div className="min-w-0 flex-1 space-y-2">
+            <h3 className="text-lg font-semibold text-foreground">{game.gameName}</h3>
+            <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">
+              Ajoute le {formatDate(game.addedAt)}
+            </p>
+            {game.notes ? <p className="line-clamp-2 text-sm text-foreground/85">{game.notes}</p> : null}
+          </div>
+        </button>
+        <Button
+          variant="outline"
+          className="border-destructive/20 bg-destructive/10 text-destructive hover:bg-destructive/15"
+          onClick={() => onRemove(game.gameId, game.gameName)}
+        >
+          <Trash2 className="h-4 w-4" />
+          Retirer
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="surface-panel overflow-hidden rounded-[24px]">
+      <button type="button" className="w-full text-left" onClick={() => onOpen(game.gameId)}>
+        <div className="aspect-[3/4] overflow-hidden">
+          <img src={game.gameCover} alt={game.gameName} className="h-full w-full object-cover" />
+        </div>
+        <div className="space-y-2 p-4">
+          <h3 className="line-clamp-2 text-base font-semibold text-foreground">{game.gameName}</h3>
+          <p className="text-xs uppercase tracking-[0.14em] text-muted-foreground">
+            Ajoute le {formatDate(game.addedAt)}
+          </p>
+        </div>
+      </button>
+      <div className="border-t border-white/8 p-4 pt-0">
+        <Button
+          variant="ghost"
+          className="mt-3 w-full justify-center text-destructive hover:bg-destructive/10 hover:text-destructive"
+          onClick={() => onRemove(game.gameId, game.gameName)}
+        >
+          Retirer de la liste
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+export default function CollectionsPage() {
   const router = useRouter();
-  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [gameToDelete, setGameToDelete] = useState<{ id: number, name: string } | null>(null);
-  
-  const navigateToGame = (gameId: number) => {
-    // Clear previous navigation flags
+  const { user, loading } = useAuth();
+  const [activeTab, setActiveTab] = useState<LibraryTab>('collection');
+  const [viewMode, setViewMode] = useState<ViewMode>('grid');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+  const [stats, setStats] = useState<CollectionStats>(emptyStats);
+  const [collectionItems, setCollectionItems] = useState<CollectionItem[]>([]);
+  const [lists, setLists] = useState<List[]>([]);
+  const [selectedListId, setSelectedListId] = useState<string | null>(null);
+  const [listGames, setListGames] = useState<ListGame[]>([]);
+  const [isLoadingLibrary, setIsLoadingLibrary] = useState(true);
+  const [isLoadingListGames, setIsLoadingListGames] = useState(false);
+  const [isCreateListOpen, setIsCreateListOpen] = useState(false);
+  const [newListName, setNewListName] = useState('');
+  const [newListDescription, setNewListDescription] = useState('');
+  const [isSubmittingList, setIsSubmittingList] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const selectedList = useMemo(
+    () => lists.find((list) => list.id === selectedListId) ?? null,
+    [lists, selectedListId]
+  );
+
+  const filteredCollection = useMemo(() => {
+    return collectionItems.filter((item) => {
+      const matchesStatus = statusFilter === 'all' || item.status === statusFilter;
+      const haystack = [
+        item.gameName,
+        item.genre,
+        item.genres?.join(' '),
+        item.platform,
+        item.platforms?.join(' '),
+        item.notes,
+      ]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase();
+
+      return matchesStatus && haystack.includes(searchQuery.trim().toLowerCase());
+    });
+  }, [collectionItems, searchQuery, statusFilter]);
+
+  const filteredListGames = useMemo(() => {
+    return listGames.filter((game) => {
+      const haystack = [game.gameName, game.notes].filter(Boolean).join(' ').toLowerCase();
+      return haystack.includes(searchQuery.trim().toLowerCase());
+    });
+  }, [listGames, searchQuery]);
+
+  const loadLibrary = async (restoreSelection = true) => {
+    if (!user) {
+      setCollectionItems([]);
+      setStats(emptyStats);
+      setLists([]);
+      setSelectedListId(null);
+      setIsLoadingLibrary(false);
+      return;
+    }
+
+    setIsLoadingLibrary(true);
+    setError(null);
+
+    try {
+      const [collectionResult, listsResult] = await Promise.all([
+        getUserCollectionForStats(user.uid),
+        getUserLists(user.uid),
+      ]);
+
+      if (collectionResult.error) {
+        setError(collectionResult.error);
+      }
+
+      setCollectionItems(collectionResult.items);
+      setStats(collectionResult.stats);
+      setLists(listsResult.lists);
+
+      if (restoreSelection) {
+        const restoreListId = sessionStorage.getItem('restoreListId');
+        const restoreListTab = sessionStorage.getItem('restoreListTab');
+
+        if (restoreListTab === 'lists') {
+          setActiveTab('lists');
+        }
+
+        if (restoreListId && listsResult.lists.some((list) => list.id === restoreListId)) {
+          setSelectedListId(restoreListId);
+        } else if (!selectedListId && listsResult.lists[0]?.id) {
+          setSelectedListId(listsResult.lists[0].id);
+        }
+
+        sessionStorage.removeItem('restoreListId');
+        sessionStorage.removeItem('restoreListTab');
+      } else if (!selectedListId && listsResult.lists[0]?.id) {
+        setSelectedListId(listsResult.lists[0].id);
+      }
+    } catch (loadError: any) {
+      setError(loadError.message || 'Impossible de charger la bibliotheque.');
+    } finally {
+      setIsLoadingLibrary(false);
+    }
+  };
+
+  const loadListGames = async (listId: string) => {
+    if (!user) {
+      return;
+    }
+
+    setIsLoadingListGames(true);
+    const result = await getGamesInList(user.uid, listId, 100);
+    setListGames(result.games);
+    setIsLoadingListGames(false);
+  };
+
+  useEffect(() => {
+    loadLibrary();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
+
+  useEffect(() => {
+    if (activeTab === 'lists' && selectedListId) {
+      loadListGames(selectedListId);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab, selectedListId, user]);
+
+  const navigateToGame = (gameId: number, source: 'collection' | 'list') => {
     sessionStorage.removeItem('cameFromGames');
     sessionStorage.removeItem('cameFromHome');
     sessionStorage.removeItem('cameFromProfile');
-    
-    // Set appropriate flag based on active tab
-    if (activeTab === 'collection') {
+
+    if (source === 'collection') {
       sessionStorage.setItem('cameFromCollection', 'true');
       sessionStorage.removeItem('cameFromCustomList');
-    } else if (activeTab === 'lists' && activeListId) {
-      sessionStorage.setItem('cameFromCustomList', activeListId);
+    } else if (selectedListId) {
+      sessionStorage.setItem('cameFromCustomList', selectedListId);
       sessionStorage.removeItem('cameFromCollection');
     }
-    
+
     router.push(`/games/${gameId}`);
   };
-  
-  const handleDeleteClick = (gameId: number, gameName: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    setGameToDelete({ id: gameId, name: gameName });
-    setDeleteModalOpen(true);
-  };
-  
-  const handleConfirmDelete = async () => {
-    if (gameToDelete) {
-      setDeletingId(gameToDelete.id);
-      await onDeleteGame(gameToDelete.id);
-      setDeletingId(null);
-      setDeleteModalOpen(false);
-      setGameToDelete(null);
+
+  const handleRemoveCollectionItem = async (gameId: number, gameName: string) => {
+    if (!window.confirm(`Retirer "${gameName}" de ta bibliotheque ?`)) {
+      return;
+    }
+
+    const result = await removeFromCollection(gameId);
+    if (result.success) {
+      await loadLibrary(false);
     }
   };
-  
-  const handleCancelDelete = () => {
-    setDeleteModalOpen(false);
-    setGameToDelete(null);
+
+  const handleRemoveListGame = async (gameId: number, gameName: string) => {
+    if (!selectedListId || !window.confirm(`Retirer "${gameName}" de cette liste ?`)) {
+      return;
+    }
+
+    const result = await removeGameFromList(selectedListId, gameId);
+    if (result.success) {
+      await loadListGames(selectedListId);
+      await loadLibrary(false);
+    }
   };
-  
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
+
+  const handleDeleteList = async () => {
+    if (!selectedListId || !selectedList) {
+      return;
+    }
+
+    if (!window.confirm(`Supprimer la liste "${selectedList.name}" ?`)) {
+      return;
+    }
+
+    const result = await deleteList(selectedListId);
+    if (result.success) {
+      setListGames([]);
+      setSelectedListId(null);
+      await loadLibrary(false);
+    }
+  };
+
+  const handleCreateList = async () => {
+    if (!newListName.trim()) {
+      return;
+    }
+
+    setIsSubmittingList(true);
+    const result = await createList({
+      name: newListName.trim(),
+      description: newListDescription.trim(),
+      icon: 'bookmark',
+      color: '#10bfa1',
     });
-  };
-  
-  const getStatusIcon = (game: any) => {
-    if ('status' in game) {
-      const status = game.status;
-      if (status === 'playing') return <FiPlay />;
-      if (status === 'completed') return <FiAward />;
-      if (status === 'toPlay') return <FiClock />;
-      if (status === 'abandoned') return <FiX />;
-      if (status === 'wishlist') return <FiHeart />;
-    }
-    return <FaGamepad />;
-  };
-  
-  const getAddedDate = (game: any) => {
-    if ('addedAt' in game) return game.addedAt;
-    return game.addedAt || game.updatedAt;
-  };
-  
-  return (
-    <>
-      <div className={viewMode === 'grid' ? styles.collectionGrid : styles.collectionList}>
-        {games.map((game, idx) => {
-          const gameId = game.gameId;
-          const gameName = game.gameName;
-          const gameCover = game.gameCover;
-          
-          return (
-            <div 
-              key={`${gameId}-${idx}`} 
-              className={viewMode === 'grid' ? styles.gameCard : styles.gameListItem}
-              onClick={() => navigateToGame(gameId)}
-            >
-              <div className={viewMode === 'grid' ? styles.gameCardImage : styles.gameListImage}>
-                <img src={gameCover} alt={gameName} />
-                <div className={styles.gameStatus}>
-                  {getStatusIcon(game)}
-                </div>
-              </div>
-              <div className={viewMode === 'grid' ? styles.gameCardContent : styles.gameListContent}>
-                <h3 className={viewMode === 'grid' ? styles.gameCardTitle : styles.gameListTitle}>
-                  {gameName}
-                </h3>
-                <div className={viewMode === 'grid' ? styles.gameCardMeta : styles.gameListMeta}>
-                  <span className={styles.gameCardDate}>
-                    Added {formatDate(getAddedDate(game))}
-                  </span>
-                  <button 
-                    className={styles.deleteButtonMeta}
-                    onClick={(e) => handleDeleteClick(gameId, gameName, e)}
-                    disabled={deletingId === gameId}
-                    aria-label="Remove game"
-                    title="Remove from collection"
-                  >
-                    {deletingId === gameId ? (
-                      <span className={styles.smallSpinner}></span>
-                    ) : (
-                      <FiTrash2 />
-                    )}
-                  </button>
-                </div>
-                {'rating' in game && game.rating && (
-                  <span className={styles.gameCardRating}>
-                    {game.rating}/5
-                  </span>
-                )}
-                {'notes' in game && game.notes && (
-                  <p className={styles.gameNotes}>{game.notes}</p>
-                )}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-      
-      <DeleteConfirmModal
-        isOpen={deleteModalOpen}
-        onClose={handleCancelDelete}
-        onConfirm={handleConfirmDelete}
-        gameName={gameToDelete?.name || ''}
-        isDeleting={deletingId === gameToDelete?.id}
-      />
-    </>
-  );
-};
 
-export default function CollectionsPage() {
-  // State for collection and UI
-  const [activeTab, setActiveTab] = useState<'collection' | 'lists'>('collection');
-  const [activeStatus, setActiveStatus] = useState<string | null>(null);
-  const [activeListId, setActiveListId] = useState<string | null>(null);
-  const [collectionGames, setCollectionGames] = useState<CollectionItem[]>([]);
-  const [listGames, setListGames] = useState<ListGame[]>([]);
-  const [customLists, setCustomLists] = useState<Array<List & { gameCount: number }>>([]);
-  const [loading, setLoading] = useState(true);
-  const [authChecked, setAuthChecked] = useState(false);
-  const [authLoading, setAuthLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [isCreatingList, setIsCreatingList] = useState(false);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  const [deletingId, setDeletingId] = useState<number | null>(null);
-  const [deleteListModalOpen, setDeleteListModalOpen] = useState(false);
-  const [listToDelete, setListToDelete] = useState<{ id: string, name: string } | null>(null);
-  
-  // Ajouter un cache avec timestamp
-  const [cacheTimestamp, setCacheTimestamp] = useState<number>(0);
-  const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes en millisecondes
-  
-  // Collection stats
-  const [stats, setStats] = useState({
-    total: 0,
-    completed: 0,
-    playing: 0,
-    toPlay: 0,
-    abandoned: 0,
-    wishlist: 0
-  });
-  
-  // Pagination state
-  const [collectionLastDoc, setCollectionLastDoc] = useState<DocumentSnapshot | undefined>(undefined);
-  const [listLastDoc, setListLastDoc] = useState<DocumentSnapshot | undefined>(undefined);
-  const [hasMoreCollection, setHasMoreCollection] = useState(false);
-  const [hasMoreListGames, setHasMoreListGames] = useState(false);
-  
-  const { user } = useAuth();
-  const router = useRouter();
-  
-  // Load collection and lists data
-  useEffect(() => {
-    setAuthLoading(true);
-    
-    const authTimeout = setTimeout(() => {
-      setAuthChecked(true);
-      setAuthLoading(false);
-    }, 1500);
-    
-    if (user) {
-      clearTimeout(authTimeout);
-      setAuthChecked(true);
-      setAuthLoading(false);
-      
-      // Toujours charger les données fraîches au montage du composant
-      loadAllData();
-      
-      // Vérifier s'il faut restaurer une liste active
-      const restoreListId = sessionStorage.getItem('restoreListId');
-      const restoreListTab = sessionStorage.getItem('restoreListTab');
-      
-      if (restoreListId && restoreListTab === 'lists') {
-        // Restaurer l'onglet lists et la liste active
+    if (result.success) {
+      setNewListName('');
+      setNewListDescription('');
+      setIsCreateListOpen(false);
+      await loadLibrary(false);
+      if (result.listId) {
+        setSelectedListId(result.listId);
         setActiveTab('lists');
-        setActiveListId(restoreListId);
-        
-        // Nettoyer les flags de restauration
-        sessionStorage.removeItem('restoreListId');
-        sessionStorage.removeItem('restoreListTab');
       }
-    }
-    
-    return () => clearTimeout(authTimeout);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user]);
-  
-  // Load collection games when active status changes
-  useEffect(() => {
-    // Ne charger que si les données ne viennent pas du cache
-    if (user && activeTab === 'collection' && collectionGames.length === 0) {
-      loadCollectionGames(true);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeStatus, activeTab, user]);
-  
-  // Load list games when active list changes
-  useEffect(() => {
-    if (user && activeTab === 'lists' && activeListId) {
-      loadListGames(true);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeListId, activeTab, user]);
-  
-  // Collection stats
-  const loadCollectionStats = async () => {
-    if (!user) return;
-    
-    try {
-      const result = await getUserCollectionStats(user.uid);
-      if (result.error) {
-        console.error('Error loading stats:', result.error);
-      } else {
-        setStats(result);
-      }
-    } catch (error) {
-      console.error('Error loading collection stats:', error);
-    }
-  };
-  
-  // Load custom lists
-  const loadCustomLists = async () => {
-    if (!user) return;
-    
-    try {
-      const result = await getListsWithCounts(user.uid);
-      if (result.error) {
-        console.error('Error loading lists:', result.error);
-      } else {
-        setCustomLists(result.lists);
-      }
-    } catch (error) {
-      console.error('Error loading custom lists:', error);
-    }
-  };
-  
-  // Load collection games
-  const loadCollectionGames = async (reset = false) => {
-    if (!user) return;
-    
-    setLoading(true);
-    setError(null);
-    
-    try {
-      const result = await getUserCollection(
-        user.uid,
-        activeStatus || undefined,
-        12, // Number of games per page
-        reset ? undefined : collectionLastDoc
-      );
-      
-      if (result.error) {
-        setError(result.error);
-        return;
-      }
-      
-      if (reset) {
-        setCollectionGames(result.items);
-      } else {
-        setCollectionGames(prev => [...prev, ...result.items]);
-      }
-      
-      setCollectionLastDoc(result.lastDoc);
-      setHasMoreCollection(result.hasMore);
-    } catch (error: any) {
-      setError(error.message || 'Failed to load collection');
-    } finally {
-      setLoading(false);
-    }
-  };
-  
-  // Load games from a custom list
-  const loadListGames = async (reset = false) => {
-    if (!user || !activeListId) return;
-    
-    setLoading(true);
-    setError(null);
-    
-    try {
-      const result = await getGamesInList(
-        user.uid,
-        activeListId,
-        12, // Number of games per page
-        reset ? undefined : listLastDoc
-      );
-      
-      if (result.error) {
-        setError(result.error);
-        return;
-      }
-      
-      if (reset) {
-        setListGames(result.games);
-      } else {
-        setListGames(prev => [...prev, ...result.games]);
-      }
-      
-      setListLastDoc(result.lastDoc);
-      setHasMoreListGames(result.hasMore);
-    } catch (error: any) {
-      setError(error.message || 'Failed to load list games');
-    } finally {
-      setLoading(false);
-    }
-  };
-  
-  // Handle tab clicks
-  const handleTabClick = (tab: 'collection' | 'lists') => {
-    setActiveTab(tab);
-    if (tab === 'collection') {
-      setActiveListId(null);
-      loadCollectionGames(true);
-    } else if (tab === 'lists' && customLists.length > 0 && !activeListId) {
-      // Select first list by default if none is selected
-      setActiveListId(customLists[0].id || null);
-      loadListGames(true);
-    }
-  };
-  
-  // Handle collection status filter clicks
-  const handleStatusClick = (status: string | null) => {
-    setActiveStatus(status);
-    // Reset pagination et vider les jeux pour forcer le rechargement
-    setCollectionLastDoc(undefined);
-    setCollectionGames([]);
-    setHasMoreCollection(false);
-    // Invalider le cache car le filtre a changé
-    if (user) {
-      CacheManager.remove(`collection_${user.uid}`);
-    }
-  };
-  
-  // Handle list selection
-  const handleListClick = (listId: string | null) => {
-    if (listId === activeListId) return;
-    
-    setActiveListId(listId);
-    setListLastDoc(undefined);
-    setListGames([]);
-    setLoading(true); // Ajouter cette ligne pour indiquer qu'on commence à charger
-  };
-  
-  // Add ref for infinite scroll observer
-  const loadingRef = useRef<HTMLDivElement>(null);
-  
-  // Intersection observer for infinite scroll
-  useEffect(() => {
-    if (loading) return;
-
-    const observerCallback = (entries: IntersectionObserverEntry[]) => {
-      if (entries[0].isIntersecting) {
-        if (activeTab === 'collection' && hasMoreCollection) {
-          loadCollectionGames(false);
-        } else if (activeTab === 'lists' && activeListId && hasMoreListGames) {
-          loadListGames(false);
-        }
-      }
-    };
-
-    const options = {
-      root: null,
-      rootMargin: '0px',
-      threshold: 0.1
-    };
-
-    const observer = new IntersectionObserver(observerCallback, options);
-    
-    if (loadingRef.current) {
-      observer.observe(loadingRef.current);
     }
 
-    return () => {
-      if (observer) {
-        observer.disconnect();
-      }
-    };
-  }, [loading, hasMoreCollection, hasMoreListGames, activeTab, activeListId]);
-  
-  // Collection stats
-  const loadAllData = async () => {
-    if (!user) return;
-    
-    setLoading(true);
-    
-    try {
-      // Charger seulement si pas déjà en cache ou si stale
-      const cacheKey = `collection_${user.uid}`;
-      const cached = CacheManager.get(cacheKey) as {
-        stats: any;
-        lists: Array<List & { gameCount: number }>;
-        games: CollectionItem[];
-        hasMoreCollection: boolean;
-        activeStatus: string | null;
-        timestamp: number;
-      } | null;
-      
-      if (cached && cached.timestamp && Date.now() - cached.timestamp < 60000) { // Cache valide 1 minute
-        setStats(cached.stats);
-        setCustomLists(cached.lists);
-        setCollectionGames(cached.games);
-        setHasMoreCollection(cached.hasMoreCollection);
-        setLoading(false);
-        return;
-      }
-      
-      // Sinon, charger les données
-      const [statsResult, listsResult, gamesResult] = await Promise.all([
-        getUserCollectionStats(user.uid),
-        getListsWithCounts(user.uid),
-        getUserCollection(user.uid, activeStatus || undefined, 12)
-      ]);
-      
-      if (statsResult && !statsResult.error) {
-        setStats(statsResult);
-      }
-      
-      if (listsResult && !listsResult.error) {
-        setCustomLists(listsResult.lists);
-      }
-      
-      if (gamesResult && !gamesResult.error) {
-        setCollectionGames(gamesResult.items);
-        setCollectionLastDoc(gamesResult.lastDoc);
-        setHasMoreCollection(gamesResult.hasMore);
-      }
-      
-      // Mettre en cache avec timestamp
-      CacheManager.set(
-        cacheKey,
-        {
-          stats: statsResult,
-          lists: listsResult?.lists || [],
-          games: gamesResult?.items || [],
-          hasMoreCollection: gamesResult?.hasMore || false,
-          activeStatus: activeStatus,
-          timestamp: Date.now()
-        },
-        false
-      );
-      
-    } catch (error) {
-      console.error('Error loading collection data:', error);
-      setError('Failed to load collection data');
-    } finally {
-      setLoading(false);
-    }
-  };
-  
-  // Invalider le cache lors de modifications
-  const invalidateCache = () => {
-    sessionStorage.removeItem('collectionCache');
-    sessionStorage.removeItem('collectionCacheTimestamp');
-  };
-  
-  // Handle game deletion from collection
-  const handleDeleteCollectionGame = async (gameId: number) => {
-    if (!user) return;
-    
-    // Mise à jour optimiste de l'UI
-    const previousGames = [...collectionGames];
-    setCollectionGames(collectionGames.filter(game => game.gameId !== gameId));
-    
-    try {
-      const result = await removeFromCollection(gameId);
-      
-      if (result.success) {
-        setSuccessMessage(`Game removed from your collection!`);
-        
-        // Invalider seulement le cache nécessaire
-        CacheManager.remove(`collection_${user.uid}`);
-        // Invalider tous les caches de stats pour cet utilisateur
-        CacheManager.remove(`statsCache_${user.uid}`);
-        
-        // Recharger seulement les stats (plus léger qu'une requête complète)
-        loadCollectionStats();
-        
-        setTimeout(() => {
-          setSuccessMessage(null);
-        }, 3000);
-      } else {
-        // Restaurer en cas d'erreur
-        setCollectionGames(previousGames);
-        setError(result.error || 'Failed to remove game from collection');
-      }
-    } catch (error: any) {
-      setCollectionGames(previousGames);
-      setError(error.message || 'An error occurred');
-    }
-  };
-  
-  // Handle game deletion from list
-  const handleDeleteListGame = async (gameId: number) => {
-    if (!user || !activeListId) return;
-    
-    // Mise à jour optimiste de l'UI
-    const previousGames = [...listGames];
-    setListGames(listGames.filter(game => game.gameId !== gameId));
-    
-    try {
-      const result = await removeGameFromList(activeListId, gameId);
-      
-      if (result.success) {
-        setSuccessMessage(`Game removed from list!`);
-        
-        // Invalider le cache
-        if (user) {
-          CacheManager.remove(`collection_${user.uid}`);
-        }
-        
-        // Recharger les listes pour mettre à jour les compteurs
-        loadCustomLists();
-        
-        setTimeout(() => {
-          setSuccessMessage(null);
-        }, 3000);
-      } else {
-        // Restaurer en cas d'erreur
-        setListGames(previousGames);
-        setError(result.error || 'Failed to remove game from list');
-      }
-    } catch (error: any) {
-      setListGames(previousGames);
-      setError(error.message || 'An error occurred');
-    }
-  };
-  
-  // Delete a custom list
-  const handleDeleteListClick = (listId: string, listName: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    setListToDelete({ id: listId, name: listName });
-    setDeleteListModalOpen(true);
-  };
-  
-  const handleConfirmDeleteList = async () => {
-    if (!listToDelete || !user) return;
-    
-    try {
-      // Déterminer la prochaine liste active AVANT la suppression
-      const remainingLists = customLists.filter(list => list.id !== listToDelete.id);
-      
-      // Si la liste supprimée est active, changer la liste active AVANT de supprimer
-      if (activeListId === listToDelete.id) {
-        if (remainingLists.length > 0) {
-          setActiveListId(remainingLists[0].id || null);
-          setListGames([]);
-        } else {
-          setActiveTab('collection');
-          setActiveListId(null);
-          setListGames([]);
-        }
-      }
-      
-      // Maintenant supprimer la liste
-      const result = await deleteList(listToDelete.id);
-      
-      if (result.success) {
-        setSuccessMessage(`List "${listToDelete.name}" deleted successfully!`);
-        
-        // Recharger les listes
-        await loadCustomLists();
-        
-        // Charger les jeux de la nouvelle liste active si on est toujours dans l'onglet lists
-        if (activeTab === 'lists' && activeListId && activeListId !== listToDelete.id) {
-          loadListGames(true);
-        }
-        
-        setTimeout(() => {
-          setSuccessMessage(null);
-        }, 3000);
-      } else {
-        setError(result.error || 'Failed to delete list');
-      }
-    } catch (error: any) {
-      setError(error.message || 'An error occurred');
-    } finally {
-      setDeleteListModalOpen(false);
-      setListToDelete(null);
-    }
-  };
-  
-  const handleCancelDeleteList = () => {
-    setDeleteListModalOpen(false);
-    setListToDelete(null);
+    setIsSubmittingList(false);
   };
 
-  // Filtered games based on search query
-  const filteredCollectionGames = searchQuery.trim() !== ''
-    ? collectionGames.filter(game => 
-        game.gameName.toLowerCase().includes(searchQuery.toLowerCase())
-      )
-    : collectionGames;
-  
-  const filteredListGames = searchQuery.trim() !== ''
-    ? listGames.filter(game => 
-        game.gameName.toLowerCase().includes(searchQuery.toLowerCase())
-      )
-    : listGames;
-  
-  // Handle successful list creation
-  const handleListCreated = async () => {
-    // Invalider complètement le cache
-    if (user) {
-      CacheManager.remove(`collection_${user.uid}`);
-    }
-    
-    // Forcer le rechargement des listes depuis Firestore
-    await loadCustomLists();
-    
-    // Afficher le message de succès
-    setSuccessMessage('New list created successfully!');
-    setTimeout(() => {
-      setSuccessMessage(null);
-    }, 3000);
-  };
-  
-  const handleLoginClick = () => {
-    const event = new CustomEvent('openLoginModal');
-    window.dispatchEvent(event);
-  };
-  
-  const handleRegisterClick = () => {
-    const event = new CustomEvent('openRegisterModal');
-    window.dispatchEvent(event);
-  };
-  
-  // Afficher un spinner de chargement pendant la vérification d'authentification
-  if (authLoading) {
+  if (!loading && !user) {
     return (
-      <div className={styles.pageContainer}>
-        <Header />
-        <div className={styles.loadingContainer}>
-          <div className={styles.spinner}></div>
-          <p>Loading...</p>
+      <AppShell>
+        <div className="space-y-6">
+          <PageIntro
+            eyebrow="Bibliotheque"
+            title="Une bibliotheque personnelle pour suivre vraiment tes jeux."
+            description="Statuts, notes, listes custom et navigation detaillee dans une seule interface."
+          />
+          <EmptyState
+            title="Connecte-toi pour debloquer ta bibliotheque"
+            description="Tu pourras classer tes jeux, filtrer par statut, gerer des listes et retrouver rapidement tes reviews."
+            actions={
+              <>
+                <Button onClick={() => window.dispatchEvent(new CustomEvent('openLoginModal'))}>
+                  Se connecter
+                </Button>
+                <Button
+                  variant="outline"
+                  className="border-white/10 bg-white/5"
+                  onClick={() => window.dispatchEvent(new CustomEvent('openRegisterModal'))}
+                >
+                  Creer un compte
+                </Button>
+              </>
+            }
+          />
         </div>
-      </div>
-    );
-  }
-  
-  // Si l'utilisateur n'est pas connecté ET que l'authentification a été vérifiée, afficher le message
-  if (authChecked && !user) {
-    return (
-      <div className={styles.pageContainer}>
-        <Header />
-        <div className={styles.notLoggedIn}>
-          <h2>Sign in to view your collection</h2>
-          <p>Create an account to keep track of games you are playing, completed, or want to play</p>
-          <div className={styles.authActions}>
-            <button className={`${styles.authButton} ${styles.loginButton}`} onClick={handleLoginClick}>
-              <FiLogIn /> Log In
-            </button>
-            <button className={`${styles.authButton} ${styles.registerButton}`} onClick={handleRegisterClick}>
-              <FiUserPlus /> Sign Up
-            </button>
-          </div>
-        </div>
-      </div>
+      </AppShell>
     );
   }
 
   return (
-    <div className={styles.pageContainer}>
-      <Header />
-      
-      <main className={styles.main}>
-        <div className={styles.pageHeader}>
-          <h1 className={styles.title}>Your Games</h1>
-          
-          {/* Remove view controls */}
-          {/* <div className={styles.viewControls}>
-            <button 
-              className={styles.viewModeToggle}
-              onClick={toggleViewMode}
-              title={viewMode === 'grid' ? 'Switch to list view' : 'Switch to grid view'}
+    <AppShell contentClassName="space-y-6">
+      <PageIntro
+        eyebrow="Library"
+        title="Ta bibliotheque, structuree comme un vrai outil de pilotage."
+        description="Basculer entre backlog, jeux termines, wishlist et listes custom reste instantane, avec une lecture claire en grille ou en liste."
+        actions={
+          <div className="flex flex-wrap gap-2">
+            <Button
+              variant={viewMode === 'grid' ? 'default' : 'outline'}
+              className={viewMode === 'grid' ? 'gap-2' : 'gap-2 border-white/10 bg-white/5'}
+              onClick={() => setViewMode('grid')}
             >
-              {viewMode === 'grid' ? <FiList /> : <FiGrid />}
-              <span>{viewMode === 'grid' ? 'List View' : 'Grid View'}</span>
-            </button>
-          </div> */}
+              <Grid2x2 className="h-4 w-4" />
+              Grille
+            </Button>
+            <Button
+              variant={viewMode === 'list' ? 'default' : 'outline'}
+              className={viewMode === 'list' ? 'gap-2' : 'gap-2 border-white/10 bg-white/5'}
+              onClick={() => setViewMode('list')}
+            >
+              <LayoutList className="h-4 w-4" />
+              Liste
+            </Button>
+            <Button className="gap-2" onClick={() => setIsCreateListOpen(true)}>
+              <Plus className="h-4 w-4" />
+              Nouvelle liste
+            </Button>
+          </div>
+        }
+      >
+        <div className="grid gap-3 md:grid-cols-4">
+          <div className="rounded-[22px] border border-white/8 bg-black/15 p-4">
+            <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Total</p>
+            <p className="mt-3 text-3xl font-semibold text-foreground">{stats.total}</p>
+          </div>
+          <div className="rounded-[22px] border border-white/8 bg-black/15 p-4">
+            <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">En cours</p>
+            <p className="mt-3 text-3xl font-semibold text-foreground">{stats.playing}</p>
+          </div>
+          <div className="rounded-[22px] border border-white/8 bg-black/15 p-4">
+            <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Termines</p>
+            <p className="mt-3 text-3xl font-semibold text-foreground">{stats.completed}</p>
+          </div>
+          <div className="rounded-[22px] border border-white/8 bg-black/15 p-4">
+            <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Wishlist</p>
+            <p className="mt-3 text-3xl font-semibold text-foreground">{stats.wishlist}</p>
+          </div>
         </div>
-        
-        {successMessage && (
-          <div className={styles.successMessage}>
-            {successMessage}
-          </div>
-        )}
-        
-        {error && (
-          <div className={styles.errorMessage}>
-            {error}
-          </div>
-        )}
-        
-        <div className={styles.tabsContainer}>
-          <div className={styles.tabs}>
-            <button 
-              className={`${styles.tab} ${activeTab === 'collection' ? styles.activeTab : ''}`}
-              onClick={() => handleTabClick('collection')}
-            >
-              <FiLayers />
-              <span>Collection</span>
-            </button>
-            <button 
-              className={`${styles.tab} ${activeTab === 'lists' ? styles.activeTab : ''}`}
-              onClick={() => handleTabClick('lists')}
-            >
-              <FiList />
-              <span>Custom Lists</span>
-            </button>
-          </div>
-          
-          {activeTab === 'lists' && (
-            <button 
-              className={styles.newListButton}
-              onClick={() => setIsCreatingList(true)}
-            >
-              <FiPlus />
-              <span>New List</span>
-            </button>
-          )}
-        </div>
-        
-        {activeTab === 'collection' && (
-          <div className={styles.statsBar}>
-            <div 
-              className={`${styles.statItem} ${activeStatus === null ? styles.activeStatItem : ''}`}
-              onClick={() => handleStatusClick(null)}
-            >
-              <FiList className={styles.statIcon} />
-              <div className={styles.statName}>All Games</div>
-              <div className={styles.statCount}>{stats.total}</div>
-            </div>
-            
-            <div 
-              className={`${styles.statItem} ${activeStatus === 'playing' ? styles.activeStatItem : ''}`}
-              onClick={() => handleStatusClick('playing')}
-            >
-              <FiPlay className={styles.statIcon} />
-              <div className={styles.statName}>Playing</div>
-              <div className={styles.statCount}>{stats.playing}</div>
-            </div>
-            
-            <div 
-              className={`${styles.statItem} ${activeStatus === 'completed' ? styles.activeStatItem : ''}`}
-              onClick={() => handleStatusClick('completed')}
-            >
-              <FiAward className={styles.statIcon} />
-              <div className={styles.statName}>Completed</div>
-              <div className={styles.statCount}>{stats.completed}</div>
-            </div>
-            
-            <div 
-              className={`${styles.statItem} ${activeStatus === 'toPlay' ? styles.activeStatItem : ''}`}
-              onClick={() => handleStatusClick('toPlay')}
-            >
-              <FiClock className={styles.statIcon} />
-              <div className={styles.statName}>Plan to Play</div>
-              <div className={styles.statCount}>{stats.toPlay}</div>
-            </div>
-            
-            <div 
-              className={`${styles.statItem} ${activeStatus === 'abandoned' ? styles.activeStatItem : ''}`}
-              onClick={() => handleStatusClick('abandoned')}
-            >
-              <FiX className={styles.statIcon} />
-              <div className={styles.statName}>Abandoned</div>
-              <div className={styles.statCount}>{stats.abandoned}</div>
-            </div>
-            
-            <div 
-              className={`${styles.statItem} ${activeStatus === 'wishlist' ? styles.activeStatItem : ''}`}
-              onClick={() => handleStatusClick('wishlist')}
-            >
-              <FiHeart className={styles.statIcon} />
-              <div className={styles.statName}>Wishlist</div>
-              <div className={styles.statCount}>{stats.wishlist}</div>
-            </div>
-          </div>
-        )}
-        
-        {activeTab === 'lists' && (
-          <div className={styles.listsContainer}>
-            <div className={styles.listsSidebar}>
-              <h3>Your Lists</h3>
-              {customLists.length === 0 ? (
-                <div className={styles.noLists}>
-                  <p>You haven't created any lists yet</p>
-                </div>
-              ) : (
-                <div className={styles.userLists}>
-                  {customLists.map((list, idx) => (
-                    <div 
-                      key={`${list.id}-${idx}`} 
-                      className={`${styles.listItem} ${activeListId === list.id ? styles.activeList : ''}`}
-                      onClick={() => handleListClick(list.id || null)}
-                    >
-                      <div className={styles.listItemIcon} style={{ color: list.color }}>
-                        {AVAILABLE_ICONS.find(i => i.name === list.icon)?.icon || <FiList />}
-                      </div>
-                      <div className={styles.listItemDetails}>
-                        <div className={styles.listItemName}>
-                          {list.name}
-                          <span className={styles.listItemCount}>{list.gameCount}</span>
-                        </div>
-                      </div>
-                      <button 
-                        className={styles.deleteListButton}
-                        onClick={(e) => handleDeleteListClick(list.id || '', list.name, e)}
-                        title="Delete list"
-                      >
-                        <FiTrash2 />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-            
-            <div className={styles.listsContent}>
-              {customLists.length === 0 ? (
-                <div className={styles.emptyListsContent}>
-                  <h3>Create your first custom list</h3>
-                  <p>Organize your games in themed lists like "Games to finish", "Indie gems", or "Classics"</p>
-                  <button 
-                    className={styles.createListButtonLarge}
-                    onClick={() => setIsCreatingList(true)}
-                  >
-                    <FiPlus /> Create New List
-                  </button>
-                </div>
-              ) : activeListId ? (
-                <>
-                  {customLists.find(list => list.id === activeListId) && (
-                    <div className={styles.listHeader}>
-                      <div className={styles.listHeaderDetails}>
-                        <h2 className={styles.listHeaderTitle}>
-                          <span 
-                            className={styles.listHeaderIcon} 
-                            style={{ color: customLists.find(list => list.id === activeListId)?.color }}
-                          >
-                            {AVAILABLE_ICONS.find(i => i.name === customLists.find(list => list.id === activeListId)?.icon)?.icon}
-                          </span>
-                          {customLists.find(list => list.id === activeListId)?.name}
-                        </h2>
-                        {customLists.find(list => list.id === activeListId)?.description && (
-                          <p className={styles.listHeaderDescription}>
-                            {customLists.find(list => list.id === activeListId)?.description}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  )}
-                  
-                  {customLists.find(list => list.id === activeListId)?.gameCount === 0 ? (
-                    <div className={styles.emptyList}>
-                      <p>This list is empty</p>
-                      <p>Add games to this list from any game page</p>
-                      <button 
-                        className={styles.browseButton}
-                        onClick={() => router.push('/games')}
-                      >
-                        Browse Games
-                      </button>
-                    </div>
-                  ) : (
-                    <>
-                      <div className={styles.searchBar}>
-                        <FiSearch className={styles.searchIcon} />
-                        <input
-                          type="text"
-                          placeholder="Search in this list..."
-                          value={searchQuery}
-                          onChange={(e) => setSearchQuery(e.target.value)}
-                          className={styles.searchInput}
-                        />
-                      </div>
-                      
-                      {loading && listGames.length === 0 ? (
-                        <div className={styles.loadingContainer}>
-                          <div className={styles.spinner}></div>
-                          <p>Loading games...</p>
-                        </div>
-                      ) : filteredListGames.length === 0 && searchQuery.trim() !== '' ? (
-                        <div className={styles.emptyCollection}>
-                          <h3>No games found</h3>
-                          <p>No games matching "{searchQuery}" in this list</p>
-                        </div>
-                      ) : filteredListGames.length === 0 ? (
-                        <div className={styles.emptyCollection}>
-                          <h3>No games found</h3>
-                          <p>No games in this list</p>
-                        </div>
-                      ) : (
-                        <>
-                          <GameList 
-                            games={filteredListGames} 
-                            onDeleteGame={handleDeleteListGame}
-                            viewMode="grid"
-                            deletingId={deletingId}
-                            setDeletingId={setDeletingId}
-                            activeTab={activeTab}
-                            activeListId={activeListId}
-                          />
-                          
-                          {/* Replace load more button with discreet loading indicator */}
-                          {hasMoreListGames && (
-                            <div ref={loadingRef} className={styles.loadMore}>
-                              {loading && (
-                                <div className={styles.loadMoreIndicator}>
-                                  <div className={styles.loadMoreSpinner}></div>
-                                </div>
-                              )}
-                            </div>
-                          )}
-                        </>
-                      )}
-                    </>
-                  )}
-                </>
-              ) : (
-                <div className={styles.noListSelected}>
-                  <p>Select a list from the sidebar</p>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-        
-        {activeTab === 'collection' && (
-          <>
-            {stats.total > 0 && (
-              <div className={styles.searchBar}>
-                <FiSearch className={styles.searchIcon} />
-                <input
-                  type="text"
-                  placeholder="Search in your collection..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className={styles.searchInput}
-                />
-              </div>
-            )}
-            
-            {loading && collectionGames.length === 0 ? (
-              <div className={styles.loadingContainer}>
-                <div className={styles.spinner}></div>
-                <p>Loading your collection...</p>
-              </div>
-            ) : stats.total === 0 ? (
-              <div className={styles.emptyCollection}>
-                <h3>Your collection is empty</h3>
-                <p>Add games to your collection from any game page</p>
-                <button 
-                  className={styles.browseButton}
-                  onClick={() => router.push('/games')}
-                >
-                  Browse Games
-                </button>
-              </div>
-            ) : filteredCollectionGames.length === 0 ? (
-              <div className={styles.emptyCollection}>
-                <h3>No games found</h3>
-                <p>
-                  {searchQuery.trim() !== ''
-                    ? `No games matching "${searchQuery}" in your collection`
-                    : `No games in the "${activeStatus}" category`}
-                </p>
-              </div>
-            ) : (
-              <>
-                <GameList 
-                  games={filteredCollectionGames} 
-                  onDeleteGame={handleDeleteCollectionGame}
-                  viewMode="grid"
-                  deletingId={deletingId}
-                  setDeletingId={setDeletingId}
-                  activeTab={activeTab}
-                  activeListId={activeListId}
-                />
-                
-                {/* Replace load more button with discreet loading indicator */}
-                {hasMoreCollection && (
-                  <div ref={loadingRef} className={styles.loadMore}>
-                    {loading && (
-                      <div className={styles.loadMoreIndicator}>
-                        <div className={styles.loadMoreSpinner}></div>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </>
-            )}
-            
-            {loading && collectionGames.length > 0 && (
-              <div className={styles.loadingMoreContainer}>
-                <div className={styles.spinner}></div>
-                <p>Loading more games...</p>
-              </div>
-            )}
-          </>
-        )}
-      </main>
-      
-      {isCreatingList && (
-        <div className={styles.modalOverlay}>
-          <div className={styles.modalContent}>
-            <CreateListForm 
-              onClose={() => setIsCreatingList(false)}
-              onSuccess={handleListCreated}
+      </PageIntro>
+
+      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as LibraryTab)}>
+        <TabsList variant="line" className="w-full justify-start gap-2 rounded-none p-0">
+          <TabsTrigger value="collection" className="rounded-full border border-white/10 bg-white/5 px-5 py-2.5 data-[state=active]:border-primary/20 data-[state=active]:bg-primary/10">
+            <Library className="h-4 w-4" />
+            Bibliotheque
+          </TabsTrigger>
+          <TabsTrigger value="lists" className="rounded-full border border-white/10 bg-white/5 px-5 py-2.5 data-[state=active]:border-primary/20 data-[state=active]:bg-primary/10">
+            <BookMarked className="h-4 w-4" />
+            Listes perso
+          </TabsTrigger>
+        </TabsList>
+
+        <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+          <div className="relative max-w-xl flex-1">
+            <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={searchQuery}
+              onChange={(event) => setSearchQuery(event.target.value)}
+              placeholder={activeTab === 'collection' ? 'Rechercher un jeu, un genre, une note...' : 'Rechercher dans la liste selectionnee...'}
+              className="h-12 border-white/10 bg-black/20 pl-11"
             />
           </div>
+          {error ? <p className="text-sm text-destructive">{error}</p> : null}
         </div>
-      )}
-      
-      {/* Delete list confirmation modal */}
-      {deleteListModalOpen && (
-        <div className={styles.modalOverlay} onClick={handleCancelDeleteList}>
-          <div className={styles.deleteModalContent} onClick={(e) => e.stopPropagation()}>
-            <div className={styles.deleteModalHeader}>
-              <FiTrash2 className={styles.deleteModalIcon} />
-              <h3>Delete List?</h3>
+
+        <TabsContent value="collection" className="space-y-5 pt-2">
+          <div className="grid gap-3 md:grid-cols-5">
+            {statusFilters.map((filter) => (
+              <button
+                key={filter.key}
+                type="button"
+                onClick={() => setStatusFilter(filter.key)}
+                className={`rounded-[22px] border px-4 py-4 text-left transition-all ${
+                  statusFilter === filter.key
+                    ? 'border-primary/20 bg-primary/10'
+                    : 'border-white/8 bg-white/4 hover:bg-white/8'
+                }`}
+              >
+                <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">{filter.label}</p>
+                <p className="mt-3 text-2xl font-semibold text-foreground">{filter.getValue(stats)}</p>
+              </button>
+            ))}
+          </div>
+
+          {isLoadingLibrary ? (
+            <div className="surface-panel rounded-[28px] px-6 py-16 text-center text-muted-foreground">
+              Chargement de la bibliotheque...
             </div>
-            <p className={styles.deleteModalMessage}>
-              Are you sure you want to delete <strong>{listToDelete?.name}</strong>? All games in this list will be removed from it. This action cannot be undone.
-            </p>
-            <div className={styles.deleteModalActions}>
-              <button 
-                className={styles.cancelDeleteButton}
-                onClick={handleCancelDeleteList}
-              >
-                Cancel
-              </button>
-              <button 
-                className={styles.confirmDeleteButton}
-                onClick={handleConfirmDeleteList}
-              >
-                <FiTrash2 />
-                Delete List
-              </button>
+          ) : filteredCollection.length > 0 ? (
+            <div className={viewMode === 'grid' ? 'grid gap-4 sm:grid-cols-2 xl:grid-cols-4' : 'space-y-4'}>
+              {filteredCollection.map((item) => (
+                <CollectionCard
+                  key={item.gameId}
+                  item={item}
+                  viewMode={viewMode}
+                  onOpen={(gameId) => navigateToGame(gameId, 'collection')}
+                  onRemove={handleRemoveCollectionItem}
+                />
+              ))}
+            </div>
+          ) : (
+            <EmptyState
+              title="Aucun jeu ne correspond"
+              description="Ajuste ton filtre ou commence a alimenter ta bibliotheque depuis les fiches jeu."
+            />
+          )}
+        </TabsContent>
+
+        <TabsContent value="lists" className="pt-2">
+          <div className="grid gap-6 xl:grid-cols-[320px_1fr]">
+            <Card className="surface-panel gap-0 rounded-[28px] border-white/8 bg-transparent py-0">
+              <CardHeader className="px-5 pt-5">
+                <CardTitle className="text-xl">Tes listes</CardTitle>
+                <CardDescription>Collections temporaires, marathons, envies ou franchises.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3 px-5 pb-5">
+                {lists.length > 0 ? (
+                  lists.map((list) => {
+                    const isSelected = list.id === selectedListId;
+                    return (
+                      <button
+                        key={list.id}
+                        type="button"
+                        onClick={() => setSelectedListId(list.id || null)}
+                        className={`w-full rounded-[20px] border p-4 text-left transition-all ${
+                          isSelected
+                            ? 'border-primary/20 bg-primary/10'
+                            : 'border-white/8 bg-white/4 hover:bg-white/8'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between gap-3">
+                          <p className="font-semibold text-foreground">{list.name}</p>
+                          <Heart className="h-4 w-4 text-primary" />
+                        </div>
+                        {list.description ? (
+                          <p className="mt-2 line-clamp-2 text-sm text-muted-foreground">{list.description}</p>
+                        ) : (
+                          <p className="mt-2 text-sm text-muted-foreground">Aucune description.</p>
+                        )}
+                      </button>
+                    );
+                  })
+                ) : (
+                  <EmptyState
+                    title="Aucune liste perso"
+                    description="Cree une premiere liste pour organiser un marathon, une saga ou des envies d'achat."
+                  />
+                )}
+              </CardContent>
+            </Card>
+
+            <div className="space-y-4">
+              <Card className="surface-panel gap-0 rounded-[28px] border-white/8 bg-transparent py-0">
+                <CardHeader className="px-6 pt-6">
+                  <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                    <div>
+                      <CardTitle className="text-2xl">
+                        {selectedList ? selectedList.name : 'Selectionne une liste'}
+                      </CardTitle>
+                      <CardDescription>
+                        {selectedList?.description || 'Choisis une liste pour afficher ses jeux.'}
+                      </CardDescription>
+                    </div>
+                    {selectedList ? (
+                      <div className="flex gap-2">
+                        <Button className="gap-2" onClick={() => setIsCreateListOpen(true)}>
+                          <Plus className="h-4 w-4" />
+                          Nouvelle liste
+                        </Button>
+                        <Button
+                          variant="outline"
+                          className="gap-2 border-destructive/20 bg-destructive/10 text-destructive hover:bg-destructive/15"
+                          onClick={handleDeleteList}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                          Supprimer
+                        </Button>
+                      </div>
+                    ) : null}
+                  </div>
+                </CardHeader>
+                <CardContent className="px-6 pb-6">
+                  {!selectedList ? (
+                    <EmptyState
+                      title="Aucune liste selectionnee"
+                      description="Choisis une liste dans le panneau de gauche ou cree-en une nouvelle."
+                    />
+                  ) : isLoadingListGames ? (
+                    <div className="px-2 py-12 text-center text-muted-foreground">
+                      Chargement des jeux de la liste...
+                    </div>
+                  ) : filteredListGames.length > 0 ? (
+                    <div className={viewMode === 'grid' ? 'grid gap-4 sm:grid-cols-2 xl:grid-cols-3' : 'space-y-4'}>
+                      {filteredListGames.map((game) => (
+                        <ListGameCard
+                          key={game.gameId}
+                          game={game}
+                          viewMode={viewMode}
+                          onOpen={(gameId) => navigateToGame(gameId, 'list')}
+                          onRemove={handleRemoveListGame}
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <EmptyState
+                      title="Liste vide"
+                      description="Ajoute des jeux depuis les fiches detail ou cree une autre liste plus specialisee."
+                    />
+                  )}
+                </CardContent>
+              </Card>
             </div>
           </div>
-        </div>
-      )}
-    </div>
-  );
-};
+        </TabsContent>
+      </Tabs>
 
+      <Dialog open={isCreateListOpen} onOpenChange={setIsCreateListOpen}>
+        <DialogContent className="border-white/10 bg-[rgba(8,14,22,0.98)] sm:max-w-xl">
+          <DialogHeader>
+            <DialogTitle>Nouvelle liste personnelle</DialogTitle>
+            <DialogDescription>
+              Cree une liste simple pour organiser tes envies, ta saga en cours ou un objectif saisonnier.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-foreground" htmlFor="list-name">
+                Nom
+              </label>
+              <Input
+                id="list-name"
+                value={newListName}
+                onChange={(event) => setNewListName(event.target.value)}
+                placeholder="Ex. Marathon Soulslike"
+                className="h-11 border-white/10 bg-black/20"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-foreground" htmlFor="list-description">
+                Description
+              </label>
+              <textarea
+                id="list-description"
+                value={newListDescription}
+                onChange={(event) => setNewListDescription(event.target.value)}
+                placeholder="Optionnel"
+                rows={4}
+                className="flex w-full rounded-xl border border-white/10 bg-black/20 px-3 py-3 text-sm text-foreground outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              className="border-white/10 bg-white/5"
+              onClick={() => setIsCreateListOpen(false)}
+            >
+              Annuler
+            </Button>
+            <Button onClick={handleCreateList} disabled={isSubmittingList || !newListName.trim()}>
+              {isSubmittingList ? 'Creation...' : 'Creer la liste'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </AppShell>
+  );
+}
