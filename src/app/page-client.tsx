@@ -5,11 +5,11 @@ import { useRouter } from 'next/navigation';
 import {
   ArrowRight,
   CalendarDays,
+  Flame,
   Gamepad2,
   Info,
   Library,
   Sparkles,
-  Trophy,
 } from 'lucide-react';
 import AppShell from '@/components/AppShell';
 import EmptyState from '@/components/EmptyState';
@@ -90,6 +90,12 @@ function formatReleaseDate(timestamp: number): string {
   }).format(new Date(timestamp * 1000));
 }
 
+function daysUntil(timestamp: number): number | null {
+  const diff = timestamp * 1000 - Date.now();
+  if (diff < 0) return null;
+  return Math.ceil(diff / (1000 * 60 * 60 * 24));
+}
+
 /**
  * SectionHeader VOID PROTOCOL
  * index : numérotation éditoriale (ex: "01")
@@ -137,6 +143,72 @@ function SectionPanel({ children, className }: { children: React.ReactNode; clas
     >
       {children}
     </div>
+  );
+}
+
+/** Jeu mis en avant — bannière éditoriale avec cover */
+function FeaturedGameBanner({
+  game,
+  onClick,
+}: {
+  game: { id: number; name: string; cover: string; rating: number; genres?: string };
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        'group relative w-full overflow-hidden rounded-[22px] border border-border text-left',
+        'bg-gradient-to-r from-[hsl(223_28%_8%)] to-[hsl(223_32%_6%)]',
+        'transition-all duration-300 hover:border-primary/30',
+        'hover:shadow-[0_0_0_1px_rgba(108,68,245,0.12),0_24px_60px_rgba(0,0,0,0.5)]'
+      )}
+    >
+      {/* Ambient glow derrière la cover */}
+      <div className="pointer-events-none absolute right-0 top-0 h-full w-1/2 bg-gradient-to-l from-[rgba(108,68,245,0.06)] to-transparent" />
+
+      <div className="flex items-stretch gap-0">
+        {/* Contenu textuel */}
+        <div className="flex flex-1 flex-col justify-center gap-3 p-5 md:p-6">
+          <div className="flex items-center gap-2">
+            <Flame className="h-3.5 w-3.5 text-gold" />
+            <span className="text-[10px] font-bold uppercase tracking-[0.24em] text-gold/80">
+              Top du moment
+            </span>
+          </div>
+          <div>
+            <h3 className="line-clamp-2 text-xl font-black leading-tight tracking-tight text-foreground md:text-2xl">
+              {game.name}
+            </h3>
+            {game.genres && (
+              <p className="mt-1 text-xs text-muted-foreground">{game.genres}</p>
+            )}
+          </div>
+          <div className="flex items-center gap-3">
+            {game.rating > 0 && (
+              <span className="score-badge px-2.5 py-1 text-[13px]">
+                {game.rating.toFixed(1)}
+              </span>
+            )}
+            <span className="flex items-center gap-1.5 text-[11px] font-semibold text-primary/70 transition-colors group-hover:text-primary">
+              Voir le détail
+              <ArrowRight className="h-3 w-3 transition-transform duration-200 group-hover:translate-x-0.5" />
+            </span>
+          </div>
+        </div>
+
+        {/* Cover */}
+        <div className="relative hidden h-[130px] w-[92px] flex-shrink-0 overflow-hidden rounded-r-[22px] sm:block md:h-[150px] md:w-[108px]">
+          <img
+            src={game.cover}
+            alt={game.name}
+            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-[hsl(223_28%_8%)]/50 to-transparent" />
+        </div>
+      </div>
+    </button>
   );
 }
 
@@ -192,9 +264,9 @@ export default function HomePage({
 
   const summaryMetrics = useMemo(
     () => [
-      { label: 'Recommandations', value: recommendedGames.length, icon: Sparkles },
-      { label: 'Sorties à suivre',  value: upcomingGames.length,   icon: CalendarDays },
-      { label: 'Plateformes',       value: platforms.length,        icon: Gamepad2 },
+      { label: 'Recommandations', value: recommendedGames.length, icon: Sparkles,    accent: 'bg-primary/12  text-primary'   },
+      { label: 'Sorties à venir',  value: upcomingGames.length,   icon: CalendarDays, accent: 'bg-ice/10      text-ice'        },
+      { label: 'Plateformes',      value: platforms.length,       icon: Gamepad2,     accent: 'bg-gold/10     text-gold'       },
     ],
     [platforms.length, recommendedGames.length, upcomingGames.length]
   );
@@ -263,7 +335,7 @@ export default function HomePage({
       >
         {/* Tuiles métriques */}
         <div className="grid gap-3 sm:grid-cols-3">
-          {summaryMetrics.map(({ label, value, icon: Icon }) => (
+          {summaryMetrics.map(({ label, value, icon: Icon, accent }) => (
             <div
               key={label}
               className="stat-chip flex items-center justify-between px-4 py-4"
@@ -276,13 +348,21 @@ export default function HomePage({
                   {value}
                 </p>
               </div>
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/12 text-primary">
+              <div className={cn('flex h-10 w-10 items-center justify-center rounded-xl', accent)}>
                 <Icon className="h-5 w-5" />
               </div>
             </div>
           ))}
         </div>
       </PageIntro>
+
+      {/* ══ JEU MIS EN AVANT ════════════════════════════════════ */}
+      {recommendedGames.length > 0 && (
+        <FeaturedGameBanner
+          game={recommendedGames[0]}
+          onClick={() => navigateToGameDetail(recommendedGames[0].id)}
+        />
+      )}
 
       {/* ══ BIBLIOTHÈQUE + RÉCEMMENT SUIVIS ════════════════════ */}
       <section className="grid gap-5 xl:grid-cols-[1.1fr_0.9fr]">
@@ -312,15 +392,18 @@ export default function HomePage({
                 {/* Stat tiles */}
                 <div className="grid gap-2 grid-cols-2 sm:grid-cols-4">
                   {[
-                    { label: 'Total',    value: librarySnapshot.total     },
-                    { label: 'En cours', value: librarySnapshot.playing   },
-                    { label: 'Terminés', value: librarySnapshot.completed },
-                    { label: 'Backlog',  value: librarySnapshot.toPlay    },
-                  ].map(({ label, value }) => (
+                    { label: 'Total',    value: librarySnapshot.total,     dot: 'bg-foreground/30' },
+                    { label: 'En cours', value: librarySnapshot.playing,   dot: 'bg-emerald-400'   },
+                    { label: 'Terminés', value: librarySnapshot.completed, dot: 'bg-cyan-400'      },
+                    { label: 'Backlog',  value: librarySnapshot.toPlay,    dot: 'bg-amber-400'     },
+                  ].map(({ label, value, dot }) => (
                     <div key={label} className="rounded-xl border border-border bg-muted/30 px-4 py-3">
-                      <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                        {label}
-                      </p>
+                      <div className="flex items-center gap-1.5">
+                        <span className={cn('h-1.5 w-1.5 shrink-0 rounded-full', dot)} />
+                        <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                          {label}
+                        </p>
+                      </div>
                       <p className="mt-1.5 font-oxanium text-2xl font-black tabular-nums text-foreground">
                         {value}
                       </p>
@@ -486,7 +569,9 @@ export default function HomePage({
 
           <div className="space-y-2 px-4 pb-4 pt-4">
             {upcomingGames.length > 0 ? (
-              upcomingGames.slice(0, 5).map((game) => (
+              upcomingGames.slice(0, 5).map((game) => {
+                const days = daysUntil(game.release_date);
+                return (
                 <button
                   key={game.id}
                   type="button"
@@ -508,18 +593,26 @@ export default function HomePage({
                           {formatReleaseDate(game.release_date)}
                         </p>
                       </div>
-                      {game.rating ? (
-                        <div className="score-badge shrink-0 px-2 py-0.5 text-[11px]">
-                          {game.rating.toFixed(1)}
-                        </div>
-                      ) : null}
+                      <div className="flex flex-col items-end gap-1 shrink-0">
+                        {game.rating ? (
+                          <div className="score-badge px-2 py-0.5 text-[11px]">
+                            {game.rating.toFixed(1)}
+                          </div>
+                        ) : null}
+                        {days !== null && (
+                          <span className="date-chip">
+                            J-{days}
+                          </span>
+                        )}
+                      </div>
                     </div>
                     {game.genres && (
                       <p className="mt-1.5 line-clamp-1 text-xs text-muted-foreground">{game.genres}</p>
                     )}
                   </div>
                 </button>
-              ))
+                );
+              })
             ) : (
               <EmptyState
                 title="Aucune sortie à venir"

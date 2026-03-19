@@ -4,6 +4,7 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   ArrowUp,
+  ArrowUpRight,
   Calendar,
   ChevronLeft,
   ChevronRight,
@@ -18,7 +19,7 @@ import { Input } from '@/components/ui/input';
 import Modal from './Modal';
 import PlatformImage from '../PlatformImage';
 
-// Types
+// ── Types ────────────────────────────────────────────────────────────────────
 interface Game {
   id: number;
   name: string;
@@ -36,12 +37,12 @@ interface GameCalendarModalProps {
   onClose: () => void;
 }
 
-// Constants
+// ── Constants ─────────────────────────────────────────────────────────────────
 const PLATFORM_OPTIONS = [
-  { key: 'PS5', id: 167, label: 'PlayStation 5' },
-  { key: 'XBOX', id: 169, label: 'Xbox Series' },
+  { key: 'PS5',    id: 167, label: 'PlayStation 5'  },
+  { key: 'XBOX',   id: 169, label: 'Xbox Series'    },
   { key: 'SWITCH', id: 130, label: 'Nintendo Switch' },
-  { key: 'MOBILE', id: 34, label: 'Mobile' },
+  { key: 'MOBILE', id: 34,  label: 'Mobile'          },
 ] as const;
 
 const DEFAULT_PLATFORM_ID = PLATFORM_OPTIONS[0].id;
@@ -52,10 +53,10 @@ const MONTHS = [
 ];
 
 const MONTHS_FR: Record<string, string> = {
-  January: 'Janvier', February: 'Février', March: 'Mars',
-  April: 'Avril', May: 'Mai', June: 'Juin',
-  July: 'Juillet', August: 'Août', September: 'Septembre',
-  October: 'Octobre', November: 'Novembre', December: 'Décembre',
+  January: 'Janvier',  February: 'Février',   March: 'Mars',
+  April: 'Avril',      May: 'Mai',            June: 'Juin',
+  July: 'Juillet',     August: 'Août',        September: 'Septembre',
+  October: 'Octobre',  November: 'Novembre',  December: 'Décembre',
 };
 
 const QUARTERS: Record<number, string[]> = {
@@ -65,13 +66,16 @@ const QUARTERS: Record<number, string[]> = {
   4: ['October', 'November', 'December'],
 };
 
-// Sub-components
+// ── CalendarHeader ─────────────────────────────────────────────────────────────
 interface CalendarHeaderProps {
   year: number;
   changeYear: (increment: number) => void;
   searchTerm: string;
   setSearchTerm: (term: string) => void;
   isSearching: boolean;
+  selectedPlatformLabel: string;
+  activeQuarter: number;
+  visibleGamesCount: number;
 }
 
 const CalendarHeader: React.FC<CalendarHeaderProps> = ({
@@ -80,25 +84,33 @@ const CalendarHeader: React.FC<CalendarHeaderProps> = ({
   searchTerm,
   setSearchTerm,
   isSearching,
+  selectedPlatformLabel,
+  activeQuarter,
+  visibleGamesCount,
 }) => (
-  <div className="flex flex-col gap-4">
-    <div className="flex items-center justify-between">
+  <div className="space-y-4">
+    {/* Year + search row */}
+    <div className="flex items-center gap-3">
       <button
-        className="flex h-10 w-10 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-muted-foreground transition-colors hover:bg-white/10 hover:text-foreground"
+        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-border bg-muted/40 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
         onClick={() => changeYear(-1)}
         aria-label="Année précédente"
       >
         <ChevronLeft className="h-4 w-4" />
       </button>
-      <div className="text-center">
-        <p className="text-xs uppercase tracking-[0.22em] text-primary/80">Release radar</p>
-        <div className="mt-1 flex items-center gap-2 text-base font-semibold text-foreground">
-          <Calendar className="h-4 w-4 text-primary" />
-          <span>{year}</span>
-        </div>
+
+      <div className="flex flex-1 items-center justify-center gap-2">
+        <Calendar className="h-4 w-4 text-primary/70" />
+        <span className="font-oxanium text-lg font-black tracking-[0.12em] text-foreground">
+          {year}
+        </span>
+        <span className="hidden text-[10px] font-bold uppercase tracking-[0.22em] text-primary/60 sm:block">
+          Release Radar
+        </span>
       </div>
+
       <button
-        className="flex h-10 w-10 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-muted-foreground transition-colors hover:bg-white/10 hover:text-foreground"
+        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-border bg-muted/40 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
         onClick={() => changeYear(1)}
         aria-label="Année suivante"
       >
@@ -106,24 +118,51 @@ const CalendarHeader: React.FC<CalendarHeaderProps> = ({
       </button>
     </div>
 
+    {/* Stats strip */}
+    <div className="grid grid-cols-3 gap-2">
+      <div className="flex items-center gap-2 rounded-[14px] border border-border bg-muted/25 px-3 py-2.5">
+        <MonitorSmartphone className="h-3.5 w-3.5 shrink-0 text-primary/60" />
+        <div className="min-w-0">
+          <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-muted-foreground">Plateforme</p>
+          <p className="truncate text-[12px] font-semibold text-foreground">{selectedPlatformLabel}</p>
+        </div>
+      </div>
+      <div className="flex items-center gap-2 rounded-[14px] border border-border bg-muted/25 px-3 py-2.5">
+        <Sparkles className="h-3.5 w-3.5 shrink-0 text-primary/60" />
+        <div>
+          <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-muted-foreground">Trimestre</p>
+          <p className="font-oxanium text-[12px] font-semibold text-foreground">T{activeQuarter}</p>
+        </div>
+      </div>
+      <div className="flex items-center gap-2 rounded-[14px] border border-border bg-muted/25 px-3 py-2.5">
+        <Clock3 className="h-3.5 w-3.5 shrink-0 text-primary/60" />
+        <div>
+          <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-muted-foreground">Sorties</p>
+          <p className="font-oxanium text-[12px] font-semibold text-foreground">{visibleGamesCount}</p>
+        </div>
+      </div>
+    </div>
+
+    {/* Search */}
     <div className="relative">
-      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+      <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
       <Input
         type="text"
-        className="h-11 border-white/10 bg-black/20 pl-9 pr-20"
-        placeholder={`Rechercher une sortie en ${year}…`}
+        className="h-10 border-border bg-muted/30 pl-9 pr-4 text-sm placeholder:text-muted-foreground/50 focus-visible:ring-primary/30"
+        placeholder={`Chercher un jeu en ${year}…`}
         value={searchTerm}
         onChange={(e) => setSearchTerm(e.target.value)}
       />
       {isSearching && (
-        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
-          Recherche…
-        </span>
+        <div className="absolute right-3 top-1/2 -translate-y-1/2">
+          <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />
+        </div>
       )}
     </div>
   </div>
 );
 
+// ── PlatformFilters ─────────────────────────────────────────────────────────────
 interface PlatformFiltersProps {
   selectedPlatforms: number[];
   togglePlatformFilter: (platformId: number) => void;
@@ -133,28 +172,20 @@ const PlatformFilters: React.FC<PlatformFiltersProps> = ({
   selectedPlatforms,
   togglePlatformFilter,
 }) => (
-  <div className="space-y-3">
-    <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
-      <MonitorSmartphone className="h-3.5 w-3.5" />
-      Plateforme focus
-    </div>
-    <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+  <div className="space-y-2">
+    <p className="section-label">Plateforme focus</p>
+    <div className="flex flex-wrap gap-2">
       {PLATFORM_OPTIONS.map(({ key, id, label }) => (
         <button
           key={`${key}-${id}`}
-          className={cn(
-            'flex items-center gap-2 rounded-[18px] border px-3 py-3 text-sm transition-colors',
-            selectedPlatforms.includes(id)
-              ? 'border-primary/30 bg-primary/10 text-foreground'
-              : 'border-white/8 bg-white/4 text-muted-foreground hover:border-white/12 hover:bg-white/8 hover:text-foreground'
-          )}
+          className={cn('platform-chip', selectedPlatforms.includes(id) && 'active')}
           onClick={() => togglePlatformFilter(id)}
         >
           <PlatformImage
             platformId={id}
             platformName={key === 'MOBILE' ? 'Mobile' : undefined}
             alt={key}
-            size={18}
+            size={16}
           />
           <span>{label}</span>
         </button>
@@ -163,59 +194,70 @@ const PlatformFilters: React.FC<PlatformFiltersProps> = ({
   </div>
 );
 
+// ── QuarterTabs ─────────────────────────────────────────────────────────────────
 interface QuarterTabsProps {
   activeQuarter: number;
   setActiveQuarter: (quarter: number) => void;
+  quarterCounts: Record<number, number>;
 }
 
-const QuarterTabs: React.FC<QuarterTabsProps> = ({ activeQuarter, setActiveQuarter }) => (
-  <div className="grid grid-cols-4 gap-2">
+const QuarterTabs: React.FC<QuarterTabsProps> = ({ activeQuarter, setActiveQuarter, quarterCounts }) => (
+  <div className="flex gap-2">
     {[1, 2, 3, 4].map((quarter) => (
       <button
         key={quarter}
-        className={cn(
-          'rounded-2xl border py-2.5 text-center text-xs font-medium transition-colors',
-          activeQuarter === quarter
-            ? 'border-primary/30 bg-primary/10 text-primary'
-            : 'border-white/8 bg-white/4 text-muted-foreground hover:border-white/12 hover:bg-white/8 hover:text-foreground'
-        )}
+        className={cn('quarter-tab', activeQuarter === quarter && 'active')}
         onClick={() => setActiveQuarter(quarter)}
       >
-        T{quarter}
+        <span>T{quarter}</span>
+        {quarterCounts[quarter] > 0 && (
+          <span className="count">{quarterCounts[quarter]}</span>
+        )}
       </button>
     ))}
   </div>
 );
 
+// ── MonthNavigation ─────────────────────────────────────────────────────────────
 interface MonthNavigationProps {
   activeQuarter: number;
   selectedMonth: string | null;
   scrollToMonth: (month: string) => void;
+  currentMonth: string | null;
 }
 
 const MonthNavigation: React.FC<MonthNavigationProps> = ({
   activeQuarter,
   selectedMonth,
   scrollToMonth,
+  currentMonth,
 }) => (
-  <div className="flex gap-2 overflow-x-auto pb-1">
-    {QUARTERS[activeQuarter].map((month) => (
-      <button
-        key={month}
-        className={cn(
-          'min-w-[88px] rounded-full border px-3 py-2 text-center text-xs transition-colors',
-          selectedMonth === month
-            ? 'border-primary/30 bg-primary/10 font-medium text-foreground'
-            : 'border-white/8 bg-white/4 text-muted-foreground hover:text-foreground'
-        )}
-        onClick={() => scrollToMonth(month)}
-      >
-        {MONTHS_FR[month].slice(0, 4)}
-      </button>
-    ))}
+  <div className="flex gap-1.5 overflow-x-auto pb-0.5">
+    {QUARTERS[activeQuarter].map((month) => {
+      const isSelected = selectedMonth === month;
+      const isCurrent  = currentMonth === month;
+      return (
+        <button
+          key={month}
+          className={cn(
+            'relative min-w-[80px] flex-1 rounded-full border px-3 py-1.5 text-center text-[11px] font-medium transition-all',
+            isSelected
+              ? 'border-primary/35 bg-primary/10 text-foreground'
+              : 'border-border bg-muted/20 text-muted-foreground hover:border-border hover:bg-muted/40 hover:text-foreground'
+          )}
+          onClick={() => scrollToMonth(month)}
+        >
+          {MONTHS_FR[month].slice(0, 4)}
+          {isCurrent && (
+            <span className="absolute -right-0.5 -top-0.5 h-1.5 w-1.5 rounded-full bg-primary" />
+          )}
+        </button>
+      );
+    })}
   </div>
 );
 
+// ── GameItem ─────────────────────────────────────────────────────────────────────
 interface GameItemProps {
   game: Game;
   formatDate: (timestamp: number) => string;
@@ -225,29 +267,47 @@ interface GameItemProps {
 const GameItem: React.FC<GameItemProps> = ({ game, formatDate, onGameClick }) => (
   <button
     type="button"
-    className="flex w-full items-center gap-3 rounded-[18px] border border-white/8 bg-white/4 p-3 text-left transition-colors hover:bg-white/8"
+    className="group release-item"
     onClick={() => onGameClick(game.id)}
   >
-    <div className="w-16 flex-shrink-0 rounded-[14px] border border-white/8 bg-black/20 px-2 py-3 text-center">
-      <p className="text-[11px] uppercase tracking-[0.14em] text-primary/80">Date</p>
-      <p className="mt-2 text-xs font-medium text-foreground">{formatDate(game.release_date)}</p>
+    {/* Cover */}
+    <div className="h-[54px] w-[38px] flex-shrink-0 overflow-hidden rounded-[10px] border border-border bg-muted">
+      <img
+        src={game.cover}
+        alt={game.name}
+        className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+      />
     </div>
-    <div className="h-16 w-12 flex-shrink-0 overflow-hidden rounded-[14px] border border-white/8">
-      <img src={game.cover} alt={game.name} className="h-full w-full object-cover" />
-    </div>
-    <div className="flex-1 min-w-0">
-      <p className="line-clamp-2 text-sm font-semibold text-foreground">{game.name}</p>
-      <div className="mt-2 flex gap-1">
-        {game.platforms.map((platformId, idx) => (
-          <span key={`${platformId}-${idx}`} className="flex h-7 w-7 items-center justify-center rounded-full border border-white/8 bg-black/20">
-            <PlatformImage platformId={platformId} alt="" size={14} />
+
+    {/* Info */}
+    <div className="min-w-0 flex-1">
+      <p className="line-clamp-2 text-[13px] font-semibold leading-snug text-foreground">
+        {game.name}
+      </p>
+      <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+        <span className="date-chip">{formatDate(game.release_date)}</span>
+        {game.platforms.slice(0, 3).map((platformId, idx) => (
+          <span
+            key={`${platformId}-${idx}`}
+            className="flex h-[18px] w-[18px] items-center justify-center rounded-full border border-border bg-muted"
+          >
+            <PlatformImage platformId={platformId} alt="" size={11} />
           </span>
         ))}
+        {game.platforms.length > 3 && (
+          <span className="text-[10px] text-muted-foreground">
+            +{game.platforms.length - 3}
+          </span>
+        )}
       </div>
     </div>
+
+    {/* Arrow */}
+    <ArrowUpRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground/30 transition-colors group-hover:text-primary/70" />
   </button>
 );
 
+// ── MonthSection ─────────────────────────────────────────────────────────────────
 interface MonthSectionProps {
   month: string;
   year: number;
@@ -255,6 +315,7 @@ interface MonthSectionProps {
   formatDate: (timestamp: number) => string;
   onGameClick: (gameId: number) => void;
   setRef: (el: HTMLDivElement | null) => void;
+  isCurrentMonth: boolean;
 }
 
 const MonthSection: React.FC<MonthSectionProps> = ({
@@ -264,17 +325,38 @@ const MonthSection: React.FC<MonthSectionProps> = ({
   formatDate,
   onGameClick,
   setRef,
+  isCurrentMonth,
 }) => (
-  <div className="surface-panel mb-4 rounded-[24px] p-5" ref={setRef}>
-    <div className="mb-4 flex items-center justify-between border-b border-white/8 pb-3">
-      <h3 className="text-base font-semibold text-foreground">
-        {MONTHS_FR[month]} {year}
-      </h3>
-      <span className="rounded-full border border-white/8 bg-white/5 px-3 py-1 text-xs text-muted-foreground">
-        {games.length} jeu{games.length > 1 ? 'x' : ''}
-      </span>
+  <div
+    ref={setRef}
+    className={cn(
+      'overflow-hidden rounded-[18px] border bg-gradient-to-b from-[hsl(223_26%_8.5%)] to-[hsl(223_30%_7%)]',
+      isCurrentMonth ? 'border-primary/30' : 'border-border'
+    )}
+  >
+    {/* Month header */}
+    <div className="month-header">
+      <div className="flex items-center gap-2.5">
+        <span
+          className={cn(
+            'font-oxanium text-xs font-black uppercase tracking-[0.2em]',
+            isCurrentMonth ? 'text-primary' : 'text-muted-foreground/80'
+          )}
+        >
+          {MONTHS_FR[month].slice(0, 4).toUpperCase()}
+        </span>
+        <span className="text-[11px] text-muted-foreground/40">{year}</span>
+        {isCurrentMonth && (
+          <span className="rounded-full bg-primary/15 px-2 py-0.5 text-[9px] font-bold uppercase tracking-[0.12em] text-primary">
+            Maintenant
+          </span>
+        )}
+      </div>
+      <span className="count-badge">{games.length} jeu{games.length > 1 ? 'x' : ''}</span>
     </div>
-    <div className="grid gap-3">
+
+    {/* Games list */}
+    <div className="space-y-1.5 p-2.5">
       {games.map((game, idx) => (
         <GameItem
           key={`${game.id}-${idx}`}
@@ -287,6 +369,7 @@ const MonthSection: React.FC<MonthSectionProps> = ({
   </div>
 );
 
+// ── StatusDisplay ────────────────────────────────────────────────────────────────
 interface StatusDisplayProps {
   loading: boolean;
   error: string | null;
@@ -308,22 +391,19 @@ const StatusDisplay: React.FC<StatusDisplayProps> = ({
 }) => {
   if (loading) {
     return (
-      <div className="flex flex-col items-center gap-3 rounded-[22px] border border-white/8 bg-white/4 py-12 text-muted-foreground">
-        <Loader2 className="h-6 w-6 animate-spin text-primary" />
-        <p className="text-sm">Chargement…</p>
+      <div className="flex flex-col items-center gap-3 rounded-[18px] border border-border bg-muted/15 py-14">
+        <Loader2 className="h-5 w-5 animate-spin text-primary" />
+        <p className="text-[13px] text-muted-foreground">Chargement du calendrier…</p>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="flex flex-col items-center gap-3 rounded-[22px] border border-destructive/20 bg-destructive/10 py-8 text-center">
+      <div className="flex flex-col items-center gap-3 rounded-[18px] border border-destructive/20 bg-destructive/5 py-10 text-center">
         <p className="text-sm text-destructive">{error}</p>
         {onRetry && (
-          <button
-            onClick={onRetry}
-            className="text-xs text-primary hover:underline"
-          >
+          <button onClick={onRetry} className="text-xs text-primary hover:underline">
             Réessayer
           </button>
         )}
@@ -333,7 +413,7 @@ const StatusDisplay: React.FC<StatusDisplayProps> = ({
 
   if (searchTerm && !hasResults) {
     return (
-      <div className="rounded-[22px] border border-white/8 bg-white/4 py-8 text-center text-sm text-muted-foreground">
+      <div className="rounded-[18px] border border-border bg-muted/15 py-10 text-center text-sm text-muted-foreground">
         Aucun jeu trouvé pour &laquo;&nbsp;{searchTerm}&nbsp;&raquo;
       </div>
     );
@@ -341,7 +421,7 @@ const StatusDisplay: React.FC<StatusDisplayProps> = ({
 
   if (!hasResults) {
     return (
-      <div className="rounded-[22px] border border-white/8 bg-white/4 py-8 text-center text-sm text-muted-foreground">
+      <div className="rounded-[18px] border border-border bg-muted/15 py-10 text-center text-sm text-muted-foreground">
         Aucune sortie pour T{activeQuarter} {year} avec ces filtres.
       </div>
     );
@@ -350,7 +430,7 @@ const StatusDisplay: React.FC<StatusDisplayProps> = ({
   return null;
 };
 
-// Main component
+// ── Main Component ────────────────────────────────────────────────────────────────
 const GameCalendarModal: React.FC<GameCalendarModalProps> = ({ isOpen, onClose }) => {
   const [calendarGames, setCalendarGames] = useState<CalendarGames>({});
   const [loading, setLoading] = useState(true);
@@ -372,20 +452,21 @@ const GameCalendarModal: React.FC<GameCalendarModalProps> = ({ isOpen, onClose }
   const contentRef = useRef<HTMLDivElement | null>(null);
   const router = useRouter();
 
+  // Dériver le mois courant
+  const now = new Date();
+  const currentMonthName = MONTHS[now.getMonth()];
+  const currentYear = now.getFullYear();
+
   // Initialiser à l'ouverture
   useEffect(() => {
     if (isOpen) {
-      const currentDate = new Date();
-      const currentYear = currentDate.getFullYear();
-      const currentMonth = currentDate.getMonth() + 1;
-      const currentQuarter = Math.ceil(currentMonth / 3);
-
+      const d = new Date();
       setSelectedPlatforms([DEFAULT_PLATFORM_ID]);
-      setYear(currentYear);
+      setYear(d.getFullYear());
       setSearchTerm('');
       setDebouncedSearchTerm('');
       setSearchResults({});
-      setActiveQuarter(currentQuarter);
+      setActiveQuarter(Math.ceil((d.getMonth() + 1) / 3));
       setSelectedMonth(null);
       setCalendarGames({});
     }
@@ -393,58 +474,39 @@ const GameCalendarModal: React.FC<GameCalendarModalProps> = ({ isOpen, onClose }
 
   // Charger les jeux
   useEffect(() => {
-    if (isOpen) {
-      fetchCalendarGames();
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    if (isOpen) fetchCalendarGames();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, selectedPlatforms, year]);
 
-  // Debounce recherche
+  // Debounce
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearchTerm(searchTerm);
-    }, 300);
-    return () => clearTimeout(timer);
+    const t = setTimeout(() => setDebouncedSearchTerm(searchTerm), 300);
+    return () => clearTimeout(t);
   }, [searchTerm]);
 
-  // Filtrer les résultats de recherche
+  // Filtrage recherche
   useEffect(() => {
-    if (debouncedSearchTerm.length < 2) {
-      setSearchResults({});
-      return;
-    }
-
+    if (debouncedSearchTerm.length < 2) { setSearchResults({}); return; }
     const results: CalendarGames = {};
     const lower = debouncedSearchTerm.toLowerCase();
-
     Object.keys(calendarGames).forEach((month) => {
       if (!calendarGames[month]) return;
-      const matching = calendarGames[month]
-        .filter((game) => game.name.toLowerCase().includes(lower))
-        .slice(0, 10);
+      const matching = calendarGames[month].filter((g) => g.name.toLowerCase().includes(lower)).slice(0, 10);
       if (matching.length > 0) results[month] = matching;
     });
-
     setSearchResults(results);
   }, [debouncedSearchTerm, calendarGames]);
 
   const fetchCalendarGames = async () => {
     setLoading(true);
     setError(null);
-
     try {
-      const platformParams = selectedPlatforms.length > 0
-        ? `platforms=${selectedPlatforms.join(',')}`
-        : '';
-      const fetchUrl = `/api/calendar-games?year=${year}${platformParams ? `&${platformParams}` : ''}`;
-      const response = await fetch(fetchUrl);
-
-      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-
-      const data = await response.json();
-      setCalendarGames(data);
+      const platformParams = selectedPlatforms.length > 0 ? `platforms=${selectedPlatforms.join(',')}` : '';
+      const res = await fetch(`/api/calendar-games?year=${year}${platformParams ? `&${platformParams}` : ''}`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      setCalendarGames(await res.json());
     } catch (err) {
-      console.error('Error loading calendar data:', err);
+      console.error('Calendar error:', err);
       setError('Impossible de charger le calendrier. Réessayez plus tard.');
     } finally {
       setLoading(false);
@@ -458,31 +520,26 @@ const GameCalendarModal: React.FC<GameCalendarModalProps> = ({ isOpen, onClose }
   };
 
   const handleGameClick = (gameId: number) => {
-    sessionStorage.removeItem('cameFromGames');
-    sessionStorage.removeItem('cameFromHome');
-    sessionStorage.removeItem('cameFromProfile');
-    sessionStorage.removeItem('cameFromCollection');
+    ['cameFromGames', 'cameFromHome', 'cameFromProfile', 'cameFromCollection'].forEach(
+      (k) => sessionStorage.removeItem(k)
+    );
     sessionStorage.setItem('cameFromCalendar', 'true');
     router.push(`/games/${gameId}`);
     onClose();
   };
 
-  const formatDate = (timestamp: number): string => {
-    const date = new Date(timestamp * 1000);
-    return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
-  };
+  const formatDate = (timestamp: number): string =>
+    new Date(timestamp * 1000).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
 
   const changeYear = (increment: number) => {
     setCalendarGames({});
-    setYear((prev) => prev + increment);
+    setYear((p) => p + increment);
     setActiveQuarter(1);
     setSelectedMonth(null);
     setSearchTerm('');
     setDebouncedSearchTerm('');
     setSearchResults({});
-    if (contentRef.current) {
-      contentRef.current.scrollTo({ top: 0, behavior: 'smooth' });
-    }
+    contentRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const scrollToMonth = (month: string) => {
@@ -496,122 +553,115 @@ const GameCalendarModal: React.FC<GameCalendarModalProps> = ({ isOpen, onClose }
     setTouchEnd(null);
     setTouchStart(e.targetTouches[0].clientX);
   };
-
-  const onTouchMove = (e: React.TouchEvent) => {
-    setTouchEnd(e.targetTouches[0].clientX);
-  };
-
+  const onTouchMove = (e: React.TouchEvent) => setTouchEnd(e.targetTouches[0].clientX);
   const onTouchEnd = () => {
     if (!touchStart || !touchEnd) return;
-    const distance = touchStart - touchEnd;
-    if (distance > minSwipeDistance && activeQuarter < 4) setActiveQuarter((q) => q + 1);
-    if (distance < -minSwipeDistance && activeQuarter > 1) setActiveQuarter((q) => q - 1);
+    const d = touchStart - touchEnd;
+    if (d > minSwipeDistance && activeQuarter < 4) setActiveQuarter((q) => q + 1);
+    if (d < -minSwipeDistance && activeQuarter > 1) setActiveQuarter((q) => q - 1);
   };
 
-  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) =>
     setShowScrollTop(e.currentTarget.scrollTop > 300);
-  };
 
-  const scrollToTop = () => {
-    contentRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
-  };
+  const scrollToTop = () => contentRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
 
-  const filteredGames = useMemo(() => {
-    if (debouncedSearchTerm.trim()) return searchResults;
-    return calendarGames;
-  }, [debouncedSearchTerm, calendarGames, searchResults]);
+  const filteredGames = useMemo(
+    () => (debouncedSearchTerm.trim() ? searchResults : calendarGames),
+    [debouncedSearchTerm, calendarGames, searchResults]
+  );
 
-  const hasGamesInQuarter = (quarter: number): boolean =>
-    QUARTERS[quarter].some(
-      (month) => filteredGames[month] && filteredGames[month].length > 0
-    );
+  const hasGamesInQuarter = (quarter: number) =>
+    QUARTERS[quarter].some((m) => filteredGames[m]?.length > 0);
 
   const isSearching = searchTerm.length > 0 && debouncedSearchTerm !== searchTerm;
 
-  const hasSearchResults = debouncedSearchTerm.trim()
-    ? Object.values(searchResults).flat().length > 0
-    : true;
-
   const visibleMonths = useMemo(
-    () => MONTHS.filter((month) => (!debouncedSearchTerm ? QUARTERS[activeQuarter].includes(month) : true)),
+    () => MONTHS.filter((m) => (!debouncedSearchTerm ? QUARTERS[activeQuarter].includes(m) : true)),
     [activeQuarter, debouncedSearchTerm]
   );
 
-  const visibleGamesCount = useMemo(() => {
-    return visibleMonths.reduce((total, month) => total + (filteredGames[month]?.length || 0), 0);
-  }, [filteredGames, visibleMonths]);
+  const visibleGamesCount = useMemo(
+    () => visibleMonths.reduce((total, m) => total + (filteredGames[m]?.length || 0), 0),
+    [filteredGames, visibleMonths]
+  );
+
+  // Compte par trimestre (pour les tabs)
+  const quarterCounts = useMemo(() => {
+    const counts: Record<number, number> = { 1: 0, 2: 0, 3: 0, 4: 0 };
+    Object.entries(QUARTERS).forEach(([q, months]) => {
+      counts[Number(q)] = months.reduce((n, m) => n + (filteredGames[m]?.length || 0), 0);
+    });
+    return counts;
+  }, [filteredGames]);
 
   const selectedPlatformLabel =
-    PLATFORM_OPTIONS.find((platform) => selectedPlatforms.includes(platform.id))?.label || 'Plateforme';
+    PLATFORM_OPTIONS.find((p) => selectedPlatforms.includes(p.id))?.label || 'Plateforme';
 
   return (
     <Modal
       isOpen={isOpen}
       onClose={onClose}
       title="Calendrier des sorties"
-      description="Une vue plus claire pour suivre ton année gaming par plateforme, trimestre et mois."
+      description="Suivez l'agenda gaming par plateforme, trimestre et mois."
       size="xxl"
       className="sm:max-w-6xl"
     >
       <div
         ref={contentRef}
-        className="max-h-[80vh] space-y-6 overflow-y-auto pr-1 scrollbar-thin scrollbar-track-transparent scrollbar-thumb-border"
+        className="max-h-[80vh] space-y-4 overflow-y-auto pr-1"
         onScroll={handleScroll}
         onTouchStart={onTouchStart}
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
       >
-        <section className="surface-panel surface-noise relative overflow-hidden rounded-[28px] p-5 md:p-6">
-          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(16,191,161,0.16),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(247,201,93,0.12),transparent_24%)]" />
-          <div className="relative z-10 space-y-5">
+        {/* ── Controls panel ─────────────────────────────────── */}
+        <div className="rounded-[20px] border border-border bg-gradient-to-b from-[hsl(223_26%_9%)] to-[hsl(223_30%_7%)] p-4 md:p-5">
+          {/* Dot grid overlay */}
+          <div
+            className="pointer-events-none absolute inset-0 rounded-[20px] opacity-20"
+            style={{
+              backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.04) 1px, transparent 0)',
+              backgroundSize: '20px 20px',
+            }}
+          />
+          <div className="relative space-y-4">
             <CalendarHeader
               year={year}
               changeYear={changeYear}
               searchTerm={searchTerm}
               setSearchTerm={setSearchTerm}
               isSearching={isSearching}
+              selectedPlatformLabel={selectedPlatformLabel}
+              activeQuarter={activeQuarter}
+              visibleGamesCount={visibleGamesCount}
             />
 
-            <div className="grid gap-3 md:grid-cols-3">
-              <div className="rounded-[20px] border border-white/8 bg-black/15 p-4">
-                <div className="flex items-center gap-2 text-xs uppercase tracking-[0.18em] text-muted-foreground">
-                  <MonitorSmartphone className="h-3.5 w-3.5" />
-                  Plateforme
-                </div>
-                <p className="mt-3 text-lg font-semibold text-foreground">{selectedPlatformLabel}</p>
-              </div>
-              <div className="rounded-[20px] border border-white/8 bg-black/15 p-4">
-                <div className="flex items-center gap-2 text-xs uppercase tracking-[0.18em] text-muted-foreground">
-                  <Sparkles className="h-3.5 w-3.5" />
-                  Trimestre actif
-                </div>
-                <p className="mt-3 text-lg font-semibold text-foreground">T{activeQuarter}</p>
-              </div>
-              <div className="rounded-[20px] border border-white/8 bg-black/15 p-4">
-                <div className="flex items-center gap-2 text-xs uppercase tracking-[0.18em] text-muted-foreground">
-                  <Clock3 className="h-3.5 w-3.5" />
-                  Sorties visibles
-                </div>
-                <p className="mt-3 text-lg font-semibold text-foreground">{visibleGamesCount}</p>
-              </div>
-            </div>
+            <div className="section-divider" />
 
             <PlatformFilters
               selectedPlatforms={selectedPlatforms}
               togglePlatformFilter={togglePlatformFilter}
             />
 
-            <div className="space-y-3">
-              <QuarterTabs activeQuarter={activeQuarter} setActiveQuarter={setActiveQuarter} />
+            <div className="space-y-2.5">
+              <p className="section-label">Trimestre</p>
+              <QuarterTabs
+                activeQuarter={activeQuarter}
+                setActiveQuarter={setActiveQuarter}
+                quarterCounts={quarterCounts}
+              />
               <MonthNavigation
                 activeQuarter={activeQuarter}
                 selectedMonth={selectedMonth}
                 scrollToMonth={scrollToMonth}
+                currentMonth={year === currentYear ? currentMonthName : null}
               />
             </div>
           </div>
-        </section>
+        </div>
 
+        {/* ── Status ─────────────────────────────────────────── */}
         <StatusDisplay
           loading={loading}
           error={error}
@@ -626,12 +676,12 @@ const GameCalendarModal: React.FC<GameCalendarModalProps> = ({ isOpen, onClose }
           onRetry={fetchCalendarGames}
         />
 
+        {/* ── Month grid ─────────────────────────────────────── */}
         {!loading && !error && (
-          <div className="grid gap-4 2xl:grid-cols-3 xl:grid-cols-2">
+          <div className="grid gap-3 xl:grid-cols-2 2xl:grid-cols-3">
             {MONTHS.map((month) => {
               if (!debouncedSearchTerm && !QUARTERS[activeQuarter].includes(month)) return null;
-              if (!filteredGames[month] || filteredGames[month].length === 0) return null;
-
+              if (!filteredGames[month]?.length) return null;
               return (
                 <MonthSection
                   key={`${year}-${month}`}
@@ -641,24 +691,26 @@ const GameCalendarModal: React.FC<GameCalendarModalProps> = ({ isOpen, onClose }
                   formatDate={formatDate}
                   onGameClick={handleGameClick}
                   setRef={(el) => { monthRefs.current[month] = el; }}
+                  isCurrentMonth={year === currentYear && month === currentMonthName}
                 />
               );
             })}
           </div>
         )}
 
+        {/* ── Scroll-to-top FAB ──────────────────────────────── */}
         <div
           className={cn(
-            'sticky bottom-2 flex justify-end mt-2 transition-opacity',
-            showScrollTop ? 'opacity-100' : 'opacity-0 pointer-events-none'
+            'sticky bottom-2 flex justify-end transition-all duration-200',
+            showScrollTop ? 'opacity-100 translate-y-0' : 'pointer-events-none opacity-0 translate-y-2'
           )}
         >
           <button
-            className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-primary text-primary-foreground shadow-lg"
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-primary/30 bg-primary/90 text-white shadow-[0_8px_24px_rgba(108,68,245,0.35)] transition-transform hover:scale-105"
             onClick={scrollToTop}
             aria-label="Retour en haut"
           >
-            <ArrowUp className="h-4 w-4" />
+            <ArrowUp className="h-3.5 w-3.5" />
           </button>
         </div>
       </div>

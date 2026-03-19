@@ -291,6 +291,155 @@ h1, h2, h3, h4, h5, h6 {
   .gradient-border-hover:hover::after {
     opacity: 1;
   }
+
+  /* === DATE CHIP — pill indigo pour dates de sortie === */
+  .date-chip {
+    display: inline-flex;
+    align-items: center;
+    background: hsl(var(--primary) / 0.1);
+    border: 1px solid hsl(var(--primary) / 0.2);
+    border-radius: 99px;
+    padding: 2px 8px;
+    font-size: 10px;
+    font-weight: 700;
+    color: hsl(var(--primary) / 0.9);
+    letter-spacing: 0.05em;
+    font-family: var(--font-heading), monospace;
+    white-space: nowrap;
+    line-height: 1.6;
+  }
+
+  /* === COUNT BADGE — compteur neutre (ex: "8 jeux") === */
+  .count-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: hsl(var(--muted));
+    border: 1px solid hsl(var(--border));
+    border-radius: var(--radius-sm);
+    padding: 1px 8px;
+    font-size: 11px;
+    font-weight: 600;
+    color: hsl(var(--muted-foreground));
+    font-variant-numeric: tabular-nums;
+    font-family: var(--font-heading), monospace;
+  }
+
+  /* === RELEASE ITEM — ligne de jeu dans le calendrier === */
+  .release-item {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px 10px 10px;
+    border-radius: 16px;
+    border: 1px solid hsl(var(--border));
+    background: hsl(var(--muted) / 0.2);
+    text-align: left;
+    transition: border-color 0.2s ease, background-color 0.2s ease;
+    cursor: pointer;
+  }
+  .release-item:hover {
+    border-color: hsl(var(--primary) / 0.28);
+    background: hsl(var(--primary) / 0.05);
+  }
+
+  /* === SURFACE ELEVATED — pour modals, overlays === */
+  .surface-elevated {
+    background: linear-gradient(145deg, hsl(223 30% 9%) 0%, hsl(223 34% 7%) 100%);
+    border: 1px solid hsl(var(--border));
+    box-shadow:
+      0 40px 120px rgba(0, 0, 0, 0.65),
+      0 0 0 1px rgba(255, 255, 255, 0.04);
+  }
+
+  /* === SECTION LABEL — petite étiquette de section === */
+  .section-label {
+    font-size: 9px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.28em;
+    color: hsl(var(--primary) / 0.5);
+    font-family: var(--font-heading), monospace;
+  }
+
+  /* === GLOW ICE === */
+  .glow-ice {
+    box-shadow:
+      0 0 0 1px rgba(0, 212, 240, 0.15),
+      0 16px 50px rgba(0, 212, 240, 0.12);
+  }
+
+  /* === MONTH HEADER — en-tête de section mensuelle === */
+  .month-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    border-bottom: 1px solid hsl(var(--border));
+  }
+
+  /* === PLATFORM CHIP — filtre plateforme compact === */
+  .platform-chip {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    border-radius: 14px;
+    border: 1px solid hsl(var(--border));
+    background: hsl(var(--muted) / 0.3);
+    font-size: 13px;
+    font-weight: 500;
+    color: hsl(var(--muted-foreground));
+    transition: border-color 0.18s ease, background 0.18s ease, color 0.18s ease;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .platform-chip:hover {
+    border-color: hsl(var(--border));
+    background: hsl(var(--muted) / 0.5);
+    color: hsl(var(--foreground));
+  }
+  .platform-chip.active {
+    border-color: hsl(var(--primary) / 0.35);
+    background: hsl(var(--primary) / 0.1);
+    color: hsl(var(--foreground));
+  }
+
+  /* === QUARTER TAB === */
+  .quarter-tab {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: 8px 6px;
+    border-radius: 12px;
+    border: 1px solid hsl(var(--border));
+    background: hsl(var(--muted) / 0.2);
+    font-size: 12px;
+    font-weight: 600;
+    color: hsl(var(--muted-foreground));
+    transition: border-color 0.18s ease, background 0.18s ease, color 0.18s ease;
+    cursor: pointer;
+  }
+  .quarter-tab:hover {
+    border-color: hsl(var(--border));
+    background: hsl(var(--muted) / 0.4);
+    color: hsl(var(--foreground));
+  }
+  .quarter-tab.active {
+    border-color: hsl(var(--primary) / 0.35);
+    background: hsl(var(--primary) / 0.1);
+    color: hsl(var(--primary));
+  }
+  .quarter-tab .count {
+    font-size: 9px;
+    font-family: var(--font-heading), monospace;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    opacity: 0.7;
+  }
 }
 
 /* ============================================================
@@ -319,4 +468,14 @@ h1, h2, h3, h4, h5, h6 {
 @keyframes slideInRight {
   from { opacity: 0; transform: translateX(20px); }
   to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes countUp {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes glowPulseIce {
+  0%, 100% { box-shadow: 0 0 8px rgba(0, 212, 240, 0.25); }
+  50%       { box-shadow: 0 0 20px rgba(0, 212, 240, 0.5); }
 }
